@@ -1,0 +1,59 @@
+{
+  "card": {
+    "sale": "Sale",
+    "topRated": "Top Rated",
+    "addToCart": "Add to cart",
+    "outOfStock": "Out of Stock",
+    "new": "New",
+    "view": "View",
+    "buyNow": "Buy Now",
+    "categoryFallback": "Seafood",
+    "descriptionFallback": "Fresh and premium quality."
+  },
+  "list": {
+    "searchPlaceholder": "Search seafood...",
+    "errorLoading": "Failed to load products. Please try again.",
+    "tryAgain": "Try Again",
+    "noProductsFound": "No products found",
+    "noProductsDescription": "We couldn't find anything for \"{{searchTerm}}\". Try a different keyword.",
+    "clearSearch": "Clear search",
+    "showingResults": "Showing {{start}}–{{end}} of {{total}} results"
+  },
+  "details": {
+    "back": "Back",
+    "backToShop": "Back to Shop",
+    "notFound": "Product not found",
+    "errorLoad": "Failed to load product details.",
+    "outOfStock": "Out of Stock",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "addWishlist": "Add to Wishlist",
+    "removeWishlist": "Remove from Wishlist",
+    "off": "{{value}}% OFF",
+    "viewImage": "View {{index}}",
+    "ratingText": "{{rating}} ({{reviews}} reviews)",
+    "pricePer": "Price per {{sku}}",
+    "perUnitFallback": "unit",
+    "currencyAed": "AED {{value}}",
+    "qtyIncrease": "Increase quantity",
+    "qtyDecrease": "Decrease quantity",
+    "qtyLabel": "Quantity {{value}}",
+    "bulkOrder": {
+      "title": "Bulk Order",
+      "subtitle": "Save more with bulk pricing",
+      "description": "Looking for bulk quantities? Contact us for special pricing and expedited large-scale delivery.",
+      "minOrder": "Minimum order: {{count}} units",
+      "getQuote": "Reach out on WhatsApp"
+    },
+    "meta": {
+      "fastDelivery": {
+        "title": "Fast Delivery",
+        "subtitle": "Within 2 hours"
+      },
+      "freshGuaranteed": {
+        "title": "Fresh Guaranteed",
+        "subtitle": "Certified Quality"
+      }
+    }
+  }
+}

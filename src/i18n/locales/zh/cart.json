@@ -1,0 +1,20 @@
+{
+    "cart": {
+        "title": "您的购物车 ({{count}})",
+        "continueShopping": "继续购物",
+        "summaryTitle": "订单摘要",
+        "emptyTitle": "您的购物车是空的",
+        "emptyDescription": "看来您还没有添加任何新鲜渔获到购物车中。",
+        "startShopping": "开始购物",
+        "itemUnit": "{{quantity}} 个",
+        "removeFromCart": "从购物车中移除",
+        "subtotal": "小计",
+        "shipping": "运费",
+        "free": "免费",
+        "addMoreForFreeShipping": "再添加 AED {{amount}} 即可享受免费配送",
+        "total": "总计",
+        "proceedToCheckout": "去结算",
+        "secureCheckout": "安全结算",
+        "errorFetching": "加载购物车失败。请再试一次。"
+    }
+}

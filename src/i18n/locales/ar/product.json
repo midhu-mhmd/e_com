@@ -1,0 +1,59 @@
+{
+  "card": {
+    "sale": "خصم",
+    "topRated": "الأعلى تقييماً",
+    "addToCart": "أضف إلى السلة",
+    "outOfStock": "نفدت الكمية",
+    "new": "جديد",
+    "view": "عرض",
+    "buyNow": "اشتري الآن",
+    "categoryFallback": "مأكولات بحرية",
+    "descriptionFallback": "طازج وبجودة ممتازة."
+  },
+  "list": {
+    "searchPlaceholder": "ابحث عن مأكولات بحرية...",
+    "errorLoading": "فشل تحميل المنتجات. يرجى المحاولة مرة أخرى.",
+    "tryAgain": "إعادة المحاولة",
+    "noProductsFound": "لم يتم العثور على منتجات",
+    "noProductsDescription": "لم نتمكن من العثور على أي نتائج لـ \"{{searchTerm}}\". جرب كلمة بحث أخرى.",
+    "clearSearch": "مسح البحث",
+    "showingResults": "عرض {{start}}–{{end}} من أصل {{total}} من النتائج"
+  },
+  "details": {
+    "back": "رجوع",
+    "backToShop": "العودة إلى المتجر",
+    "notFound": "المنتج غير موجود",
+    "errorLoad": "فشل تحميل تفاصيل المنتج.",
+    "outOfStock": "غير متوفر",
+    "addToCart": "أضف إلى السلة",
+    "buyNow": "اشترِ الآن",
+    "addWishlist": "أضف إلى المفضلة",
+    "removeWishlist": "إزالة من المفضلة",
+    "off": "خصم {{value}}٪",
+    "viewImage": "عرض {{index}}",
+    "ratingText": "{{rating}} ({{reviews}} مراجعات)",
+    "pricePer": "السعر لكل {{sku}}",
+    "perUnitFallback": "وحدة",
+    "currencyAed": "AED {{value}}",
+    "qtyIncrease": "زيادة الكمية",
+    "qtyDecrease": "تقليل الكمية",
+    "qtyLabel": "الكمية {{value}}",
+    "bulkOrder": {
+      "title": "طلبيات الجملة",
+      "subtitle": "وفر أكثر مع أسعار الجملة",
+      "description": "هل تبحث عن كميات كبيرة؟ تواصل معنا للحصول على أسعار خاصة وتوصيل سريع للكميات الكبيرة.",
+      "minOrder": "الحد الأدنى للطلب: {{count}} وحدة",
+      "getQuote": "تواصل عبر الواتساب"
+    },
+    "meta": {
+      "fastDelivery": {
+        "title": "توصيل سريع",
+        "subtitle": "خلال ساعتين"
+      },
+      "freshGuaranteed": {
+        "title": "نضارة مضمونة",
+        "subtitle": "جودة معتمدة"
+      }
+    }
+  }
+}

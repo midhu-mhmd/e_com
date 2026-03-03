@@ -1,0 +1,20 @@
+{
+    "cart": {
+        "title": "عربة التسوق الخاصة بك ({{count}})",
+        "continueShopping": "مواصلة التسوق",
+        "summaryTitle": "ملخص الطلب",
+        "emptyTitle": "عربة التسوق فارغة",
+        "emptyDescription": "يبدو أنك لم تضف أي صيد طازج إلى عربة التسوق الخاصة بك بعد.",
+        "startShopping": "ابدأ التسوق",
+        "itemUnit": "{{quantity}} وحدة",
+        "removeFromCart": "إزالة من العربة",
+        "subtotal": "المجموع الفرعي",
+        "shipping": "الشحن",
+        "free": "مجاني",
+        "addMoreForFreeShipping": "أضف {{amount}} درهم إضافي للحصول على شحن مجاني",
+        "total": "الإجمالي",
+        "proceedToCheckout": "المتابعة لإتمام الطلب",
+        "secureCheckout": "دفع آمن",
+        "errorFetching": "فشل تحميل العربة. يرجى المحاولة مرة أخرى."
+    }
+}

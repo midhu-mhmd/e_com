@@ -1,0 +1,235 @@
+{
+  "hero": {
+    "startingAt": "起价",
+    "banners": [
+      {
+        "tag": "新鲜捕捞",
+        "title": "优质大虾",
+        "subtitle": "鲜甜多汁，24小时内从海岸直送到家。",
+        "highlight": "已清洗去虾线",
+        "cta": "立即订购大虾"
+      },
+      {
+        "tag": "鲜活现捞",
+        "title": "青蟹",
+        "subtitle": "肉质饱满，风味十足，适合做你最爱的咖喱。",
+        "highlight": "鲜活捕捞",
+        "cta": "购买螃蟹"
+      },
+      {
+        "tag": "热销",
+        "title": "超大鲜虾",
+        "subtitle": "个头超大，鲜嫩多汁，适合烧烤或油炸。",
+        "highlight": "无抗生素",
+        "cta": "立即购买虾"
+      },
+      {
+        "tag": "臻选",
+        "title": "岩龙虾",
+        "subtitle": "臻享美味。肉质鲜甜细嫩，带来奢华用餐体验。",
+        "highlight": "高端之选",
+        "cta": "选购龙虾"
+      }
+    ]
+  },
+  "trust": {
+    "kicker": "为什么选择我们",
+    "title": "新鲜海鲜，",
+    "titleHighlight": "准时送达",
+    "subtitle": "从海洋到厨房——我们全程把控，只为让你每一次都吃到更新鲜的海鲜，绝不妥协。",
+    "badges": {
+      "coldChain": {
+        "title": "冷链配送",
+        "desc": "全程控温包装，从码头到家门口。"
+      },
+      "freshCatch": {
+        "title": "100% 新鲜捕捞",
+        "desc": "每日甄选可信渔民直供——绝不二次冷冻。"
+      },
+      "sameDay": {
+        "title": "当日送达",
+        "desc": "上午10点前下单，傍晚送达。保证准时。"
+      },
+      "quality": {
+        "title": "品质保障",
+        "desc": "认证标准，洁净处理并真空包装。"
+      },
+      "returns": {
+        "title": "轻松退换",
+        "desc": "不满意？送达后4小时内可全额退款。"
+      },
+      "sustainable": {
+        "title": "可持续来源",
+        "desc": "支持本地渔业与负责任的捕捞方式。"
+      }
+    },
+    "stats": {
+      "happyCustomers": "满意顾客",
+      "varieties": "品类数量",
+      "avgRating": "平均评分",
+      "onTimeDelivery": "准时送达率"
+    },
+    "review": {
+      "quote": "“虾非常新鲜——就像刚从船上下来一样！包装冰凉，配送准时。绝对是城里最棒的海鲜配送服务。”",
+      "author": "— Priya R., 孟买",
+      "verified": "已验证购买"
+    }
+  },
+  "bestsellers": {
+    "kicker": "热销推荐",
+    "title": "最受欢迎的",
+    "titleHighlight": "人气",
+    "titleSuffix": "海鲜",
+    "subtitle": "邻居都在买的热门新鲜选择——来自海洋，清洗处理、打包冷链，轻松下厨。",
+    "outOfStock": "缺货",
+    "quickView": "快速查看",
+    "fallbackCategory": "海鲜",
+    "empty": "暂无商品，请稍后再来看看！",
+    "off": "折扣",
+    "addToCartAria": "加入购物车"
+  },
+  "howItWorks": {
+    "kicker": "运作流程",
+    "title": "从海洋到",
+    "titleHighlight": "您的餐桌",
+    "subtitle": "只需四个简单步骤，即可享用您品尝过最鲜美的海鲜。没有中间商，没有延迟——只有纯粹的新鲜。",
+    "cta": "开始购物",
+    "freeDelivery": "订单满 999 迪拉姆免运费",
+    "steps": [
+      {
+        "title": "浏览与选择",
+        "description": "探索我们的每日捕捞——从鲳鱼、大虾到鱿鱼和马鲛鱼。按种类、大小或处理方式进行筛选。",
+        "detail": "已清洗 • 鱼排 • 鱼片 • 整条"
+      },
+      {
+        "title": "加入购物车并付款",
+        "description": "选择数量，挑选配送时间段，并通过银行卡或货到付款安全支付。",
+        "detail": "银行卡 • 货到付款 • 电子钱包"
+      },
+      {
+        "title": "包装与发货",
+        "description": "您的订单经过卫生清理，真空包装并加冰，放入我们的绝缘冷链箱中运出。",
+        "detail": "加冰保鲜 • 真空密封 • 隔热保温"
+      },
+      {
+        "title": "烹饪与享用！",
+        "description": "在门口接收新鲜海鲜——即刻下厨。尝试我们厨师精选的食谱，打造完美菜肴。",
+        "detail": "当日送达 • 附赠食谱卡"
+      }
+    ]
+  },
+  "freshness": {
+    "kicker": "新鲜承诺",
+    "title": "新鲜到让您能 ",
+    "titleHighlight": "闻到海洋的气息",
+    "subtitle": "我们执着于新鲜，让您无后顾之忧。以下是我们确保每份海鲜都以巅峰品质送达的方法。",
+    "promises": [
+      {
+        "title": "数小时内从船到盒",
+        "desc": "我们的鱼每天早上直接从渔港采购——绝不使用冷库。",
+        "stat": "< 6 小时",
+        "statLabel": "从海洋到包装"
+      },
+      {
+        "title": "全程冷链不中断",
+        "desc": "从包装的那一刻到您拆箱的那一秒——温度始终保持在 0°C–4°C 之间。",
+        "stat": "0°– 4°C",
+        "statLabel": "全程保持"
+      },
+      {
+        "title": "当日送达",
+        "desc": "早上的订单傍晚送达。我们不仓库化鱼类——直接送到您手中。",
+        "stat": "< 12 小时",
+        "statLabel": "从订单到门口"
+      },
+      {
+        "title": "新鲜度保障",
+        "desc": "如果未通过气味和质地测试，我们将立即为您退款——无需任何理由。",
+        "stat": "100%",
+        "statLabel": "不新鲜即退款"
+      }
+    ],
+    "journeyTitle": "今日捕捞之旅",
+    "journeySubtitle": "典型的一天——从港口到您的家",
+    "timeline": [
+      {
+        "time": "4:00 AM",
+        "event": "渔船返回港口"
+      },
+      {
+        "time": "5:30 AM",
+        "event": "鱼类分拣与拍卖"
+      },
+      {
+        "time": "7:00 AM",
+        "event": "清洗并真空包装"
+      },
+      {
+        "time": "8:30 AM",
+        "event": "装入冷链货车"
+      },
+      {
+        "time": "傍晚时分",
+        "event": "送达您的家门口"
+      }
+    ],
+    "footerCTA": "每份订单都随附冰袋和隔热包装"
+  },
+  "offers": {
+    "kicker": "优惠活动",
+    "title": "立省更多在 ",
+    "titleHighlight": "新鲜捕捞",
+    "subtitle": "在这些独家优惠游走之前抢购它们。结账时使用代码。",
+    "list": [
+      {
+        "badge": "新用户",
+        "title": "立减 200 迪拉姆",
+        "subtitle": "满 799 迪拉姆的首个订单",
+        "expiry": "永不过期",
+        "terms": "最低订单 799 迪拉姆 • 仅限首单"
+      },
+      {
+        "badge": "周末特惠",
+        "title": "买二送一",
+        "subtitle": "所有虾类品种",
+        "expiry": "仅限周六及周日",
+        "terms": "同类品种 • 每单最多 3 份免费"
+      },
+      {
+        "badge": "免费配送",
+        "title": "免运费",
+        "subtitle": "满 999 迪拉姆的所有订单",
+        "expiry": "本月有效",
+        "terms": "适用于标准配送"
+      },
+      {
+        "badge": "组合套餐",
+        "title": "海鲜派对套餐",
+        "subtitle": "鲳鱼 + 大虾 + 马鲛鱼 30% 折扣",
+        "expiry": "库存有限",
+        "terms": "售完即止"
+      }
+    ],
+    "bannerTitle": "🦐 超大海鲜大促 — 最高 40% 折扣！",
+    "bannerSubtitle": "新鲜捕捞，价格无敌。仅限本周末。",
+    "bannerCTA": "立即选购",
+    "copyCode": "复制代码",
+    "copied": "已复制！"
+  },
+  "reviews": {
+    "kicker": "客户评价",
+    "title": "看看我们的客户 ",
+    "titleHighlight": "怎么说",
+    "subtitle": "来自真实海鲜爱好者的真实评价。了解为什么成千上万的人信任 SIMAK FRESH。",
+    "reviewsLabel": "条评价",
+    "verified": "已验证",
+    "customerLabel": "客户",
+    "timeAgo": {
+      "m": "分钟前",
+      "h": "小时前",
+      "d": "天前",
+      "mo": "个月前",
+      "recently": "最近"
+    }
+  }
+}

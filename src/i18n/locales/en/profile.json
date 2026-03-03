@@ -1,0 +1,118 @@
+{
+    "profile": {
+        "sidebar": {
+            "personalInfo": "Personal Info",
+            "myOrders": "My Orders",
+            "addresses": "Addresses",
+            "signOut": "Sign Out"
+        },
+        "auth": {
+            "loginRequired": "Please login to view your profile.",
+            "goToLogin": "Go to Login",
+            "accountMember": "Account Member"
+        },
+        "personalInfo": {
+            "title": "Personal Information",
+            "subtitle": "Your personal details and preferences",
+            "edit": "Edit",
+            "cancel": "Cancel",
+            "save": "Save Changes",
+            "saving": "Saving...",
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "email": "Email Address",
+            "phone": "Phone Number",
+            "gender": "Gender",
+            "dob": "Date of Birth",
+            "language": "Preferred Language",
+            "verified": "Verified",
+            "unverified": "Unverified",
+            "changeEmail": "Change Email",
+            "verifyEmail": "Verify Email",
+            "addEmail": "Add Email",
+            "editPhone": "Edit Phone",
+            "male": "Male",
+            "female": "Female",
+            "other": "Other",
+            "english": "English",
+            "arabic": "Arabic",
+            "chinese": "Chinese"
+        },
+        "otp": {
+            "verify": "Verify {{type}}",
+            "enterValue": "Enter the new {{type}} you want to verify.",
+            "enterOtp": "Enter the 6-digit OTP sent to your {{type}}.",
+            "label": "6-Digit OTP Code",
+            "send": "Send OTP",
+            "verifying": "Verifying...",
+            "back": "Back",
+            "success": "{{type}} successfully verified!",
+            "placeholder": "••••••"
+        },
+        "orders": {
+            "title": "My Orders",
+            "subtitle": "Your recent purchases",
+            "viewAll": "View All",
+            "empty": "No orders yet",
+            "startShopping": "Start Shopping",
+            "orderNumber": "Order #",
+            "items": "item",
+            "items_plural": "items",
+            "viewAllCount": "View all {{count}} orders →",
+            "status": {
+                "pending": "Pending",
+                "confirmed": "Confirmed",
+                "processing": "Processing",
+                "shipped": "Shipped",
+                "delivered": "Delivered",
+                "cancelled": "Cancelled"
+            }
+        },
+        "addresses": {
+            "title": "Saved Addresses",
+            "subtitle": "Manage your delivery addresses",
+            "addAddress": "Add Address",
+            "type": "Type",
+            "fullName": "Full Name",
+            "building": "Building",
+            "flat": "Flat / Villa",
+            "street": "Street",
+            "area": "Area",
+            "city": "City",
+            "emirate": "Emirate",
+            "select": "Select",
+            "home": "Home",
+            "work": "Work",
+            "other": "Other",
+            "default": "Default",
+            "setAsDefault": "Set as Default",
+            "saveAddress": "Save Address"
+        },
+        "emirates": {
+            "abu_dhabi": "Abu Dhabi",
+            "dubai": "Dubai",
+            "sharjah": "Sharjah",
+            "ajman": "Ajman",
+            "umm_al_quwain": "Umm Al Quwain",
+            "ras_al_khaimah": "Ras Al Khaimah",
+            "fujairah": "Fujairah"
+        },
+        "messages": {
+            "profilePicUpdated": "Profile picture updated!",
+            "profileUpdated": "Profile updated!",
+            "addressAdded": "Address added!",
+            "defaultAddressUpdated": "Default address updated!",
+            "failedToUpdateProfile": "Failed to update profile.",
+            "failedToUpdateProfilePic": "Failed to update profile picture.",
+            "failedToSaveAddress": "Failed to save address.",
+            "failedToUpdateDefaultAddress": "Failed to update default address.",
+            "nameAndStreetRequired": "Name and street are required.",
+            "firstNameRequired": "First name is required.",
+            "otpSent": "OTP sent to your {{type}}",
+            "otpError": "Failed to send OTP.",
+            "otpVerifyError": "Failed to verify OTP.",
+            "otpInputError": "Please enter a valid {{type}}",
+            "otpInvalid": "Please enter a valid 6-digit OTP."
+        }
+    }
+}

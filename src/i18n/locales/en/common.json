@@ -1,0 +1,145 @@
+{
+  "top": {
+    "delivering": "Delivering to your doorstep",
+    "offers": "Offers",
+    "trackOrder": "Track Order",
+    "support": "Support"
+  },
+  "brand": {
+    "subtitle": "Online Fish Market"
+  },
+  "location": {
+    "deliverTo": "Deliver to",
+    "select": "Select Location"
+  },
+  "nav": {
+    "shop": "Shop",
+    "cart": "Cart",
+    "account": "Account",
+    "home": "Home",
+    "allProducts": "All Products",
+    "myCart": "My Cart"
+  },
+  "account": {
+    "myProfile": "My Profile",
+    "myOrders": "My Orders",
+    "notifications": "Notifications",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login"
+  },
+  "mobile": {
+    "menu": "Menu",
+    "language": "Language",
+    "welcomeBack": "Welcome Back",
+    "member": "Member",
+    "viewProfile": "View Profile",
+    "welcomeBrand": "Welcome to SIMAK FRESH",
+    "loginRegister": "Login / Register",
+    "shop": "Shop",
+    "account": "Account"
+  },
+  "footer": {
+    "newsletter": {
+      "title": "🦐 Get Fresh Deals in Your Inbox",
+      "subtitle": "Weekly offers, new arrivals & seasonal recipes. No spam, ever.",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe"
+    },
+    "brandDescription": "India's freshest seafood, delivered to your doorstep. From harbour to home in hours — cleaned, packed & ready to cook.",
+    "location": "Kerala, India",
+    "timing": "6 AM – 9 PM, Mon–Sun",
+    "shop": "Shop",
+    "company": "Company",
+    "support": "Support",
+    "secure": "FSSAI Licensed • 100% Secure Payments",
+    "rights": "All rights reserved.",
+    "shopLinks": [
+      {
+        "label": "All Seafood"
+      },
+      {
+        "label": "Prawns & Shrimp"
+      },
+      {
+        "label": "Fish"
+      },
+      {
+        "label": "Crab & Lobster"
+      },
+      {
+        "label": "Squid & Octopus"
+      },
+      {
+        "label": "Ready to Cook"
+      },
+      {
+        "label": "Combo Packs"
+      }
+    ],
+    "companyLinks": [
+      {
+        "label": "About Us"
+      },
+      {
+        "label": "Our Story"
+      },
+      {
+        "label": "Freshness Promise"
+      },
+      {
+        "label": "Careers"
+      },
+      {
+        "label": "Blog"
+      },
+      {
+        "label": "Press"
+      }
+    ],
+    "supportLinks": [
+      {
+        "label": "Help Center"
+      },
+      {
+        "label": "Track Order"
+      },
+      {
+        "label": "Shipping Info"
+      },
+      {
+        "label": "Returns & Refunds"
+      },
+      {
+        "label": "Contact Us"
+      },
+      {
+        "label": "FAQs"
+      }
+    ],
+    "legalLinks": [
+      {
+        "label": "Privacy Policy"
+      },
+      {
+        "label": "Terms of Service"
+      },
+      {
+        "label": "Refund Policy"
+      },
+      {
+        "label": "Cookie Policy"
+      }
+    ],
+    "download": "Download App",
+    "getItOn": "Get it on",
+    "downloadOn": "Download on",
+    "weAccept": "We Accept",
+    "paymentMethods": {
+      "cards": "Cards",
+      "upi": "UPI",
+      "cod": "COD"
+    }
+  }
+}

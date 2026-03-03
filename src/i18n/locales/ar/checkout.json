@@ -1,0 +1,83 @@
+{
+  "header": {
+    "title": "الدفع"
+  },
+  "emptyCart": {
+    "title": "سلة التسوق فارغة.",
+    "cta": "اذهب للتسوق"
+  },
+  "success": {
+    "title": "تم تقديم الطلب بنجاح!",
+    "subtitle": "شكرًا لك. نحن نجهز طلبك الآن.",
+    "redirecting": "جارٍ التحويل إلى الصفحة الرئيسية..."
+  },
+  "alerts": {
+    "placeOrderFailed": "فشل تقديم الطلب. حاول مرة أخرى."
+  },
+  "shipping": {
+    "title": "تفاصيل الشحن",
+    "fields": {
+      "fullName": {
+        "label": "الاسم الكامل",
+        "placeholder": "محمد أحمد",
+        "required": "الاسم مطلوب"
+      },
+      "phone": {
+        "label": "رقم الهاتف",
+        "placeholder": "+971 50 000 0000",
+        "required": "رقم الهاتف مطلوب"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "mohammed@example.com",
+        "required": "البريد الإلكتروني مطلوب",
+        "invalid": "البريد الإلكتروني غير صالح"
+      },
+      "address": {
+        "label": "عنوان الشارع",
+        "placeholder": "شارع البحر 123، شقة 4B",
+        "required": "العنوان مطلوب"
+      },
+      "city": {
+        "label": "المدينة",
+        "placeholder": "دبي",
+        "required": "المدينة مطلوبة"
+      },
+      "state": {
+        "label": "الولاية/الإمارة",
+        "placeholder": "دبي",
+        "required": "الولاية مطلوبة"
+      },
+      "zip": {
+        "label": "الرمز البريدي",
+        "placeholder": "00000",
+        "required": "الرمز البريدي مطلوب"
+      }
+    }
+  },
+  "payment": {
+    "title": "طريقة الدفع",
+    "cod": {
+      "title": "الدفع عند الاستلام",
+      "subtitle": "ادفع عند استلام طلبك"
+    },
+    "online": {
+      "title": "الدفع الإلكتروني (قريبًا)",
+      "subtitle": "بطاقة، UPI، تحويل بنكي"
+    }
+  },
+  "summary": {
+    "title": "ملخص الطلب",
+    "qtyPrice": "{{qty}} x AED {{price}}",
+    "subtotal": "المجموع الفرعي",
+    "shipping": "الشحن",
+    "free": "مجاني",
+    "total": "الإجمالي"
+  },
+  "actions": {
+    "placeOrder": "تأكيد الطلب"
+  },
+  "currency": {
+    "aed": "AED {{value}}"
+  }
+}

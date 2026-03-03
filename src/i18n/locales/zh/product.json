@@ -1,0 +1,52 @@
+{
+  "card": {
+    "sale": "特惠",
+    "topRated": "高分好评",
+    "addToCart": "加入购物车",
+    "outOfStock": "缺货",
+    "new": "新品",
+    "view": "查看",
+    "buyNow": "立即购买",
+    "categoryFallback": "海鲜",
+    "descriptionFallback": "新鲜优质，品质保障。"
+  },
+  "list": {
+    "searchPlaceholder": "搜索海鲜...",
+    "errorLoading": "产品加载失败，请重试。",
+    "tryAgain": "重试",
+    "noProductsFound": "未找到相关产品",
+    "noProductsDescription": "找不到与“{{searchTerm}}”相关的结果。请尝试其他关键词。",
+    "clearSearch": "清除搜索",
+    "showingResults": "显示第 {{start}}–{{end}} 个结果，共 {{total}} 个"
+  },
+  "details": {
+    "back": "返回",
+    "backToShop": "返回商店",
+    "notFound": "未找到产品",
+    "errorLoad": "加载产品详情失败。",
+    "outOfStock": "缺货",
+    "addToCart": "加入购物车",
+    "buyNow": "立即购买",
+    "addWishlist": "添加到收藏夹",
+    "removeWishlist": "从收藏夹移除",
+    "off": "{{value}}% OFF",
+    "viewImage": "查看 {{index}}",
+    "ratingText": "{{rating}} ({{reviews}} 条评论)",
+    "pricePer": "{{sku}} 价格",
+    "perUnitFallback": "件",
+    "currencyAed": "AED {{value}}",
+    "qtyIncrease": "增加数量",
+    "qtyDecrease": "减少数量",
+    "qtyLabel": "数量 {{value}}",
+    "meta": {
+      "fastDelivery": {
+        "title": "快速送达",
+        "subtitle": "2小时内送达"
+      },
+      "freshGuaranteed": {
+        "title": "新鲜保证",
+        "subtitle": "认证品质"
+      }
+    }
+  } 
+}

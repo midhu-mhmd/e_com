@@ -1,0 +1,145 @@
+{
+  "top": {
+    "delivering": "送货上门",
+    "offers": "优惠",
+    "trackOrder": "订单追踪",
+    "support": "客服支持"
+  },
+  "brand": {
+    "subtitle": "在线海鲜市场"
+  },
+  "location": {
+    "deliverTo": "配送到",
+    "select": "选择地址"
+  },
+  "nav": {
+    "shop": "购物",
+    "cart": "购物车",
+    "account": "账户",
+    "home": "首页",
+    "allProducts": "全部商品",
+    "myCart": "我的购物车"
+  },
+  "account": {
+    "myProfile": "我的资料",
+    "myOrders": "我的订单",
+    "notifications": "通知",
+    "logout": "退出登录"
+  },
+  "auth": {
+    "login": "登录"
+  },
+  "mobile": {
+    "menu": "菜单",
+    "language": "语言",
+    "welcomeBack": "欢迎回来",
+    "member": "会员",
+    "viewProfile": "查看资料",
+    "welcomeBrand": "欢迎来到 SIMAK FRESH",
+    "loginRegister": "登录 / 注册",
+    "shop": "购物",
+    "account": "账户"
+  },
+  "footer": {
+    "newsletter": {
+      "title": "🦐 获取最新鲜的优惠资讯",
+      "subtitle": "每周特惠、新品上架及季节性食谱。绝无垃圾邮件。",
+      "placeholder": "输入您的电子邮件地址",
+      "subscribe": "订阅"
+    },
+    "brandDescription": "印度最新鲜的海鲜，直送府上。数小时内从港口直达家中——已清洗、包装，即刻下厨。",
+    "location": "印度，喀拉拉邦",
+    "timing": "周一至周日，早上 6点 – 晚上 9点",
+    "shop": "商城",
+    "company": "公司",
+    "support": "客户支持",
+    "secure": "FSSAI 认证 • 100% 安全支付",
+    "rights": "版权所有。",
+    "shopLinks": [
+      {
+        "label": "所有海鲜"
+      },
+      {
+        "label": "对虾与大虾"
+      },
+      {
+        "label": "鱼类"
+      },
+      {
+        "label": "螃蟹与龙虾"
+      },
+      {
+        "label": "鱿鱼与章鱼"
+      },
+      {
+        "label": "即烹系列"
+      },
+      {
+        "label": "超值套餐"
+      }
+    ],
+    "companyLinks": [
+      {
+        "label": "关于我们"
+      },
+      {
+        "label": "我们的故事"
+      },
+      {
+        "label": "新鲜承诺"
+      },
+      {
+        "label": "人才招聘"
+      },
+      {
+        "label": "博客"
+      },
+      {
+        "label": "媒体报道"
+      }
+    ],
+    "supportLinks": [
+      {
+        "label": "帮助中心"
+      },
+      {
+        "label": "追踪订单"
+      },
+      {
+        "label": "配送信息"
+      },
+      {
+        "label": "退换货说明"
+      },
+      {
+        "label": "联系我们"
+      },
+      {
+        "label": "常见问题"
+      }
+    ],
+    "legalLinks": [
+      {
+        "label": "隐私政策"
+      },
+      {
+        "label": "服务条款"
+      },
+      {
+        "label": "退款政策"
+      },
+      {
+        "label": "Cookie 政策"
+      }
+    ],
+    "download": "下载应用",
+    "getItOn": "立即获取",
+    "downloadOn": "立即下载",
+    "weAccept": "我们接受",
+    "paymentMethods": {
+      "cards": "银行卡",
+      "upi": "UPI",
+      "cod": "货到付款"
+    }
+  }
+}

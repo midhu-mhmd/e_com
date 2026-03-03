@@ -1,0 +1,112 @@
+{
+  "header": {
+    "title": "Checkout"
+  },
+  "emptyCart": {
+    "title": "Your cart is empty.",
+    "cta": "Go Shopping"
+  },
+  "success": {
+    "title": "Order Placed Successfully!",
+    "subtitle": "Thank you for your fresh catch. We're preparing it now.",
+    "redirecting": "Redirecting to home...",
+    "orderId": "Order #{{id}}"
+  },
+  "alerts": {
+    "placeOrderFailed": "Failed to place order. Please try again.",
+    "selectAddress": "Please select a delivery address."
+  },
+  "address": {
+    "title": "Delivery Address",
+    "select": "Select Address",
+    "default": "Default",
+    "noAddresses": "No saved addresses found.",
+    "addNew": "Add New Address",
+    "adding": "Adding...",
+    "fields": {
+      "label": {
+        "label": "Label",
+        "placeholder": "Home, Office..."
+      },
+      "fullName": {
+        "label": "Full Name",
+        "placeholder": "John Doe"
+      },
+      "phone": {
+        "label": "Phone",
+        "placeholder": "+971 50 123 4567"
+      },
+      "building": {
+        "label": "Building",
+        "placeholder": "Al Reem Tower"
+      },
+      "flat": {
+        "label": "Flat / Villa",
+        "placeholder": "Apt 4B"
+      },
+      "street": {
+        "label": "Street Address",
+        "placeholder": "123 Ocean Drive"
+      },
+      "area": {
+        "label": "Area",
+        "placeholder": "Al Nahda"
+      },
+      "city": {
+        "label": "City",
+        "placeholder": "Dubai"
+      },
+      "emirate": {
+        "label": "Emirate",
+        "placeholder": "Dubai"
+      },
+      "country": {
+        "label": "Country",
+        "placeholder": "UAE"
+      }
+    }
+  },
+  "delivery": {
+    "title": "Delivery Preferences",
+    "date": "Preferred Date",
+    "slot": "Delivery Slot",
+    "slots": {
+      "morning": "Morning (8 AM – 12 PM)",
+      "afternoon": "Afternoon (12 PM – 5 PM)",
+      "evening": "Evening (5 PM – 9 PM)"
+    },
+    "notes": "Delivery Notes",
+    "notesPlaceholder": "Ring the bell, leave at the door, etc."
+  },
+  "tip": {
+    "title": "Add a Tip",
+    "custom": "Custom"
+  },
+  "payment": {
+    "title": "Payment Method",
+    "cod": {
+      "title": "Cash on Delivery",
+      "subtitle": "Pay when you receive your order"
+    },
+    "telr": {
+      "title": "Pay Online (Telr)",
+      "subtitle": "Credit Card, Debit Card, Apple Pay"
+    }
+  },
+  "summary": {
+    "title": "Order Summary",
+    "qtyPrice": "{{qty}} x AED {{price}}",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tip": "Tip",
+    "free": "Free",
+    "total": "Total"
+  },
+  "actions": {
+    "placeOrder": "Place Order",
+    "processing": "Processing..."
+  },
+  "currency": {
+    "aed": "AED {{value}}"
+  }
+}

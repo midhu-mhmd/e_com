@@ -1,0 +1,235 @@
+{
+  "hero": {
+    "startingAt": "Starting at",
+    "banners": [
+      {
+        "tag": "Fresh Catch",
+        "title": "Premium Prawns",
+        "subtitle": "Sweet, succulent, and delivered from coast to home within 24 hours.",
+        "highlight": "Cleaned & Deveined",
+        "cta": "Order Prawns Now"
+      },
+      {
+        "tag": "Live & Fresh",
+        "title": "Mud Crabs",
+        "subtitle": "Meaty and full of flavor, perfect for your favorite curry recipes.",
+        "highlight": "Caught Live",
+        "cta": "Buy Crabs"
+      },
+      {
+        "tag": "Bestseller",
+        "title": "Jumbo Tiger Shrimps",
+        "subtitle": "Extra large and juicy, ideal for grilling or pan-frying.",
+        "highlight": "Antibiotic Free",
+        "cta": "Shop Shrimps"
+      },
+      {
+        "tag": "Exotic",
+        "title": "Rock Lobster",
+        "subtitle": "A luxury treat. Sweet, tender meat for a fine dining experience.",
+        "highlight": "Premium Selection",
+        "cta": "Explore Lobster"
+      }
+    ]
+  },
+  "trust": {
+    "kicker": "Why Choose Us",
+    "title": "Fresh Seafood, ",
+    "titleHighlight": "Delivered on Time",
+    "subtitle": "From ocean to kitchen—we control every step to ensure you get the freshest seafood every single time, no compromises.",
+    "badges": {
+      "coldChain": {
+        "title": "Cold Chain Delivery",
+        "desc": "Temperature-controlled packaging from the dock to your doorstep."
+      },
+      "freshCatch": {
+        "title": "100% Fresh Catch",
+        "desc": "Daily selection from trusted fishermen—never double frozen."
+      },
+      "sameDay": {
+        "title": "Same Day Delivery",
+        "desc": "Order by 10 AM, get it by evening. Punctuality guaranteed."
+      },
+      "quality": {
+        "title": "Quality Assured",
+        "desc": "Certified standards, hygienically processed and vacuum packed."
+      },
+      "returns": {
+        "title": "Easy Returns",
+        "desc": "Not satisfied? Get a full refund within 4 hours of delivery."
+      },
+      "sustainable": {
+        "title": "Sustainably Sourced",
+        "desc": "Supporting local fisheries and responsible catching methods."
+      }
+    },
+    "stats": {
+      "happyCustomers": "Happy Customers",
+      "varieties": "Seafood Varieties",
+      "avgRating": "Average Rating",
+      "onTimeDelivery": "On-time Delivery"
+    },
+    "review": {
+      "quote": "“The prawns were incredibly fresh—just like they came off the boat! Packaging was chilled and delivery was spot on.”",
+      "author": "— Priya R., Mumbai",
+      "verified": "Verified Purchase"
+    }
+  },
+  "bestsellers": {
+    "kicker": "Bestsellers",
+    "title": "Explore our ",
+    "titleHighlight": "Most Popular",
+    "titleSuffix": "Seafood",
+    "subtitle": "The fresh catches your neighbors are loving right now. Cleaned, packed, and delivered cold.",
+    "off": "OFF",
+    "outOfStock": "Out of Stock",
+    "quickView": "Quick View",
+    "fallbackCategory": "Seafood",
+    "addToCartAria": "Add to cart",
+    "empty": "No bestsellers found at the moment."
+  },
+  "howItWorks": {
+    "kicker": "How It Works",
+    "title": "From Ocean to ",
+    "titleHighlight": "Your Plate",
+    "subtitle": "Four simple steps to the freshest seafood you've ever tasted. No middlemen, no delays — just pure freshness.",
+    "cta": "Start Shopping",
+    "freeDelivery": "Free delivery on orders above AED 999",
+    "steps": [
+      {
+        "title": "Browse & Pick",
+        "description": "Explore our daily catch — from Pomfret and Prawns to Squid and Surmai. Filter by type or size.",
+        "detail": "Cleaned • Steaks • Fillets • Whole"
+      },
+      {
+        "title": "Add to Cart & Pay",
+        "description": "Choose your quantity, pick a delivery slot, and pay securely via Cards or Cash on Delivery.",
+        "detail": "Cards • COD • Wallets"
+      },
+      {
+        "title": "We Pack & Ship",
+        "description": "Your order is hygienically cleaned, vacuum-packed with ice, and dispatched in insulated cold-chain boxes.",
+        "detail": "Ice-packed • Vacuum-sealed • Insulated"
+      },
+      {
+        "title": "Cook & Enjoy!",
+        "description": "Receive fresh seafood at your door — ready to cook. Try our chef-curated recipes for the perfect dish.",
+        "detail": "Same-day delivery • Recipe cards"
+      }
+    ]
+  },
+  "freshness": {
+    "kicker": "Freshness Promise",
+    "title": "So Fresh, You Can ",
+    "titleHighlight": "Smell the Ocean",
+    "subtitle": "We obsess over freshness so you don't have to. Here's how we make sure every piece of seafood reaches you at peak quality.",
+    "promises": [
+      {
+        "title": "Boat-to-Box in Hours",
+        "desc": "Our fish is sourced directly from fishing harbours every morning — never from cold storage.",
+        "stat": "< 6 hrs",
+        "statLabel": "Ocean to packing"
+      },
+      {
+        "title": "Unbroken Cold Chain",
+        "desc": "From the moment we pack to the second you unbox — temperature stays between 0°C–4°C.",
+        "stat": "0°– 4°C",
+        "statLabel": "Maintained throughout"
+      },
+      {
+        "title": "Delivered Same Day",
+        "desc": "Morning orders reach you by evening. We don't warehouse fish — it goes straight to you.",
+        "stat": "< 12 hrs",
+        "statLabel": "Order to doorstep"
+      },
+      {
+        "title": "Freshness Guarantee",
+        "desc": "If it doesn't pass the smell & texture test, we'll refund you instantly — no questions asked.",
+        "stat": "100%",
+        "statLabel": "Refund if not fresh"
+      }
+    ],
+    "journeyTitle": "Today's Catch Journey",
+    "journeySubtitle": "A typical day — from harbour to your home",
+    "timeline": [
+      {
+        "time": "4:00 AM",
+        "event": "Boats return to harbour"
+      },
+      {
+        "time": "5:30 AM",
+        "event": "Catch sorted & auctioned"
+      },
+      {
+        "time": "7:00 AM",
+        "event": "Cleaned & vacuum packed"
+      },
+      {
+        "time": "8:30 AM",
+        "event": "Loaded into cold-chain vans"
+      },
+      {
+        "time": "By Evening",
+        "event": "At your doorstep"
+      }
+    ],
+    "footerCTA": "Every order ships with gel ice packs & insulated packaging"
+  },
+  "offers": {
+    "kicker": "Deals & Offers",
+    "title": "Save Big on ",
+    "titleHighlight": "Fresh Catches",
+    "subtitle": "Grab these exclusive deals before they swim away. Use the codes at checkout.",
+    "list": [
+      {
+        "badge": "NEW USER",
+        "title": "Flat AED 200 Off",
+        "subtitle": "On your first order above AED 799",
+        "expiry": "No expiry",
+        "terms": "Min order AED 799 • First order only"
+      },
+      {
+        "badge": "WEEKEND",
+        "title": "Buy 2 Get 1 Free",
+        "subtitle": "On all Prawns & Shrimp varieties",
+        "expiry": "Sat & Sun only",
+        "terms": "Same variety • Max 3 free/order"
+      },
+      {
+        "badge": "FREE DELIVERY",
+        "title": "Free Shipping",
+        "subtitle": "On all orders above AED 999",
+        "expiry": "This month",
+        "terms": "Applicable for standard delivery"
+      },
+      {
+        "badge": "COMBO DEAL",
+        "title": "Seafood Party Pack",
+        "subtitle": "Pomfret + Prawns + Surmai at 30% off",
+        "expiry": "Limited stock",
+        "terms": "While supplies last"
+      }
+    ],
+    "bannerTitle": "🦐 Mega Seafood Sale — Up to 40% Off!",
+    "bannerSubtitle": "Fresh catches at unbeatable prices. This weekend only.",
+    "bannerCTA": "Shop the Sale",
+    "copyCode": "Copy code",
+    "copied": "Copied!"
+  },
+  "reviews": {
+    "kicker": "Customer Reviews",
+    "title": "What Our Customers ",
+    "titleHighlight": "Say",
+    "subtitle": "Real reviews from real seafood lovers. See why thousands trust SIMAK FRESH.",
+    "reviewsLabel": "reviews",
+    "verified": "Verified",
+    "customerLabel": "Customer",
+    "timeAgo": {
+      "m": "m ago",
+      "h": "h ago",
+      "d": "d ago",
+      "mo": "mo ago",
+      "recently": "Recently"
+    }
+  }
+}

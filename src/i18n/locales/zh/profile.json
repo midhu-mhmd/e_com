@@ -1,0 +1,114 @@
+{
+    "profile": {
+        "sidebar": {
+            "personalInfo": "个人信息",
+            "myOrders": "我的订单",
+            "addresses": "地址管理",
+            "signOut": "退出登录"
+        },
+        "auth": {
+            "loginRequired": "请登录后查看您的个人资料。",
+            "goToLogin": "前往登录"
+        },
+        "personalInfo": {
+            "title": "个人信息",
+            "subtitle": "您的个人详情与偏好设置",
+            "edit": "编辑",
+            "cancel": "取消",
+            "save": "保存更改",
+            "saving": "保存中...",
+            "firstName": "名字",
+            "lastName": "姓氏",
+            "email": "电子邮件",
+            "phone": "手机号码",
+            "gender": "性别",
+            "dob": "出生日期",
+            "language": "首选语言",
+            "verified": "已验证",
+            "unverified": "未验证",
+            "changeEmail": "更改邮箱",
+            "verifyEmail": "验证邮箱",
+            "addEmail": "添加邮箱",
+            "editPhone": "编辑手机号",
+            "male": "男",
+            "female": "女",
+            "other": "其他",
+            "english": "英语",
+            "arabic": "阿拉伯语",
+            "chinese": "中文"
+        },
+        "otp": {
+            "verify": "验证 {{type}}",
+            "enterValue": "请输入您想要验证的新 {{type}}。",
+            "enterOtp": "请输入发送到您 {{type}} 的 6 位验证码。",
+            "label": "6位验证码",
+            "send": "发送验证码",
+            "verifying": "验证中...",
+            "back": "返回",
+            "success": "{{type}} 验证成功！"
+        },
+        "orders": {
+            "title": "我的订单",
+            "subtitle": "您最近的购买记录",
+            "viewAll": "查看全部",
+            "empty": "暂无订单",
+            "startShopping": "开始购物",
+            "orderNumber": "订单号 #",
+            "items": "件商品",
+            "viewAllCount": "查看全部 {{count}} 个订单 ←",
+            "status": {
+                "pending": "待处理",
+                "confirmed": "已确认",
+                "processing": "处理中",
+                "shipped": "已发货",
+                "delivered": "已送达",
+                "cancelled": "已取消"
+            }
+        },
+        "addresses": {
+            "title": "保存的地址",
+            "subtitle": "管理您的收货地址",
+            "addAddress": "添加地址",
+            "type": "类型",
+            "fullName": "全名",
+            "building": "大厦/建筑物",
+            "flat": "公寓/别墅编号",
+            "street": "街道地址",
+            "area": "地区",
+            "city": "城市",
+            "emirate": "酋长国",
+            "select": "请选择",
+            "home": "住宅",
+            "work": "办公",
+            "default": "默认",
+            "setAsDefault": "设为默认",
+            "saveAddress": "保存地址"
+        },
+        "emirates": {
+            "abu_dhabi": "阿布扎比",
+            "dubai": "迪拜",
+            "sharjah": "沙迦",
+            "ajman": "阿吉曼",
+            "umm_al_quwain": "乌姆盖万",
+            "ras_al_khaimah": "拉斯海马",
+            "fujairah": "富查伊拉"
+        },
+        "messages": {
+            "profilePicUpdated": "个人资料照片已更新！",
+            "profileUpdated": "个人资料已更新！",
+            "addressAdded": "地址已添加！",
+            "defaultAddressUpdated": "默认地址已更新！",
+            "failedToUpdateProfile": "更新个人资料失败。",
+            "failedToUpdateProfilePic": "更新个人资料照片失败。",
+            "failedToSaveAddress": "保存地址失败。",
+            "failedToUpdateDefaultAddress": "更新默认地址失败。",
+            "nameAndStreetRequired": "姓名和街道地址必填。",
+            "firstNameRequired": "名字必填。",
+            "otpSent": "验证码已发送至您的 {{type}}",
+            "otpError": "发送验证码失败。",
+            "otpVerifyError": "验证码验证失败。",
+            "otpInputError": "请输入有效的 {{type}}",
+            "otpInvalid": "请输入有效的 6 位验证码。"
+        }
+    }
+}

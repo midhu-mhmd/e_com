@@ -1,0 +1,114 @@
+{
+    "profile": {
+        "sidebar": {
+            "personalInfo": "المعلومات الشخصية",
+            "myOrders": "طلباتي",
+            "addresses": "العناوين",
+            "signOut": "تسجيل الخروج"
+        },
+        "auth": {
+            "loginRequired": "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
+            "goToLogin": "الذهاب إلى تسجيل الدخول"
+        },
+        "personalInfo": {
+            "title": "المعلومات الشخصية",
+            "subtitle": "تفاصيلك الشخصية وتفضيلاتك",
+            "edit": "تعديل",
+            "cancel": "إلغاء",
+            "save": "حفظ التغييرات",
+            "saving": "جاري الحفظ...",
+            "firstName": "الاسم الأول",
+            "lastName": "اسم العائلة",
+            "email": "البريد الإلكتروني",
+            "phone": "رقم الهاتف",
+            "gender": "الجنس",
+            "dob": "تاريخ الميلاد",
+            "language": "اللغة المفضلة",
+            "verified": "موثق",
+            "unverified": "غير موثق",
+            "changeEmail": "تغيير البريد",
+            "verifyEmail": "توثيق البريد",
+            "addEmail": "إضافة بريد",
+            "editPhone": "تعديل الهاتف",
+            "male": "ذكر",
+            "female": "أنثى",
+            "other": "آخر",
+            "english": "الإنجليزية",
+            "arabic": "العربية",
+            "chinese": "الصينية"
+        },
+        "otp": {
+            "verify": "توثيق {{type}}",
+            "enterValue": "أدخل {{type}} الجديد الذي تريد توثيقه.",
+            "enterOtp": "أدخل رمز التحقق المكون من 6 أرقام المرسل إلى {{type}}.",
+            "label": "رمز التحقق (OTP)",
+            "send": "إرسال الرمز",
+            "verifying": "جاري التحقق...",
+            "back": "رجوع",
+            "success": "تم توثيق الـ {{type}} بنجاح!"
+        },
+        "orders": {
+            "title": "طلباتي",
+            "subtitle": "مشترياتك الأخيرة",
+            "viewAll": "عرض الكل",
+            "empty": "لا توجد طلبات بعد",
+            "startShopping": "ابدأ التسوق",
+            "orderNumber": "طلب رقم #",
+            "items": "منتج",
+            "viewAllCount": "عرض جميع الـ {{count}} طلبات ←",
+            "status": {
+                "pending": "قيد الانتظار",
+                "confirmed": "تم التأكيد",
+                "processing": "جاري المعالجة",
+                "shipped": "تم الشحن",
+                "delivered": "تم التوصيل",
+                "cancelled": "ملغي"
+            }
+        },
+        "addresses": {
+            "title": "العناوين المحفوظة",
+            "subtitle": "إدارة عناوين التوصيل الخاصة بك",
+            "addAddress": "إضافة عنوان",
+            "type": "النوع",
+            "fullName": "الاسم الكامل",
+            "building": "المبنى",
+            "flat": "شقة / فيلا",
+            "street": "الشارع",
+            "area": "المنطقة",
+            "city": "المدينة",
+            "emirate": "الإمارة",
+            "select": "اختر",
+            "home": "المنزل",
+            "work": "العمل",
+            "default": "افتراضي",
+            "setAsDefault": "تعيين كافتراضي",
+            "saveAddress": "حفظ العنوان"
+        },
+        "emirates": {
+            "abu_dhabi": "أبوظبي",
+            "dubai": "دبي",
+            "sharjah": "الشارقة",
+            "ajman": "عجمان",
+            "umm_al_quwain": "أم القيوين",
+            "ras_al_khaimah": "رأس الخيمة",
+            "fujairah": "الفجيرة"
+        },
+        "messages": {
+            "profilePicUpdated": "تم تحديث صورة الملف الشخصي!",
+            "profileUpdated": "تم تحديث الملف الشخصي!",
+            "addressAdded": "تم إضافة العنوان!",
+            "defaultAddressUpdated": "تم تحديث العنوان الافتراضي!",
+            "failedToUpdateProfile": "فشل تحديث الملف الشخصي.",
+            "failedToUpdateProfilePic": "فشل تحديث صورة الملف الشخصي.",
+            "failedToSaveAddress": "فشل حفظ العنوان.",
+            "failedToUpdateDefaultAddress": "فشل تحديث العنوان الافتراضي.",
+            "nameAndStreetRequired": "الاسم والشارع مطلوبان.",
+            "firstNameRequired": "الاسم الأول مطلوب.",
+            "otpSent": "تم إرسال رمز التحقق إلى {{type}} الخاص بك",
+            "otpError": "فشل إرسال رمز التحقق.",
+            "otpVerifyError": "فشل التحقق من الرمز.",
+            "otpInputError": "يرجى إدخال {{type}} صحيح",
+            "otpInvalid": "يرجى إدخال رمز تحقق صحيح مكون من 6 أرقام."
+        }
+    }
+}

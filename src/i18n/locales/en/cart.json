@@ -1,0 +1,20 @@
+{
+    "cart": {
+        "title": "Your Cart ({{count}})",
+        "continueShopping": "Continue Shopping",
+        "summaryTitle": "Order Summary",
+        "emptyTitle": "Your cart is empty",
+        "emptyDescription": "Looks like you haven't added any fresh catch to your cart yet.",
+        "startShopping": "Start Shopping",
+        "itemUnit": "{{quantity}} unit",
+        "removeFromCart": "Remove from cart",
+        "subtotal": "Subtotal",
+        "shipping": "Shipping",
+        "free": "Free",
+        "addMoreForFreeShipping": "Add AED {{amount}} more for free shipping",
+        "total": "Total",
+        "proceedToCheckout": "Proceed to Checkout",
+        "secureCheckout": "Secure Checkout",
+        "errorFetching": "Failed to load cart. Please try again."
+    }
+}
