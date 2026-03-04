@@ -611,34 +611,138 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <h2 className="text-xl font-bold text-slate-900">Timeline</h2>
                         </div>
 
-                        {order.status_history && order.status_history.length > 0 ? (
-                            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:w-1 before:bg-slate-100 before:rounded-full">
-                                {order.status_history.map((entry, idx) => {
-                                    const est = getStatus(entry.status);
-                                    const isLast = idx === 0;
-                                    return (
-                                        <div key={idx} className="relative flex items-start gap-6 group">
-                                            {/* Line marker */}
-                                            <div className={`mt-1 flex items-center justify-center w-6 h-6 rounded-full border-4 bg-white z-10 ${isLast ? "border-cyan-500" : "border-slate-300"}`}>
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className={`font-bold text-lg leading-none ${isLast ? "text-slate-900" : "text-slate-500"}`}>
-                                                    {est.label}
-                                                </div>
-                                                <div className="text-sm font-semibold text-slate-400 mt-1.5">{formatDateTime(entry.created_at)}</div>
-                                                {entry.notes && (
-                                                    <div className="mt-3 bg-slate-50 p-4 rounded-xl text-sm font-medium text-slate-600 border border-slate-100">
-                                                        {entry.notes}
-                                                    </div>
+                        {(() => {
+                            const currentStatus = order.status.toLowerCase();
+                            const isCancelled = currentStatus === "cancelled";
+
+                            const normalFlow = ["pending", "processing", "shipped", "delivered"];
+
+                            const normalSteps: { key: string; label: string; icon: React.ReactNode }[] = [
+                                { key: "pending", label: "Pending", icon: <Clock size={16} /> },
+                                { key: "processing", label: "Processing", icon: <Package size={16} /> },
+                                { key: "shipped", label: "Shipped", icon: <Truck size={16} /> },
+                                { key: "delivered", label: "Delivered", icon: <CheckCircle size={16} /> },
+                            ];
+
+                            if (isCancelled) {
+                                normalSteps.push({ key: "cancelled", label: "Cancelled", icon: <XCircle size={16} /> });
+                            }
+
+                            // Find matching history entry for each step
+                            const getHistoryEntry = (stepKey: string) =>
+                                order.status_history?.find((h) => h.status.toLowerCase() === stepKey);
+
+                            // For cancelled orders, determine the last completed normal step
+                            // by checking which steps exist in status_history
+                            let cancelledAfterIdx = -1;
+                            if (isCancelled) {
+                                for (let i = normalFlow.length - 1; i >= 0; i--) {
+                                    if (getHistoryEntry(normalFlow[i])) {
+                                        cancelledAfterIdx = i;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            // For non-cancelled orders, use normal index
+                            const normalIdx = normalFlow.indexOf(currentStatus);
+
+                            return (
+                                <div className="space-y-0 relative">
+                                    {normalSteps.map((step, idx) => {
+                                        const stepFlowIdx = normalFlow.indexOf(step.key);
+
+                                        let isCompleted = false;
+                                        let isActive = false;
+                                        let isUpcoming = false;
+
+                                        if (step.key === "cancelled") {
+                                            isActive = true;
+                                        } else if (isCancelled) {
+                                            // Only steps that actually happened (exist in history) before cancel are completed
+                                            isCompleted = stepFlowIdx <= cancelledAfterIdx;
+                                            isUpcoming = stepFlowIdx > cancelledAfterIdx;
+                                        } else {
+                                            isCompleted = stepFlowIdx < normalIdx;
+                                            isActive = stepFlowIdx === normalIdx;
+                                            isUpcoming = stepFlowIdx > normalIdx;
+                                        }
+                                        const isLast = idx === normalSteps.length - 1;
+                                        const historyEntry = getHistoryEntry(step.key);
+
+                                        let dotClass = "";
+                                        let labelClass = "";
+                                        let lineClass = "";
+
+                                        if (step.key === "cancelled") {
+                                            dotClass = "border-rose-500 bg-rose-500";
+                                            labelClass = "text-rose-600";
+                                            lineClass = "bg-rose-200";
+                                        } else if (isCompleted) {
+                                            dotClass = "border-emerald-500 bg-emerald-500";
+                                            labelClass = "text-slate-900";
+                                            lineClass = "bg-emerald-300";
+                                        } else if (isActive) {
+                                            dotClass = "border-cyan-500 bg-cyan-500 ring-4 ring-cyan-100";
+                                            labelClass = "text-slate-900";
+                                            lineClass = "bg-slate-200";
+                                        } else {
+                                            dotClass = "border-slate-200 bg-white";
+                                            labelClass = "text-slate-400";
+                                            lineClass = "bg-slate-100";
+                                        }
+
+                                        return (
+                                            <div key={step.key} className="relative flex items-start gap-5">
+                                                {/* Connector line */}
+                                                {!isLast && (
+                                                    <div
+                                                        className={`absolute left-[11px] top-7 w-[2px] h-[calc(100%)] ${lineClass}`}
+                                                    />
                                                 )}
+
+                                                {/* Dot */}
+                                                <div className={`mt-0.5 flex items-center justify-center w-6 h-6 rounded-full border-[3px] z-10 shrink-0 transition-all duration-300 ${dotClass}`}>
+                                                    {(isCompleted || isActive || step.key === "cancelled") && (
+                                                        <span className="text-white">
+                                                            {(isCompleted || step.key === "cancelled") ? <CheckCircle size={12} /> : null}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Content */}
+                                                <div className={`flex-1 pb-8 ${isLast ? "pb-0" : ""}`}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`${labelClass} transition-colors`}>
+                                                            {step.icon}
+                                                        </span>
+                                                        <span className={`font-bold text-base ${labelClass} transition-colors`}>
+                                                            {step.label}
+                                                        </span>
+                                                        {isActive && step.key !== "cancelled" && (
+                                                            <span className="relative flex h-2.5 w-2.5 ml-1">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                                                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500" />
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {historyEntry && (
+                                                        <div className="text-xs font-semibold text-slate-400 mt-1">
+                                                            {formatDateTime(historyEntry.created_at)}
+                                                        </div>
+                                                    )}
+                                                    {historyEntry?.notes && (
+                                                        <div className="mt-2 bg-slate-50 p-3 rounded-xl text-xs font-medium text-slate-600 border border-slate-100">
+                                                            {historyEntry.notes}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <p className="text-slate-500 font-medium">No tracking data available yet.</p>
-                        )}
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
                     </section>
 
                     {/* Address Bento */}
@@ -686,6 +790,18 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         <p className="text-sm font-bold text-slate-400 mb-1">Method</p>
                                         <p className="font-black text-lg text-slate-900 uppercase">{payment.payment_method}</p>
                                     </div>
+                                    {payment.transaction_id && (
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-400 mb-1">Transaction ID</p>
+                                            <p className="font-mono font-bold text-sm text-slate-700">{payment.transaction_id}</p>
+                                        </div>
+                                    )}
+                                    {payment.created_at && (
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-400 mb-1">Payment Date</p>
+                                            <p className="font-bold text-sm text-slate-700">{formatDateTime(payment.created_at)}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             {payment.receipt && (
@@ -695,7 +811,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 </div>
                             )}
                         </section>
-                    ) : (order.delivery_notes ? (
+                    ) : (
+                        <div className="md:col-span-4 bg-white rounded-[2rem]" />
+                    )}
+
+                    {/* Delivery Notes Bento */}
+                    {order.delivery_notes && (
                         <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><FileText size={20} /></div>
@@ -703,9 +824,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             </div>
                             <p className="text-slate-600 font-medium leading-relaxed italic border-l-4 border-slate-200 pl-4">{order.delivery_notes}</p>
                         </section>
-                    ) : (
-                        <div className="md:col-span-4 bg-white rounded-[2rem]" />
-                    ))}
+                    )}
 
                     {/* Total Summary Bento */}
                     <section className="md:col-span-4 bg-slate-900 text-white rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden">

@@ -172,21 +172,24 @@ const NotificationPage: React.FC = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -100 }}
-                                    className={`relative bg-white rounded-2xl p-5 border transition-all hover:shadow-md group ${notification.read ? 'border-slate-100' : 'border-rose-100 bg-rose-50/10'
-                                        }`}
+                                    className={`relative bg-white rounded-2xl p-5 border transition-all hover:shadow-md group ${
+                                        notification.read ? 'border-slate-100' : 'border-rose-100 bg-rose-50/10'
+                                    }`}
                                 >
                                     <div className="flex gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${notification.read ? 'bg-slate-50' : 'bg-white shadow-sm'
-                                            }`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                            notification.read ? 'bg-slate-50' : 'bg-white shadow-sm'
+                                        }`}>
                                             {getIcon(notification.type)}
                                         </div>
 
-                                        <div className="flex-1">
+                                        {/* Added pr-14 to ensure text never overlaps with the absolute buttons */}
+                                        <div className="flex-1 pr-14 sm:pr-0">
                                             <div className="flex justify-between items-start">
-                                                <h3 className={`text-sm font-bold ${notification.read ? 'text-slate-700' : 'text-slate-900'}`}>
+                                                <h3 className={`text-sm font-bold pr-4 sm:pr-0 ${notification.read ? 'text-slate-700' : 'text-slate-900'}`}>
                                                     {notification.title}
                                                 </h3>
-                                                <span className="text-[10px] font-medium text-slate-400">{notification.date}</span>
+                                                <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{notification.date}</span>
                                             </div>
                                             <p className="text-sm text-slate-500 mt-1 leading-relaxed">
                                                 {notification.message}
@@ -194,12 +197,12 @@ const NotificationPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {/* ✅ Actions (Absolute Bottom-Right to preserve card height) */}
+                                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
                                         {!notification.read && (
                                             <button
                                                 onClick={() => markAsRead(notification.id)}
-                                                className="p-1.5 bg-white text-rose-600 rounded-lg shadow-sm hover:bg-rose-50"
+                                                className="p-1.5 bg-white text-emerald-600 rounded-lg shadow-sm border border-slate-100 hover:bg-emerald-50 transition-colors"
                                                 title="Mark as Read"
                                             >
                                                 <CheckCircle size={14} />
@@ -207,15 +210,16 @@ const NotificationPage: React.FC = () => {
                                         )}
                                         <button
                                             onClick={() => deleteNotification(notification.id)}
-                                            className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm hover:text-rose-500 hover:bg-rose-50"
+                                            className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                             title="Delete"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
 
+                                    {/* Unread indicator dot */}
                                     {!notification.read && (
-                                        <span className="absolute top-5 right-5 w-2 h-2 bg-rose-500 rounded-full group-hover:opacity-0 transition-opacity" />
+                                        <span className="absolute top-5 right-5 w-2 h-2 bg-rose-500 rounded-full" />
                                     )}
                                 </motion.div>
                             ))}

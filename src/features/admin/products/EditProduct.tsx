@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -75,6 +75,7 @@ interface EditProductFormProps {
 const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const submitted = useRef(false);
 
     const status = useSelector(selectProductsStatus);
     const error = useSelector(selectProductsError);
@@ -106,12 +107,13 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
     }, [dispatch]);
 
     useEffect(() => {
-        if (status === "succeeded") {
+        if (status === "succeeded" && submitted.current) {
             navigate("/admin/products");
         }
     }, [status, navigate]);
 
     const onSubmit = (data: Partial<ProductDto>) => {
+        submitted.current = true;
         const formData = new FormData();
 
         // Use explicit appends to ensure clean data transmission
@@ -306,7 +308,7 @@ const ImageUploadSection = ({ register, watch, existingImageUrl }: any) => {
                 {activePreview ? (
                     <div className="relative w-full h-72">
                         <img src={activePreview} alt="Preview" className="w-full h-full object-contain" />
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-20">
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-20 pointer-events-none">
                             <span className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold">Replace Image</span>
                         </div>
                     </div>
