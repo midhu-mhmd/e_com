@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { type ProductDto, type ProductImageDto, type ProductVideoDto } from "../admin/products/productApi";
+import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";

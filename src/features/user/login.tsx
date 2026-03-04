@@ -107,7 +107,6 @@ const Login: React.FC = () => {
 
   const {
     resendCooldown,
-    otpExpiration,
     formattedExpiration,
     startTimers,
     reset,

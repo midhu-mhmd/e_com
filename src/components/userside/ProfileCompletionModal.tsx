@@ -16,7 +16,7 @@ interface ProfileCompletionModalProps {
 const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen, onClose, user }) => {
     const dispatch = useDispatch();
     const { setLanguage } = useLanguageToggle();
-    const { t } = useTranslation("common");
+    useTranslation("common");
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");

@@ -654,18 +654,15 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
 
                                         let isCompleted = false;
                                         let isActive = false;
-                                        let isUpcoming = false;
 
                                         if (step.key === "cancelled") {
                                             isActive = true;
                                         } else if (isCancelled) {
                                             // Only steps that actually happened (exist in history) before cancel are completed
                                             isCompleted = stepFlowIdx <= cancelledAfterIdx;
-                                            isUpcoming = stepFlowIdx > cancelledAfterIdx;
                                         } else {
                                             isCompleted = stepFlowIdx < normalIdx;
                                             isActive = stepFlowIdx === normalIdx;
-                                            isUpcoming = stepFlowIdx > normalIdx;
                                         }
                                         const isLast = idx === normalSteps.length - 1;
                                         const historyEntry = getHistoryEntry(step.key);

@@ -150,7 +150,7 @@ const ProfilePage: React.FC = () => {
                     <div className="space-y-4 md:space-y-5">
                         {/* Avatar Card */}
                         <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            
+
                             {/* ✅ Logout Button placed inside the profile card */}
                             <button
                                 onClick={handleLogout}
@@ -299,7 +299,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
         error: null
     });
 
-    const { setLanguage } = useLanguageToggle();
+    useLanguageToggle();
 
     useEffect(() => {
         if (profileData) {

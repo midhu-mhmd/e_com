@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
 
   // Computed stats
   const completedOrders = useMemo(
-    () => orders.filter((o) => o.status === "Delivered").length,
+    () => orders.filter((o) => (o.status as any) === "Delivered").length,
     [orders]
   );
   const pendingOrders = useMemo(
@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
     [orders]
   );
   const canceledOrders = useMemo(
-    () => orders.filter((o) => o.status === "Cancelled").length,
+    () => orders.filter((o) => (o.status as any) === "Cancelled").length,
     [orders]
   );
   const totalRevenue = useMemo(

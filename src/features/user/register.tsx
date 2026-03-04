@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  Shield,
   ArrowRight,
   Loader2,
   Check,
@@ -111,7 +110,6 @@ const RegisterWithOtp: React.FC = () => {
 
   const {
     resendCooldown,
-    otpExpiration,
     formattedExpiration,
     startTimers,
     reset,

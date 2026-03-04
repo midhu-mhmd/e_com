@@ -6,7 +6,7 @@ import { ordersApi } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
   CheckCircle, MapPin, CreditCard, Truck, ArrowLeft, Loader2,
-  Calendar, Clock, MessageSquare, Heart, Plus, Home, Briefcase, ChevronDown
+  Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
