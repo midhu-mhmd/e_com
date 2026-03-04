@@ -8,7 +8,9 @@ import {
     Gift,
     Percent,
     Truck,
-    ArrowRight
+    ArrowRight,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { type BannerDto } from "../../features/admin/banners/bannerApi";
@@ -52,7 +54,6 @@ const OffersSection: React.FC = () => {
             }));
         }
 
-        // Return empty if no results
         return [];
     }, [offerCards, t]);
 
@@ -63,6 +64,34 @@ const OffersSection: React.FC = () => {
         cta_link: promoBanner?.cta_link,
         image: promoBanner?.desktop_image || promoBanner?.image || null,
         gradient: "bg-cyan-950",
+    };
+
+    // ✅ Slider Navigation Logic
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const handleScroll = () => {
+        if (scrollRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+            setCanScrollLeft(scrollLeft > 0);
+            setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+        }
+    };
+
+    useEffect(() => {
+        handleScroll();
+        window.addEventListener("resize", handleScroll);
+        return () => window.removeEventListener("resize", handleScroll);
+    }, [displayOffers]);
+
+    const scroll = (direction: "left" | "right") => {
+        if (scrollRef.current) {
+            const { clientWidth } = scrollRef.current;
+            // Scroll by slightly less than full width to peek at the next card
+            const scrollAmount = direction === "left" ? -clientWidth + 40 : clientWidth - 40;
+            scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        }
     };
 
     return (
@@ -92,25 +121,63 @@ const OffersSection: React.FC = () => {
 
                 {/* Skeleton Loader */}
                 {loading && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                    <div className="flex lg:grid lg:grid-cols-4 gap-5 overflow-hidden pb-6 px-1 -mx-1">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-64 bg-zinc-100 rounded-2xl animate-pulse" />
+                            <div key={i} className="w-[85vw] sm:w-[320px] lg:w-auto shrink-0 h-64 bg-zinc-100 rounded-2xl animate-pulse" />
                         ))}
                     </div>
                 )}
 
-                {/* Offer Cards Grid */}
-                {!loading && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                        {displayOffers.map((offer, i) => (
-                            <OfferCard key={offer.id} offer={offer as any} index={i} />
-                        ))}
+                {/* Offer Cards Slider / Grid */}
+                {!loading && displayOffers.length > 0 && (
+                    <div className="relative group/slider">
+                        
+                        {/* ✅ Left Arrow (Hidden on Desktop grid) */}
+                        {canScrollLeft && (
+                            <button
+                                onClick={() => scroll("left")}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white/90 backdrop-blur-sm shadow-lg rounded-full text-zinc-600 hover:text-cyan-600 hover:bg-white hover:scale-110 active:scale-95 transition-all lg:hidden"
+                                aria-label="Scroll left"
+                            >
+                                <ChevronLeft size={20} className="rtl-flip" />
+                            </button>
+                        )}
+
+                        {/* ✅ Right Arrow (Hidden on Desktop grid) */}
+                        {canScrollRight && (
+                            <button
+                                onClick={() => scroll("right")}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white/90 backdrop-blur-sm shadow-lg rounded-full text-zinc-600 hover:text-cyan-600 hover:bg-white hover:scale-110 active:scale-95 transition-all lg:hidden"
+                                aria-label="Scroll right"
+                            >
+                                <ChevronRight size={20} className="rtl-flip" />
+                            </button>
+                        )}
+
+                        <div 
+                            ref={scrollRef}
+                            onScroll={handleScroll}
+                            className="flex lg:grid lg:grid-cols-4 gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-6 px-1 -mx-1"
+                            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                        >
+                            {displayOffers.map((offer, i) => (
+                                <OfferCard 
+                                    key={offer.id} 
+                                    offer={offer as any} 
+                                    index={i} 
+                                    className="w-[85vw] sm:w-[320px] lg:w-auto shrink-0 snap-center lg:snap-align-none" 
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* Banner CTA */}
-                {!loading && <BannerCTA bannerOffer={displayPromo} />}
+                {!loading && displayPromo.title && <BannerCTA bannerOffer={displayPromo} />}
             </div>
+
+            {/* Hide scrollbar CSS */}
+            <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
         </section>
     );
 };
@@ -130,7 +197,7 @@ interface Offer {
     image: string | null;
 }
 
-const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) => {
+const OfferCard: React.FC<{ offer: Offer; index: number; className?: string }> = ({ offer, index, className = "" }) => {
     const { t } = useTranslation("home");
     const ref = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(false);
@@ -153,7 +220,6 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            // fallback
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -162,8 +228,9 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
     return (
         <div
             ref={ref}
-            className={`group relative bg-white border border-zinc-100 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-default ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
+            className={`group relative bg-white border border-zinc-100 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-default ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            } ${className}`}
             style={{ transitionDelay: `${index * 80}ms` }}
         >
             {/* Top gradient strip */}
@@ -171,7 +238,7 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
 
             {/* Optional Banner Image via API */}
             {offer.image && (
-                <div className="w-full h-32 bg-slate-100 overflow-hidden">
+                <div className="w-full h-32 bg-slate-100 overflow-hidden shrink-0">
                     <img
                         src={offer.image}
                         alt={offer.title}
@@ -180,7 +247,7 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
                 </div>
             )}
 
-            <div className="p-5 flex flex-col items-center text-center sm:items-start sm:text-left">
+            <div className="p-5 flex flex-col items-center text-center sm:items-start sm:text-left h-full">
                 {/* Badge + Icon */}
                 <div className="flex items-center justify-center sm:justify-between w-full mb-4">
                     <span className={`px-2.5 py-1 ${offer.gradient} text-white rounded-lg text-[9px] font-bold uppercase tracking-wider`}>
@@ -200,8 +267,8 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
                 <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{offer.title}</h3>
                 <p className="text-xs text-zinc-500 mb-4 leading-relaxed">{offer.subtitle}</p>
 
-                {/* Coupon Code */}
-                <div className="flex items-center gap-2 mb-4">
+                {/* Coupon Code (Pushed to bottom using mt-auto if container expands) */}
+                <div className="flex items-center gap-2 mb-4 w-full mt-auto">
                     <div className="flex-1 px-3 py-2.5 bg-zinc-50 border border-dashed border-zinc-300 rounded-xl flex items-center justify-between">
                         <span className="text-xs font-mono font-bold text-zinc-700 tracking-wider">
                             {offer.code}
@@ -221,7 +288,7 @@ const OfferCard: React.FC<{ offer: Offer; index: number }> = ({ offer, index }) 
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+                <div className="flex items-center justify-between pt-3 border-t border-zinc-100 w-full">
                     <div className="flex items-center gap-1 text-zinc-400">
                         <Clock size={11} />
                         <span className="text-[10px] font-medium">{offer.expiry}</span>
@@ -252,8 +319,9 @@ const BannerCTA: React.FC<{ bannerOffer: any }> = ({ bannerOffer }) => {
     return (
         <div
             ref={ref}
-            className={`relative rounded-3xl ${bannerOffer.gradient} overflow-hidden transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
+            className={`relative rounded-3xl ${bannerOffer.gradient} overflow-hidden transition-all duration-700 ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
             {/* Glow effects */}
             <div className="absolute -top-20 left-1/4 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl" />

@@ -4,38 +4,42 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 import enCommon from "./locales/en/common.json";
 import arCommon from "./locales/ar/common.json";
-import zhCommon from "./locales/zh/common.json";
+import cnCommon from "./locales/cn/common.json";
 
 import enHome from "./locales/en/home.json";
 import arHome from "./locales/ar/home.json";
-import zhHome from "./locales/zh/home.json";
+import cnHome from "./locales/cn/home.json";
 
 import enProduct from "./locales/en/product.json";
 import arProduct from "./locales/ar/product.json";
-import zhProduct from "./locales/zh/product.json";
+import cnProduct from "./locales/cn/product.json";
 
 import enCart from "./locales/en/cart.json";
 import arCart from "./locales/ar/cart.json";
-import zhCart from "./locales/zh/cart.json";
+import cnCart from "./locales/cn/cart.json";
 
 import enCheckout from "./locales/en/checkout.json";
 import arCheckout from "./locales/ar/checkout.json";
-import zhCheckout from "./locales/zh/checkout.json";
+import cnCheckout from "./locales/cn/checkout.json";
+
+import enProfile from "./locales/en/profile.json";
+import arProfile from "./locales/ar/profile.json";
+import cnProfile from "./locales/cn/profile.json";
 
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     fallbackLng: "en",
-    supportedLngs: ["en", "ar", "zh"],
+    supportedLngs: ["en", "ar", "cn"],
 
     resources: {
-      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout },
-      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout },
-      zh: { common: zhCommon, home: zhHome, product: zhProduct, cart: zhCart, checkout: zhCheckout },
+      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout, profile: enProfile },
+      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout, profile: arProfile },
+      cn: { common: cnCommon, home: cnHome, product: cnProduct, cart: cnCart, checkout: cnCheckout, profile: cnProfile },
     },
 
-    ns: ["common", "home", "product", "cart", "checkout"],
+    ns: ["common", "home", "product", "cart", "checkout", "profile"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
 

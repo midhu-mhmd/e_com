@@ -9,16 +9,14 @@ import type { RootState } from "../../../app/store";
 /* ── Normalize status strings from backend ── */
 function normalizeOrderStatus(raw: string): OrderStatus {
     const map: Record<string, OrderStatus> = {
-        pending: "Pending",
-        confirmed: "Confirmed",
-        processing: "Processing",
-        shipped: "Shipped",
-        delivered: "Delivered",
-        cancelled: "Cancelled",
-        returned: "Returned",
-        paid: "Paid",
+        pending: "PENDING",
+        paid: "PAID",
+        processing: "PROCESSING",
+        shipped: "SHIPPED",
+        delivered: "DELIVERED",
+        cancelled: "CANCELLED",
     };
-    return map[raw.toLowerCase()] ?? "Pending";
+    return map[raw.toLowerCase()] ?? "PENDING";
 }
 
 function normalizePaymentStatus(raw: string): PaymentStatus {

@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store } from './app/store.ts';
 import { ToastProvider } from './components/ui/Toast.tsx';
+import { ErrorModalProvider } from './components/ui/ErrorModal.tsx';
 import './index.css';
 import "./i18n";
 import App from './App.tsx';
@@ -22,7 +23,9 @@ createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <App />
+        <ErrorModalProvider>
+          <App />
+        </ErrorModalProvider>
       </ToastProvider>
     </QueryClientProvider>
   </Provider>

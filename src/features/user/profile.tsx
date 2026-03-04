@@ -149,10 +149,19 @@ const ProfilePage: React.FC = () => {
                     {/* ═══════ LEFT SIDEBAR ═══════ */}
                     <div className="space-y-4 md:space-y-5">
                         {/* Avatar Card */}
-                        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
+                            
+                            {/* ✅ Logout Button placed inside the profile card */}
+                            <button
+                                onClick={handleLogout}
+                                title="Sign Out"
+                                className="absolute top-4 end-4 z-10 p-2 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white transition-all shadow-sm"
+                            >
+                                <LogOut size={16} />
+                            </button>
+
                             <div className="h-20 md:h-24 bg-gradient-to-br from-cyan-500 via-cyan-600 to-teal-600 relative">
                                 <div className="absolute inset-0 opacity-20">
-                                    {/* Changed left/right to start/end for RTL */}
                                     <div className="absolute -top-8 -end-8 w-32 h-32 bg-white rounded-full blur-2xl" />
                                     <div className="absolute -bottom-12 -start-8 w-40 h-40 bg-cyan-300 rounded-full blur-3xl" />
                                 </div>
@@ -206,17 +215,6 @@ const ProfilePage: React.FC = () => {
                                     {label}
                                 </button>
                             ))}
-
-                            <div className="hidden md:block border-t border-slate-100 my-1" />
-                            <div className="md:hidden w-[1px] bg-slate-100 my-1 flex-shrink-0" /> {/* Mobile vertical divider */}
-
-                            <button
-                                onClick={handleLogout}
-                                className="flex-shrink-0 whitespace-nowrap md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm font-semibold text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all"
-                            >
-                                <LogOut size={18} />
-                                Sign Out
-                            </button>
                         </div>
                     </div>
 
@@ -321,37 +319,33 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
             const payload: ProfileUpdatePayload = {
                 first_name: firstName.trim(),
                 last_name: lastName.trim(),
-                ...(email.trim() && email.trim() !== profileData?.email && { email: email.trim() }),
                 profile: {
-                    ...(gender && { gender: gender as "M" | "F" | "O" }),
-                    ...(dob && { date_of_birth: dob }),
-                    ...(preferredLanguage && { preferred_language: preferredLanguage }),
+                    gender: gender as "M" | "F" | "O",
+                    ...(dob ? { date_of_birth: dob } : {}), // Only include if not empty
+                    preferred_language: preferredLanguage, // Use the state value
                 },
             };
+
             await profileApi.updateProfile(profileData!.id, payload);
 
-            // Trigger global language change immediately on save
-            if (preferredLanguage) {
-                if (i18n?.changeLanguage) {
-                    i18n.changeLanguage(preferredLanguage);
-                }
-                // Set the correct direction so Arabic natively renders RTL
+            // 1. Update the i18n language instance
+            if (preferredLanguage && i18n.language !== preferredLanguage) {
+                await i18n.changeLanguage(preferredLanguage);
+                // 2. Persist to localStorage so it survives refresh
+                localStorage.setItem("i18nextLng", preferredLanguage);
+                // 3. Update document direction
                 document.documentElement.dir = preferredLanguage === 'ar' ? 'rtl' : 'ltr';
-                
-                // Keep hook if you have specific side-effects running there
-                if (typeof setLanguage === 'function') {
-                    setLanguage(preferredLanguage as "en" | "ar" | "zh");
-                }
+                document.documentElement.lang = preferredLanguage;
             }
 
             const freshProfile = await profileApi.getMe();
-
             onSaved(freshProfile);
             setEditing(false);
-        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            const msg = err?.response?.data?.detail || err?.response?.data?.message || t("profile.messages.failedToUpdateProfile");
-            onError(msg);
-        } finally { setSaving(false); }
+        } catch (err: any) {
+            onError(t("profile.messages.failedToUpdateProfile"));
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancel = () => {
@@ -722,7 +716,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                             {[
                                 { id: "en", label: "English" },
                                 { id: "ar", label: "Arabic" },
-                                { id: "zh", label: "Chinese" }
+                                { id: "cn", label: "Chinese" }
                             ].map((lang) => (
                                 <button
                                     key={lang.id}
@@ -740,7 +734,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                     ) : (
                         <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs sm:text-sm font-medium text-slate-700 flex items-center gap-2">
                             <Globe size={14} className="text-slate-400 shrink-0" />
-                            {preferredLanguage === "en" ? t("profile.personalInfo.english") : preferredLanguage === "ar" ? t("profile.personalInfo.arabic") : preferredLanguage === "zh" ? t("profile.personalInfo.chinese") : t("profile.personalInfo.english")}
+                            {preferredLanguage === "en" ? t("profile.personalInfo.english") : preferredLanguage === "ar" ? t("profile.personalInfo.arabic") : preferredLanguage === "cn" ? t("profile.personalInfo.chinese") : t("profile.personalInfo.english")}
                         </div>
                     )}
                 </div>
@@ -849,7 +843,7 @@ const OrdersTab: React.FC = () => {
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto sm:ms-auto border-t sm:border-none border-slate-50 pt-3 sm:pt-0 mt-1 sm:mt-0">
                                     <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase shrink-0 ${st.color} ${st.bg}`}>
                                         {st.icon} {st.label}

@@ -98,7 +98,7 @@ export const ordersApi = {
         notes?: string
     ): Promise<OrderDto> => {
         const res = await api.post<OrderDto>(`/orders/${id}/admin_update_status/`, {
-            status,
+            status: status.toUpperCase(),
             ...(notes ? { notes } : {}),
         });
         return res.data;

@@ -1,7 +1,6 @@
 import { call, put, select, takeLatest } from "redux-saga/effects";
 import { authApi } from "./authApi";
 import { tokenManager } from "../../services/api";
-import { profileApi } from "../user/profileApi";
 import {
   requestOtp,
   verifyOtp,
@@ -60,48 +59,30 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
       user = res.data?.user ?? res.data;
     }
 
-    // ✅ CRITICAL FIX: Manually set verification flags based on what was just verified
-    // This ensures the UI immediately reflects the verification status
+    // ✅ VERIFICATION FLAGS: Backend automatically sets is_email_verified or is_phone_verified on successful OTP
+    // Just confirm they're set by fetching fresh user data
     if (user?.id) {
-      if (action.payload.otp_type === 'email') {
-        user.is_email_verified = true;
-      } else if (action.payload.otp_type === 'phone') {
-        user.is_phone_verified = true;
-      }
-
       try {
-        const updatePayload: any = {};
-        let shouldUpdate = false;
-
-        // 1. Check if we need to save the name (registration flow)
-        if (action.payload.name && (!user.first_name && !user.last_name)) {
-          const parts = action.payload.name.trim().split(/\s+/);
-          updatePayload.first_name = parts[0] || "";
-          updatePayload.last_name = parts.slice(1).join(" ") || "";
-          shouldUpdate = true;
-          console.log("[Auth] Queuing missing name for save:", { first_name: updatePayload.first_name, last_name: updatePayload.last_name });
-        }
-
-        // 2. AGGRESSIVE PERSISTENCE: Force verification flags on backend after successful OTP
+        const meRes: { data: any } = yield call(authApi.me);
+        user = meRes.data?.user ?? meRes.data;
+        
+        // ✅ Verify the flags are actually persisted
         if (action.payload.otp_type === 'email') {
-          updatePayload.is_email_verified = true;
-          shouldUpdate = true;
-          console.log("[Auth] Persisting is_email_verified: true on backend after successful OTP");
+          if (user?.is_email_verified) {
+            console.log("[Auth] ✅ CONFIRMED: is_email_verified is TRUE in /me/ response");
+          } else {
+            console.warn("[Auth] ⚠️ WARNING: is_email_verified is not true in /me/ response");
+          }
         } else if (action.payload.otp_type === 'phone') {
-          updatePayload.is_phone_verified = true;
-          shouldUpdate = true;
-          console.log("[Auth] Persisting is_phone_verified: true on backend after successful OTP");
+          if (user?.is_phone_verified) {
+            console.log("[Auth] ✅ CONFIRMED: is_phone_verified is TRUE in /me/ response");
+          } else {
+            console.warn("[Auth] ⚠️ WARNING: is_phone_verified is not true in /me/ response");
+          }
         }
-
-        // 3. Dispatch the update if anything changed - USE PUT INSTEAD OF PATCH
-        if (shouldUpdate) {
-          const updated: any = yield call(profileApi.updateMe, updatePayload);
-          // Merge fresh data with existing user to ensure everything is perfectly synced
-          user = { ...user, ...updated };
-        }
-      } catch (_e: any) {
-        console.error("[Auth] Failed to aggressively persist verification flags:", _e?.response?.data || _e?.message || _e);
-        // Continue anyway - user object already has flags set locally
+      } catch (meErr: any) {
+        console.error("[Auth] Failed to fetch /users/me/ after OTP:", meErr?.response?.data || meErr?.message);
+        // Continue with user data from verify response
       }
     }
 

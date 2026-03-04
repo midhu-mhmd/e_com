@@ -27,14 +27,20 @@ const buildMediaList = (product: ProductDto): MediaItem[] => {
   const items: MediaItem[] = [];
   const addedSrcs = new Set<string>();
 
-  // Main / featured image first
-  const mainImg = getProductImage(product);
-  if (mainImg) {
-    items.push({ type: "image", id: -1, src: mainImg });
-    addedSrcs.add(mainImg);
+  // 1. Main image field first (if exists and not in images array)
+  if (product.image && !addedSrcs.has(product.image)) {
+    items.push({ type: "image", id: -1, src: product.image });
+    addedSrcs.add(product.image);
   }
 
-  // Gallery images (skip duplicates of main)
+  // 2. Featured image from gallery (if exists)
+  const featured = product.images?.find((img) => img.is_feature);
+  if (featured && !addedSrcs.has(featured.image)) {
+    items.push({ type: "image", id: featured.id, src: featured.image });
+    addedSrcs.add(featured.image);
+  }
+
+  // 3. All other gallery images (skip duplicates)
   for (const img of product.images || []) {
     if (!addedSrcs.has(img.image)) {
       items.push({ type: "image", id: img.id, src: img.image });
@@ -42,7 +48,7 @@ const buildMediaList = (product: ProductDto): MediaItem[] => {
     }
   }
 
-  // Videos
+  // 4. Videos
   for (const vid of product.videos || []) {
     const src = vid.video_file || vid.video_url;
     if (src) {

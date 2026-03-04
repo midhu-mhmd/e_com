@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Package, Tag, Info, CheckCircle, Trash2, ArrowLeft } from 'lucide-react';
+import { Bell, Package, Tag, Info, CheckCircle, Trash2, ArrowLeft, Loader2, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
 
 // Notification Types
 type NotificationType = 'order' | 'promo' | 'system';
@@ -13,58 +14,101 @@ interface Notification {
     message: string;
     date: string;
     read: boolean;
+    created_at?: string;
 }
 
-// Mock Data
-const initialNotifications: Notification[] = [
-    {
-        id: 1,
-        type: 'order',
-        title: 'Order Delivered',
-        message: 'Your order #12345 has been successfully delivered. Enjoy your fresh catch!',
-        date: '2 hours ago',
-        read: false,
+/* ── API helpers ── */
+const notificationsApi = {
+    list: async (): Promise<Notification[]> => {
+        const res = await api.get('/notifications/');
+        const data = res.data;
+        // Handle paginated or flat response
+        return Array.isArray(data) ? data : (data.results || []);
     },
-    {
-        id: 2,
-        type: 'promo',
-        title: 'Weekend Sale!',
-        message: 'Get flat 20% off on all Prawns this weekend. Use code: FRESH20',
-        date: '1 day ago',
-        read: false,
+
+    markAsRead: async (id: number) => {
+        const res = await api.post(`/notifications/${id}/mark_as_read/`);
+        return res.data;
     },
-    {
-        id: 3,
-        type: 'system',
-        title: 'Platform Update',
-        message: 'We have updated our privacy policy. Please review the changes.',
-        date: '3 days ago',
-        read: true,
+
+    markAllAsRead: async () => {
+        const res = await api.post('/notifications/mark_all_as_read/');
+        return res.data;
     },
-    {
-        id: 4,
-        type: 'order',
-        title: 'Order Shipped',
-        message: 'Your order #12345 is on its way! Track your shipment now.',
-        date: '4 days ago',
-        read: true,
-    },
-];
+};
+
+/* ── Helper: format date for display ── */
+function formatDate(dateStr?: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin} min ago`;
+    if (diffHr < 24) return `${diffHr} hour${diffHr > 1 ? 's' : ''} ago`;
+    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString('en-AE', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 const NotificationPage: React.FC = () => {
     const navigate = useNavigate();
-    const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [markingAll, setMarkingAll] = useState(false);
 
-    const markAsRead = (id: number) => {
-        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+    // Fetch notifications
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const data = await notificationsApi.list();
+            setNotifications(
+                data.map((n: any) => ({
+                    ...n,
+                    type: n.type || 'system',
+                    read: n.read ?? n.is_read ?? false,
+                    date: n.date || formatDate(n.created_at),
+                }))
+            );
+        } catch {
+            // silently fail — empty list will be shown
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+    // Mark single as read
+    const markAsRead = async (id: number) => {
+        try {
+            await notificationsApi.markAsRead(id);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        } catch {
+            // ignore
+        }
     };
 
+    // Mark all as read
+    const markAllAsRead = async () => {
+        setMarkingAll(true);
+        try {
+            await notificationsApi.markAllAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        } catch {
+            // ignore
+        } finally {
+            setMarkingAll(false);
+        }
+    };
+
+    // Local-only remove (keeps UI responsive)
     const deleteNotification = (id: number) => {
-        setNotifications(notifications.filter(n => n.id !== id));
-    };
-
-    const clearAll = () => {
-        setNotifications([]);
+        setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
     const getIcon = (type: NotificationType) => {
@@ -75,6 +119,8 @@ const NotificationPage: React.FC = () => {
             default: return <Bell size={20} className="text-amber-500" />;
         }
     };
+
+    const hasUnread = notifications.some(n => !n.read);
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-800 pb-20">
@@ -89,19 +135,26 @@ const NotificationPage: React.FC = () => {
                             <Bell size={20} /> Notifications
                         </h1>
                     </div>
-                    {notifications.length > 0 && (
+                    {hasUnread && (
                         <button
-                            onClick={clearAll}
-                            className="text-xs font-bold text-slate-400 hover:text-rose-500 transition-colors"
+                            onClick={markAllAsRead}
+                            disabled={markingAll}
+                            className="flex items-center gap-1.5 text-xs font-bold text-cyan-600 hover:text-cyan-700 transition-colors disabled:opacity-50"
                         >
-                            Clear All
+                            {markingAll ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={14} />}
+                            Mark all read
                         </button>
                     )}
                 </div>
             </div>
 
             <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-                {notifications.length === 0 ? (
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <Loader2 size={28} className="animate-spin text-slate-300 mb-3" />
+                        <p className="text-sm text-slate-400 font-medium">Loading notifications…</p>
+                    </div>
+                ) : notifications.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                             <Bell size={32} className="text-slate-300" />

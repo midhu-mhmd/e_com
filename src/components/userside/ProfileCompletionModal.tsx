@@ -20,7 +20,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [selectedLang, setSelectedLang] = useState<"en" | "ar" | "zh">("en");
+    const [selectedLang, setSelectedLang] = useState<"en" | "ar" | "cn">("en");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -37,8 +37,8 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
             if (user.last_name) setLastName(user.last_name);
         }
         const currentLang = localStorage.getItem("i18nextLng") || "en";
-        if (["en", "ar", "zh"].includes(currentLang)) {
-            setSelectedLang(currentLang as "en" | "ar" | "zh");
+        if (["en", "ar", "cn"].includes(currentLang)) {
+            setSelectedLang(currentLang as "en" | "ar" | "cn");
         }
     }, [user]);
 
@@ -56,7 +56,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
 
         try {
             const fallbackLang = localStorage.getItem("i18nextLng")?.split("-")[0];
-            const finalLang = ["en", "ar", "zh"].includes(selectedLang || fallbackLang || "")
+            const finalLang = ["en", "ar", "cn"].includes(selectedLang || fallbackLang || "")
                 ? (selectedLang || fallbackLang)
                 : "en";
 
@@ -183,7 +183,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
                                 <div className="grid grid-cols-3 gap-2">
                                     <LanguageBtn lang="en" label="English" selected={selectedLang} onSelect={setSelectedLang} />
                                     <LanguageBtn lang="ar" label="العربية" selected={selectedLang} onSelect={setSelectedLang} />
-                                    <LanguageBtn lang="zh" label="中文" selected={selectedLang} onSelect={setSelectedLang} />
+                                    <LanguageBtn lang="cn" label="中文" selected={selectedLang} onSelect={setSelectedLang} />
                                 </div>
                             </div>
                         </div>
@@ -203,7 +203,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
     );
 };
 
-const LanguageBtn = ({ lang, label, selected, onSelect }: { lang: "en" | "ar" | "zh", label: string, selected: string, onSelect: any }) => (
+const LanguageBtn = ({ lang, label, selected, onSelect }: { lang: "en" | "ar" | "cn", label: string, selected: string, onSelect: any }) => (
     <button
         type="button"
         onClick={() => onSelect(lang)}

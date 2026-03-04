@@ -10,30 +10,47 @@ import {
   User,
   ChevronDown,
   Timer,
+  AlertCircle
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import type { AuthMethod } from "../../types/types";
-import { requestOtp, verifyOtp, setMethod, setStep } from "../auth/authSlice";
+import { requestOtp, verifyOtp, setMethod, setStep, authError } from "../auth/authSlice";
 
 /* ─── OTP Timer Hook ─── */
 const useOtpTimer = () => {
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [resendCount, setResendCount] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [otpExpiration, setOtpExpiration] = useState(0);
 
-  const startTimer = useCallback((isInitial: boolean) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    const duration = isInitial ? 60 : 30;
-    setSecondsLeft(duration);
+  const [resendCount, setResendCount] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const expirationRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startTimers = useCallback((isInitial: boolean) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    if (expirationRef.current) clearInterval(expirationRef.current);
+
+    setResendCooldown(isInitial ? 60 : 30);
+    setOtpExpiration(300); // 5 minutes
     setResendCount((c) => c + 1);
 
-    timerRef.current = setInterval(() => {
-      setSecondsLeft((prev) => {
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
         if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          timerRef.current = null;
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    expirationRef.current = setInterval(() => {
+      setOtpExpiration((prev) => {
+        if (prev <= 1) {
+          clearInterval(expirationRef.current!);
+          expirationRef.current = null;
           return 0;
         }
         return prev - 1;
@@ -42,14 +59,36 @@ const useOtpTimer = () => {
   }, []);
 
   const reset = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setSecondsLeft(0);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    if (expirationRef.current) clearInterval(expirationRef.current);
+    setResendCooldown(0);
+    setOtpExpiration(0);
     setResendCount(0);
   }, []);
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+      if (expirationRef.current) clearInterval(expirationRef.current);
+    };
+  }, []);
 
-  return { secondsLeft, resendCount, startTimer, reset, canResend: secondsLeft === 0 };
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return {
+    resendCooldown,
+    otpExpiration,
+    formattedExpiration: formatTime(otpExpiration),
+    resendCount,
+    startTimers,
+    reset,
+    canResend: resendCooldown === 0,
+    isExpired: otpExpiration === 0
+  };
 };
 
 const RegisterWithOtp: React.FC = () => {
@@ -70,17 +109,24 @@ const RegisterWithOtp: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { secondsLeft, startTimer, reset, canResend } = useOtpTimer();
+  const {
+    resendCooldown,
+    otpExpiration,
+    formattedExpiration,
+    startTimers,
+    reset,
+    canResend,
+    isExpired
+  } = useOtpTimer();
 
   const countries = [
-    { code: "+971", flag: "🇦🇪", name: "UAE" },
-    { code: "+91", flag: "🇮🇳", name: "India" },
-    { code: "+86", flag: "🇨🇳", name: "China" },
+    { code: "+971", flag: "https://flagcdn.com/w40/ae.png", name: "UAE" },
+    { code: "+91", flag: "https://flagcdn.com/w40/in.png", name: "India" },
+    { code: "+86", flag: "https://flagcdn.com/w40/cn.png", name: "China" },
   ];
 
   const selectedCountry = countries.find((c) => c.code === countryCode) || countries[0];
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -93,17 +139,33 @@ const RegisterWithOtp: React.FC = () => {
 
   useEffect(() => { setLocalValue(value || ""); }, [value]);
 
-  // Redirect after successful verify
+  // Clear any stale auth errors (e.g. from Login page)
+  useEffect(() => {
+    dispatch(authError(null as any));
+  }, [dispatch]);
+
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     const isAdmin = user.role === "admin" || user.is_admin === true;
     navigate(isAdmin ? "/admin/dashboard" : "/", { replace: true });
   }, [isAuthenticated, user, navigate]);
 
+  const getPhoneRequirements = (code: string) => {
+    switch (code) {
+      case "+971": return { length: 9, pattern: /^5/, description: "9 digits (mobile format)" };
+      case "+91": return { length: 10, pattern: /^[6-9]/, description: "10 digits" };
+      case "+86": return { length: 11, pattern: /^1/, description: "11 digits" };
+      default: return { length: 10, pattern: null, description: "10 digits" };
+    }
+  };
+
+  const phoneRequirements = getPhoneRequirements(countryCode);
+
   const isPhoneValid = useMemo(() => {
     const digits = localValue.replace(/\D/g, "");
-    return digits.length >= 10;
-  }, [localValue]);
+    if (digits.length !== phoneRequirements.length) return false;
+    return phoneRequirements.pattern ? phoneRequirements.pattern.test(digits) : true;
+  }, [localValue, phoneRequirements]);
 
   const isEmailValid = useMemo(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localValue.trim());
@@ -120,7 +182,7 @@ const RegisterWithOtp: React.FC = () => {
     isFirstNameValid &&
     (otp_type === "phone" ? isPhoneValid : isEmailValid);
 
-  const canVerifyOtp = !isLoading && otp.trim().length === 6;
+  const canVerifyOtp = !isLoading && !isExpired && otp.trim().length === 6;
 
   const onChangeMethod = (m: AuthMethod) => {
     setOtp("");
@@ -134,7 +196,6 @@ const RegisterWithOtp: React.FC = () => {
     dispatch(setMethod(m));
   };
 
-  // Format phone with country code — used by all OTP functions
   const getFormattedPhone = () =>
     otp_type === "phone" ? `${countryCode}${localValue.trim().replace(/^0+/, '')}` : undefined;
 
@@ -149,7 +210,7 @@ const RegisterWithOtp: React.FC = () => {
         email: otp_type === "email" ? localValue.trim() : undefined,
       })
     );
-    startTimer(true); // 60s initial
+    startTimers(true);
   };
 
   const onVerifyOtp = (e: React.FormEvent) => {
@@ -182,13 +243,20 @@ const RegisterWithOtp: React.FC = () => {
         email: otp_type === "email" ? (value || localValue.trim()) : undefined,
       })
     );
-    startTimer(false); // 30s resend
+    startTimers(false);
   };
+
+  const displayError = useMemo(() => {
+    if (!error) return null;
+    if (error.includes("400") || error.includes("Request failed")) {
+      return step === "otp" ? "Invalid or expired OTP." : "Invalid details provided. Please check and try again.";
+    }
+    return error;
+  }, [error, step]);
 
   return (
     <div className="min-h-screen bg-white text-black antialiased flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-105">
-        {/* Card */}
         <div className="mt-4 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.06)] bg-white">
           <div className="px-6 pt-7 pb-6">
             <h1 className="text-[26px] leading-tight font-semibold tracking-tight">
@@ -198,13 +266,11 @@ const RegisterWithOtp: React.FC = () => {
               Register using OTP. No password needed.
             </p>
 
-            {/* Tabs */}
             <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1">
               <button
                 type="button"
                 onClick={() => onChangeMethod("phone")}
-                className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "phone" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"
-                  }`}
+                className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "phone" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"}`}
               >
                 <span className="inline-flex items-center gap-2 justify-center">
                   <Phone size={14} /> Phone
@@ -214,8 +280,7 @@ const RegisterWithOtp: React.FC = () => {
               <button
                 type="button"
                 onClick={() => onChangeMethod("email")}
-                className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "email" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"
-                  }`}
+                className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "email" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"}`}
               >
                 <span className="inline-flex items-center gap-2 justify-center">
                   <Mail size={14} /> Email
@@ -223,7 +288,6 @@ const RegisterWithOtp: React.FC = () => {
               </button>
             </div>
 
-            {/* Step: Input */}
             {step === "input" && (
               <form onSubmit={onSendOtp} className="mt-6 space-y-5">
                 <div className="grid grid-cols-2 gap-3">
@@ -265,7 +329,6 @@ const RegisterWithOtp: React.FC = () => {
                 <Field label={otp_type === "phone" ? "Phone number" : "Email"}>
                   {otp_type === "phone" ? (
                     <div className="flex gap-2">
-                      {/* Flag Dropdown */}
                       <div className="relative" ref={dropdownRef}>
                         <button
                           type="button"
@@ -274,7 +337,7 @@ const RegisterWithOtp: React.FC = () => {
                                      focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 cursor-pointer
                                      flex items-center gap-2 hover:bg-gray-50"
                         >
-                          <span className="text-xl leading-none">{selectedCountry.flag}</span>
+                          <img src={selectedCountry.flag} alt={selectedCountry.name} className="w-5 h-[14px] object-cover rounded-sm shadow-sm" />
                           <span className="text-sm font-medium text-gray-700">{selectedCountry.code}</span>
                           <ChevronDown size={14} className={`text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                         </button>
@@ -292,7 +355,7 @@ const RegisterWithOtp: React.FC = () => {
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-cyan-50 transition-colors
                                            ${c.code === countryCode ? "bg-cyan-50 text-cyan-600" : "text-gray-700"}`}
                               >
-                                <span className="text-xl leading-none">{c.flag}</span>
+                                <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm shadow-sm" />
                                 <span className="font-medium">{c.name}</span>
                                 <span className="ml-auto text-gray-400 text-xs">{c.code}</span>
                               </button>
@@ -304,9 +367,10 @@ const RegisterWithOtp: React.FC = () => {
                       <input
                         type="tel"
                         required
+                        maxLength={phoneRequirements.length}
                         value={localValue}
                         onChange={(e) => setLocalValue(e.target.value.replace(/[^\d]/g, ''))}
-                        placeholder="XXXXX XXXXX"
+                        placeholder={`${phoneRequirements.length} digits`}
                         className="flex-1 h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none transition
                                    focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
                       />
@@ -324,7 +388,6 @@ const RegisterWithOtp: React.FC = () => {
                   )}
                 </Field>
 
-                {/* Terms */}
                 <label className="flex items-start gap-3 pt-1 cursor-pointer select-none">
                   <span className="relative mt-0.5 h-4 w-4 rounded-md border border-gray-300 flex items-center justify-center">
                     <input
@@ -345,9 +408,9 @@ const RegisterWithOtp: React.FC = () => {
                   </span>
                 </label>
 
-                {error && (
-                  <p className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3">
-                    {error}
+                {displayError && (
+                  <p className="text-[11px] font-semibold text-rose-600 mt-2">
+                    {displayError}
                   </p>
                 )}
 
@@ -369,16 +432,21 @@ const RegisterWithOtp: React.FC = () => {
               </form>
             )}
 
-            {/* Step: OTP */}
             {step === "otp" && (
               <form onSubmit={onVerifyOtp} className="mt-6 space-y-5">
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-xs text-gray-500">
-                    OTP sent to{" "}
-                    <span className="text-cyan-600 font-semibold">
-                      {value || localValue}
-                    </span>
-                  </p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs text-gray-500">
+                      OTP sent to{" "}
+                      <span className="text-cyan-600 font-semibold">
+                        {value || localValue}
+                      </span>
+                    </p>
+                    <div className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ${isExpired ? "text-rose-500" : "text-cyan-600"}`}>
+                      <Timer size={12} />
+                      {isExpired ? "Expired" : formattedExpiration}
+                    </div>
+                  </div>
 
                   <button
                     type="button"
@@ -396,17 +464,22 @@ const RegisterWithOtp: React.FC = () => {
                     maxLength={6}
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    disabled={isExpired}
                     placeholder="••••••"
                     className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm tracking-[0.35em] text-center outline-none transition
-                               focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
+                               focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </Field>
 
-                {error && (
-                  <p className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3">
-                    {error}
+                {isExpired ? (
+                  <p className="text-[11px] font-semibold text-rose-600 text-center flex items-center justify-center gap-1.5">
+                    <AlertCircle size={14} /> This OTP has expired. Please request a new one.
                   </p>
-                )}
+                ) : displayError ? (
+                  <p className="text-[11px] font-semibold text-rose-600 text-center">
+                    {displayError}
+                  </p>
+                ) : null}
 
                 <button
                   type="submit"
@@ -424,7 +497,6 @@ const RegisterWithOtp: React.FC = () => {
                   )}
                 </button>
 
-                {/* Resend OTP with Timer */}
                 <button
                   type="button"
                   onClick={onResend}
@@ -439,14 +511,13 @@ const RegisterWithOtp: React.FC = () => {
                   ) : (
                     <span className="inline-flex items-center gap-2 justify-center">
                       <Timer size={14} />
-                      Resend in {secondsLeft}s
+                      Resend in {resendCooldown}s
                     </span>
                   )}
                 </button>
               </form>
             )}
 
-            {/* Divider + Social */}
             <div className="mt-7">
               <div className="flex items-center gap-3 text-gray-200">
                 <div className="h-px flex-1 bg-current" />
@@ -456,26 +527,24 @@ const RegisterWithOtp: React.FC = () => {
                 <div className="h-px flex-1 bg-current" />
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4">
                 <button
                   type="button"
-                  className="h-11 rounded-xl border border-gray-200 text-[11px] font-semibold uppercase tracking-[0.18em]
-                             hover:border-cyan-600 hover:text-cyan-600 transition"
+                  className="w-full h-11 rounded-xl border border-gray-200 text-[11px] font-semibold uppercase tracking-[0.18em]
+                             hover:border-cyan-600 hover:text-cyan-600 transition flex items-center justify-center gap-2"
                 >
-                  Google
-                </button>
-                <button
-                  type="button"
-                  className="h-11 rounded-xl border border-gray-200 text-[11px] font-semibold uppercase tracking-[0.18em]
-                             hover:border-cyan-600 hover:text-cyan-600 transition"
-                >
-                  Apple
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Sign in with Google
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
           <div className="px-6 pb-6">
             <p className="text-center text-xs text-gray-500">
               Already a member?{" "}

@@ -26,6 +26,7 @@ const Navbar: React.FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const isAuthenticated = useAppSelector((state: any) => state.auth.isAuthenticated);
+    const user = useAppSelector((state: any) => state.auth.user);
     const cartItems = useAppSelector(selectCartItems);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -69,7 +70,7 @@ const Navbar: React.FC = () => {
                         {/* Right links */}
                         <div className="flex items-center gap-1">
                             {[
-                                { key: 'track', label: t('top.trackOrder'), to: '/orders' },
+                                ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), to: '/orders' }] : []),
                                 { key: 'support', label: t('top.support'), to: '/support' },
                             ].map((link) => (
                                 <Link
@@ -92,8 +93,8 @@ const Navbar: React.FC = () => {
                                 EN
                             </button>
                             <button
-                                onClick={() => setLanguage('zh')}
-                                className={`px-2 py-1 rounded-md transition-all ${currentLanguage === 'zh' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'
+                                onClick={() => setLanguage('cn')}
+                                className={`px-2 py-1 rounded-md transition-all ${currentLanguage === 'cn' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'
                                     }`}
                             >
                                 中文
@@ -153,10 +154,20 @@ const Navbar: React.FC = () => {
                             {t('nav.shop')}
                         </Link>
 
+                        {/* ✅ Mobile 'All Products' Icon (Hidden on Desktop) */}
+                        <Link
+                            to="/products"
+                            className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-500 hover:text-cyan-600 transition-colors"
+                            aria-label={t('nav.allProducts')}
+                        >
+                            <Package size={20} />
+                        </Link>
+
+                        {/* ✅ Cart Icon - Hidden on Mobile, Visible on Desktop */}
                         {isAuthenticated ? (
                             <Link
                                 to="/cart"
-                                className="relative flex flex-col items-center gap-0.5 min-w-[3.5rem] py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
+                                className="relative hidden md:flex flex-col items-center gap-0.5 min-w-[3.5rem] py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
                             >
                                 <div className="relative flex justify-center w-full">
                                     <ShoppingCart size={18} className="text-stone-400 group-hover:text-cyan-600 transition-colors" />
@@ -283,8 +294,8 @@ const Navbar: React.FC = () => {
                                             EN
                                         </button>
                                         <button
-                                            onClick={() => setLanguage('zh')}
-                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${currentLanguage === 'zh'
+                                            onClick={() => setLanguage('cn')}
+                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${currentLanguage === 'cn'
                                                 ? 'bg-cyan-600 text-white border-cyan-600'
                                                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                                                 }`}
@@ -312,8 +323,8 @@ const Navbar: React.FC = () => {
                                                     <User size={20} />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-slate-900">{t('mobile.welcomeBack')}</p>
-                                                    <p className="text-xs text-slate-500">{t('mobile.member')}</p>
+                                                    <p className="text-sm font-bold text-slate-900">{user?.name || user?.first_name || t('mobile.welcomeBack')}</p>
+                                                    <p className="text-xs text-slate-500">{user?.email || user?.phone_number || t('mobile.member')}</p>
                                                 </div>
                                             </div>
                                             <Link
@@ -346,8 +357,7 @@ const Navbar: React.FC = () => {
 
                                     {[
                                         { key: 'home', label: t('nav.home'), href: '/', icon: <div className="w-4 h-4 rounded-full bg-slate-200" /> },
-                                        { key: 'products', label: t('nav.allProducts'), href: '/products', icon: <Package size={18} /> },
-                                        { key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length },
+                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : []),
                                         { key: 'offers', label: t('top.offers'), href: '/offers', icon: <div className="w-4 h-4 rounded-full bg-yellow-400/50" /> },
                                     ].map((link) => (
                                         <Link
@@ -375,7 +385,7 @@ const Navbar: React.FC = () => {
                                     </p>
 
                                     {[
-                                        { key: 'track', label: t('top.trackOrder'), href: '/orders', icon: <MapPin size={18} /> },
+                                        ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), href: '/orders', icon: <MapPin size={18} /> }] : []),
                                         { key: 'notifications', label: t('account.notifications'), href: '/notifications', icon: <Bell size={18} /> },
                                         { key: 'support', label: t('top.support'), href: '/support', icon: <Phone size={18} /> },
                                     ].map((link) => (

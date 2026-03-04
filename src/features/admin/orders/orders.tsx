@@ -207,10 +207,10 @@ const OrderManagement: React.FC = () => {
   // Stats
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
   const processingCount = filteredOrders.filter(
-    (o) => o.status === "Processing" || o.status === "Confirmed"
+    (o) => o.status === "PROCESSING" || o.status === "PAID"
   ).length;
-  const shippedCount = filteredOrders.filter((o) => o.status === "Shipped").length;
-  const deliveredCount = filteredOrders.filter((o) => o.status === "Delivered").length;
+  const shippedCount = filteredOrders.filter((o) => o.status === "SHIPPED").length;
+  const deliveredCount = filteredOrders.filter((o) => o.status === "DELIVERED").length;
 
   // Unique slots from data for dropdown
   const uniqueSlots = useMemo(() =>
@@ -449,13 +449,12 @@ const OrderManagement: React.FC = () => {
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="All">All Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="PAID">Paid</option>
+                        <option value="PROCESSING">Processing</option>
+                        <option value="SHIPPED">Shipped</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="CANCELLED">Cancelled</option>
                       </select>
                     </td>
                   )}
@@ -770,7 +769,7 @@ const OrderDetailsPanel = ({
   };
 
   const statusOptions: OrderStatus[] = [
-    "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Returned", "Paid"
+    "PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"
   ];
 
   return (
@@ -999,24 +998,20 @@ const OrderDetailsPanel = ({
 /* ── SUB-COMPONENTS ── */
 function OrderStatusBadge({ status }: { status: OrderStatus }) {
   const styles: Record<OrderStatus, string> = {
-    Pending: "bg-gray-50 text-gray-600 border-gray-200",
-    Confirmed: "bg-blue-50 text-blue-600 border-blue-100",
-    Processing: "bg-amber-50 text-amber-600 border-amber-100",
-    Shipped: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    Delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    Cancelled: "bg-rose-50 text-rose-600 border-rose-100",
-    Returned: "bg-orange-50 text-orange-600 border-orange-100",
-    Paid: "bg-green-50 text-green-700 border-green-200",
+    PENDING: "bg-gray-50 text-gray-600 border-gray-200",
+    PAID: "bg-green-50 text-green-700 border-green-200",
+    PROCESSING: "bg-amber-50 text-amber-600 border-amber-100",
+    SHIPPED: "bg-indigo-50 text-indigo-600 border-indigo-100",
+    DELIVERED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    CANCELLED: "bg-rose-50 text-rose-600 border-rose-100",
   };
   const dots: Record<OrderStatus, string> = {
-    Pending: "bg-gray-400",
-    Confirmed: "bg-blue-500",
-    Processing: "bg-amber-500",
-    Shipped: "bg-indigo-500",
-    Delivered: "bg-emerald-500",
-    Cancelled: "bg-rose-500",
-    Returned: "bg-orange-500",
-    Paid: "bg-green-600",
+    PENDING: "bg-gray-400",
+    PAID: "bg-green-600",
+    PROCESSING: "bg-amber-500",
+    SHIPPED: "bg-indigo-500",
+    DELIVERED: "bg-emerald-500",
+    CANCELLED: "bg-rose-500",
   };
   return (
     <span

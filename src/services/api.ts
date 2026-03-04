@@ -104,6 +104,14 @@ api.interceptors.response.use(
     const original = err.config as any;
     const status = err.response?.status;
 
+    // ✅ 400 Bad Request → emit event for global error modal
+    if (status === 400) {
+      window.dispatchEvent(
+        new CustomEvent("api-error-400", { detail: err.response?.data })
+      );
+      return Promise.reject(err);
+    }
+
     // ✅ Not 401 OR already retried -> reject
     if (status !== 401 || original?._retry) {
       return Promise.reject(err);

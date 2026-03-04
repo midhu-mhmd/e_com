@@ -57,4 +57,14 @@ export const reviewsApi = {
     delete: async (id: number): Promise<void> => {
         await api.delete(`/reviews/${id}/`);
     },
+
+    create: async (data: {
+        product: number;
+        rating: number;
+        title: string;
+        comment: string;
+    }): Promise<ReviewDto> => {
+        const res = await api.post<ReviewDto>("/reviews/", data);
+        return res.data;
+    },
 };

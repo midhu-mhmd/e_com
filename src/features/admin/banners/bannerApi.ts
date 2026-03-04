@@ -1,7 +1,9 @@
 import api from "../../../services/api";
+import { API_BASE_URL } from "../../../config/constants";
 
 export interface BannerDto {
     id: number;
+    key: string;
     title: string;
     subtitle?: string | null;
     tag?: string | null;
@@ -21,34 +23,169 @@ export interface BannerDto {
     updated_at?: string;
 }
 
+// ✅ Helper to convert relative image paths to absolute URLs
+const getAbsoluteImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) return '';
+  
+  // If already absolute (starts with http), return as-is
+  if (imagePath.startsWith('http')) return imagePath;
+  
+  // If relative path, prepend the API base URL
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const baseUrl = API_BASE_URL || '/api';
+  const apiDomain = import.meta.env.VITE_API_DOMAIN || window.location.origin;
+  
+  // Construct full URL: domain + api base path + image path
+  return `${apiDomain}${baseUrl}${cleanPath}`;
+};
+
 export const bannerApi = {
     list: async (): Promise<BannerDto[]> => {
         const response = await api.get<{ results: any[] }>("/marketing/media/");
         const results = response.data.results || [];
-        // Map common fields if they differ from current UI expectations
+        // Map backend fields to frontend format
         return results.map((item: any) => ({
-            ...item,
-            // Fallbacks for the UI structure if using the minimal API structure
-            desktop_image: item.image || item.desktop_image,
-            cta_link: item.link || item.cta_link,
+            id: item.id,
+            key: item.key,
+            title: item.title,
+            subtitle: item.description || item.subtitle || null,
+            tag: item.tag || null,
+            highlight: item.highlight || null,
+            cta_text: item.cta_text || null,
+            cta_link: item.link || item.cta_link || null,
+            desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
+            mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
+            price_text: item.price_text || null,
+            old_price_text: item.old_price_text || null,
             is_active: item.is_active ?? true,
-            order: item.order ?? item.id
+            order: item.sort_order ?? item.order ?? item.id,
+            position: item.position || 'home_hero',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
         }));
     },
 
     details: async (id: number): Promise<BannerDto> => {
         const response = await api.get(`/marketing/media/${id}/`);
-        return response.data;
+        const item = response.data;
+        // Map backend fields to frontend format
+        return {
+            id: item.id,
+            key: item.key,
+            title: item.title,
+            subtitle: item.description || item.subtitle || null,
+            tag: item.tag || null,
+            highlight: item.highlight || null,
+            cta_text: item.cta_text || null,
+            cta_link: item.link || item.cta_link || null,
+            desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
+            mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
+            price_text: item.price_text || null,
+            old_price_text: item.old_price_text || null,
+            is_active: item.is_active ?? true,
+            order: item.sort_order ?? item.order ?? item.id,
+            position: item.position || 'home_hero',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+        };
     },
 
     create: async (payload: FormData): Promise<BannerDto> => {
-        const response = await api.post("/marketing/media/", payload);
-        return response.data;
+        // Map frontend field names to backend field names
+        const backendPayload = new FormData();
+        
+        for (const [key, value] of payload.entries()) {
+            // Map field names to backend expectations
+            if (key === 'subtitle') {
+                backendPayload.append('description', value);
+            } else if (key === 'desktop_image') {
+                backendPayload.append('image_desktop', value);
+            } else if (key === 'mobile_image') {
+                backendPayload.append('image_mobile', value);
+            } else {
+                backendPayload.append(key, value);
+            }
+        }
+
+        const response = await api.post("/marketing/media/", backendPayload);
+        const item = response.data;
+        // Map response back to frontend format
+        return {
+            id: item.id,
+            key: item.key,
+            title: item.title,
+            subtitle: item.description || item.subtitle || null,
+            tag: item.tag || null,
+            highlight: item.highlight || null,
+            cta_text: item.cta_text || null,
+            cta_link: item.link || item.cta_link || null,
+            desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
+            mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
+            price_text: item.price_text || null,
+            old_price_text: item.old_price_text || null,
+            is_active: item.is_active ?? true,
+            order: item.sort_order ?? item.order ?? item.id,
+            position: item.position || 'home_hero',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+        };
     },
 
     update: async (id: number, payload: FormData | Partial<BannerDto>): Promise<BannerDto> => {
-        const response = await api.patch(`/marketing/media/${id}/`, payload);
-        return response.data;
+        let backendPayload: FormData | Partial<BannerDto>;
+        
+        if (payload instanceof FormData) {
+            // Map frontend field names to backend field names
+            backendPayload = new FormData();
+            for (const [key, value] of payload.entries()) {
+                if (key === 'subtitle') {
+                    backendPayload.append('description', value);
+                } else if (key === 'desktop_image') {
+                    backendPayload.append('image_desktop', value);
+                } else if (key === 'mobile_image') {
+                    backendPayload.append('image_mobile', value);
+                } else {
+                    backendPayload.append(key, value);
+                }
+            }
+        } else {
+            // Map object keys
+            backendPayload = {};
+            for (const [key, value] of Object.entries(payload)) {
+                if (key === 'subtitle') {
+                    (backendPayload as any)['description'] = value;
+                } else if (key === 'desktop_image') {
+                    (backendPayload as any)['image_desktop'] = value;
+                } else if (key === 'mobile_image') {
+                    (backendPayload as any)['image_mobile'] = value;
+                } else {
+                    (backendPayload as any)[key] = value;
+                }
+            }
+        }
+
+        const response = await api.patch(`/marketing/media/${id}/`, backendPayload);
+        const item = response.data;
+        // Map response back to frontend format
+        return {
+            id: item.id,
+            key: item.key,
+            title: item.title,
+            subtitle: item.description || item.subtitle || null,
+            tag: item.tag || null,
+            highlight: item.highlight || null,
+            cta_text: item.cta_text || null,
+            cta_link: item.link || item.cta_link || null,
+            desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
+            mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
+            price_text: item.price_text || null,
+            old_price_text: item.old_price_text || null,
+            is_active: item.is_active ?? true,
+            order: item.sort_order ?? item.order ?? item.id,
+            position: item.position || 'home_hero',
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+        };
     },
 
     delete: async (id: number): Promise<void> => {
@@ -56,6 +193,8 @@ export const bannerApi = {
     },
 
     reorder: async (orders: { id: number; order: number }[]): Promise<void> => {
-        await api.post("/marketing/media/reorder/", { orders });
+        // Map to backend field names
+        const backendOrders = orders.map(o => ({ id: o.id, sort_order: o.order }));
+        await api.post("/marketing/media/reorder/", { orders: backendOrders });
     },
 };

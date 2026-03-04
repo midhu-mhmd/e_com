@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     AlertCircle, ArrowLeft, Package,
     Clock, CheckCircle, XCircle, Truck,
-    ChevronRight, MapPin, CreditCard, FileText
+    ChevronRight, MapPin, CreditCard, FileText, Star, X, Loader2
 } from "lucide-react";
-import { ordersApi, type OrderDto } from "../admin/orders/ordersApi";
+import { ordersApi, type OrderDto, type OrderItemDto } from "../admin/orders/ordersApi";
+import { reviewsApi } from "../admin/reviews/reviewsApi";
+import { useToast } from "../../components/ui/Toast";
 
 /* ══════════════════════════════════════════════════
    STATUS HELPERS
@@ -32,6 +34,214 @@ const formatDateTime = (d: string) =>
     new Date(d).toLocaleString("en-AE", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /* ══════════════════════════════════════════════════
+   REVIEW MODAL
+   ══════════════════════════════════════════════════ */
+interface ReviewForm {
+    product: number;
+    product_name: string;
+    rating: number;
+    title: string;
+    comment: string;
+}
+
+const StarRating: React.FC<{ value: number; onChange: (v: number) => void }> = ({ value, onChange }) => (
+    <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((s) => (
+            <button
+                key={s}
+                type="button"
+                onClick={() => onChange(s)}
+                className="transition-transform hover:scale-125 active:scale-95"
+            >
+                <Star
+                    size={28}
+                    className={s <= value ? "text-amber-400 fill-amber-400" : "text-slate-200"}
+                />
+            </button>
+        ))}
+    </div>
+);
+
+const ReviewModal: React.FC<{
+    items: OrderItemDto[];
+    onClose: () => void;
+}> = ({ items, onClose }) => {
+    const toast = useToast();
+    const [forms, setForms] = useState<ReviewForm[]>(
+        items.map((item) => ({
+            product: item.product,
+            product_name: item.product_name,
+            rating: 5,
+            title: "",
+            comment: "",
+        }))
+    );
+    const [submitting, setSubmitting] = useState(false);
+    const [currentIdx, setCurrentIdx] = useState(0);
+
+    const current = forms[currentIdx];
+    const isLast = currentIdx === forms.length - 1;
+
+    const updateField = (field: keyof ReviewForm, value: any) => {
+        setForms((prev) =>
+            prev.map((f, i) => (i === currentIdx ? { ...f, [field]: value } : f))
+        );
+    };
+
+    const handleSubmitAll = async () => {
+        setSubmitting(true);
+        try {
+            for (const f of forms) {
+                if (f.rating > 0) {
+                    await reviewsApi.create({
+                        product: f.product,
+                        rating: f.rating,
+                        title: f.title || `Review for ${f.product_name}`,
+                        comment: f.comment,
+                    });
+                }
+            }
+            toast.show("Reviews submitted! Thank you 🎉", "success");
+            onClose();
+        } catch {
+            // 400 error modal will handle API validation errors
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={onClose}
+            />
+
+            {/* Modal */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 24 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 24 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden z-10"
+            >
+                {/* Header */}
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900">Write a Review</h2>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                            Product {currentIdx + 1} of {forms.length}
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-all">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-5">
+                    {/* Product Name */}
+                    <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-4">
+                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                            <Package size={18} className="text-slate-400" />
+                        </div>
+                        <span className="text-sm font-bold text-slate-900 line-clamp-1">{current.product_name}</span>
+                    </div>
+
+                    {/* Star Rating */}
+                    <div className="text-center space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Rating</p>
+                        <div className="flex justify-center">
+                            <StarRating value={current.rating} onChange={(v) => updateField("rating", v)} />
+                        </div>
+                    </div>
+
+                    {/* Title */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Review Title</label>
+                        <input
+                            value={current.title}
+                            onChange={(e) => updateField("title", e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all font-semibold text-sm placeholder:text-slate-300"
+                            placeholder="e.g. Amazing quality!"
+                        />
+                    </div>
+
+                    {/* Comment */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Your Review</label>
+                        <textarea
+                            rows={3}
+                            value={current.comment}
+                            onChange={(e) => updateField("comment", e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all font-medium text-sm placeholder:text-slate-300 resize-none"
+                            placeholder="Tell us about your experience…"
+                        />
+                    </div>
+
+                    {/* Progress dots */}
+                    {forms.length > 1 && (
+                        <div className="flex justify-center gap-1.5">
+                            {forms.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentIdx(i)}
+                                    className={`w-2 h-2 rounded-full transition-all ${i === currentIdx ? "bg-slate-900 w-6" : "bg-slate-200 hover:bg-slate-300"}`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 pt-0 flex gap-3">
+                    {!isLast ? (
+                        <>
+                            <button
+                                onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                                disabled={currentIdx === 0}
+                                className="flex-1 py-3.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-30"
+                            >
+                                Back
+                            </button>
+                            <button
+                                onClick={() => setCurrentIdx((i) => i + 1)}
+                                className="flex-[2] py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                            >
+                                Next Product →
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            {forms.length > 1 && (
+                                <button
+                                    onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                                    className="flex-1 py-3.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95"
+                                >
+                                    Back
+                                </button>
+                            )}
+                            <button
+                                onClick={handleSubmitAll}
+                                disabled={submitting}
+                                className="flex-[2] py-3.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-60"
+                            >
+                                {submitting ? <Loader2 size={18} className="animate-spin" /> : <Star size={18} className="fill-current" />}
+                                {submitting ? "Submitting…" : "Submit Reviews"}
+                            </button>
+                        </>
+                    )}
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+/* ══════════════════════════════════════════════════
    MAIN COMPONENT
    ══════════════════════════════════════════════════ */
 const OrderPage: React.FC = () => {
@@ -49,6 +259,7 @@ const OrderList: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState("all");
+    const [reviewOrder, setReviewOrder] = useState<OrderDto | null>(null);
 
     useEffect(() => { fetchOrders(); }, []);
 
@@ -208,6 +419,20 @@ const OrderList: React.FC = () => {
                                                 </p>
                                             </div>
 
+                                            {order.status.toLowerCase() === "delivered" && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setReviewOrder(order);
+                                                    }}
+                                                    className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl flex items-center justify-center gap-2 font-bold text-amber-700 transition-all duration-200 hover:shadow-md"
+                                                >
+                                                    <Star size={18} className="fill-current" />
+                                                    Write Review
+                                                </button>
+                                            )}
+
                                             <div className="flex justify-between items-end mt-8 pt-6 border-t border-slate-100">
                                                 <div className="text-2xl font-black text-slate-900">
                                                     AED {parseFloat(order.total_amount).toFixed(2)}
@@ -224,6 +449,16 @@ const OrderList: React.FC = () => {
                     </div>
                 )}
             </main>
+
+            {/* Review Modal */}
+            <AnimatePresence>
+                {reviewOrder && (
+                    <ReviewModal
+                        items={reviewOrder.items}
+                        onClose={() => setReviewOrder(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -236,6 +471,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const [order, setOrder] = useState<OrderDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [reviewOpen, setReviewOpen] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -319,6 +555,17 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 <p className="text-4xl font-black text-slate-900">AED {parseFloat(order.total_amount).toFixed(2)}</p>
                             </div>
                         </div>
+
+                        {/* Write Review button for delivered orders */}
+                        {order.status.toLowerCase() === "delivered" && (
+                            <button
+                                onClick={() => setReviewOpen(true)}
+                                className="relative z-10 mt-4 sm:mt-0 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl font-bold text-amber-700 transition-all duration-200 hover:shadow-md"
+                            >
+                                <Star size={18} className="fill-current" />
+                                Write Review
+                            </button>
+                        )}
 
                         {/* Decorative watermark */}
                         <div className="absolute -right-10 -bottom-10 pointer-events-none opacity-[0.03]">
@@ -494,6 +741,16 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
 
                 </div>
             </main>
+
+            {/* Review Modal */}
+            <AnimatePresence>
+                {reviewOpen && order && (
+                    <ReviewModal
+                        items={order.items}
+                        onClose={() => setReviewOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

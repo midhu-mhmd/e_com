@@ -64,6 +64,7 @@ const AdminLayout: React.FC = () => {
     { label: 'Reviews', path: '/admin/reviews', icon: <Star size={18} strokeWidth={1.5} /> },
     { label: 'Payments', path: '/admin/payments', icon: <CreditCard size={18} strokeWidth={1.5} /> },
     { label: 'Banners', path: '/admin/banners', icon: <BannersIcon size={18} strokeWidth={1.5} /> },
+    { label: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} strokeWidth={1.5} /> },
     { label: 'Settings', path: '/admin/settings', icon: <Settings size={18} strokeWidth={1.5} /> },
   ];
 

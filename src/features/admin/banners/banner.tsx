@@ -26,6 +26,7 @@ const BannersManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBanner, setEditingBanner] = useState<BannerDto | null>(null);
     const [formData, setFormData] = useState({
+        key: "",
         title: "",
         subtitle: "",
         tag: "",
@@ -49,6 +50,7 @@ const BannersManagement: React.FC = () => {
 
     const resetForm = () => {
         setFormData({
+            key: "",
             title: "",
             subtitle: "",
             tag: "",
@@ -71,6 +73,7 @@ const BannersManagement: React.FC = () => {
         if (banner) {
             setEditingBanner(banner);
             setFormData({
+                key: banner.key || "",
                 title: banner.title || "",
                 subtitle: banner.subtitle || "",
                 tag: banner.tag || "",
@@ -294,7 +297,18 @@ const BannersManagement: React.FC = () => {
                                     {/* Left Column: Text Content */}
                                     <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Banner Title</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Banner Key <span className="text-red-500">*</span></label>
+                                            <input
+                                                required
+                                                value={formData.key}
+                                                onChange={(e) => setFormData({ ...formData, key: e.target.value })}
+                                                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
+                                                placeholder="e.g. banner_summer_sale"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Banner Title <span className="text-red-500">*</span></label>
                                             <input
                                                 required
                                                 value={formData.title}
@@ -365,7 +379,6 @@ const BannersManagement: React.FC = () => {
                                                     <option value="home_hero">Home Hero Carousel</option>
                                                     <option value="home_banner">Home Banner (Standard)</option>
                                                     <option value="home_offer_card">Home Offer Card (Small)</option>
-                                                    <option value="home_promo_banner">Home Promo Banner (Large)</option>
                                                 </select>
                                             </div>
                                         </div>

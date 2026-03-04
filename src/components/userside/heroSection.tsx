@@ -16,11 +16,13 @@ const Hero: React.FC = () => {
 
   const banners = useMemo(() => {
     if (!allBanners) return [];
-    return allBanners.filter(b =>
-      b.position === 'home_hero' ||
-      b.position === 'home_banner' ||
-      (!b.position && b.is_active)
-    );
+    return allBanners.filter(b => {
+      // Show banner if it's active and either:
+      // 1. Has position for hero section
+      // 2. Or no specific position is set and it's marked as active
+      const isHeroPosition = !b.position || b.position === 'home_hero' || b.position === 'hero' || b.position === 'home_banner';
+      return b.is_active && isHeroPosition;
+    });
   }, [allBanners]);
 
   const next = useCallback(() => {
