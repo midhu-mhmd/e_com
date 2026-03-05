@@ -335,7 +335,7 @@ const RegisterWithOtp: React.FC = () => {
                                      focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 cursor-pointer
                                      flex items-center gap-2 hover:bg-gray-50"
                         >
-                          <img src={selectedCountry.flag} alt={selectedCountry.name} className="w-5 h-[14px] object-cover rounded-sm shadow-sm" />
+                          <img src={selectedCountry.flag} alt={selectedCountry.name} className="w-5 h-3.5 object-cover rounded-sm shadow-sm" />
                           <span className="text-sm font-medium text-gray-700">{selectedCountry.code}</span>
                           <ChevronDown size={14} className={`text-gray-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                         </button>
@@ -353,7 +353,7 @@ const RegisterWithOtp: React.FC = () => {
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-cyan-50 transition-colors
                                            ${c.code === countryCode ? "bg-cyan-50 text-cyan-600" : "text-gray-700"}`}
                               >
-                                <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm shadow-sm" />
+                                <img src={c.flag} alt={c.name} className="w-5 h-3.5 object-cover rounded-sm shadow-sm" />
                                 <span className="font-medium">{c.name}</span>
                                 <span className="ml-auto text-gray-400 text-xs">{c.code}</span>
                               </button>

@@ -24,12 +24,22 @@ const CartPage: React.FC = () => {
     const checkingAuth = useAppSelector((s) => s.auth.checkingAuth);
 
     // Always fetch fresh cart data when the cart page mounts and user is authenticated.
-    // This removes the previous local 'caching' behavior.
+    // Also refetch when the page regains focus to prevent caching.
     useEffect(() => {
         if (!checkingAuth && isAuthenticated) {
             dispatch(fetchCartRequest());
         }
-    }, [dispatch, checkingAuth, isAuthenticated]);
+
+        // Refetch cart whenever the window regains focus
+        const handleFocus = () => {
+            if (isAuthenticated) {
+                dispatch(fetchCartRequest());
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [dispatch, isAuthenticated, checkingAuth]);
 
     // Loading state removed as requested
 

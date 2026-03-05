@@ -51,6 +51,35 @@ export interface StatusHistoryDto {
     created_at: string;
 }
 
+/* ── Dashboard Analytics DTO ── */
+export interface DashboardAnalyticsDto {
+    total_users: number;
+    active_users: number;
+    total_orders: number;
+    completed_orders: number;
+    total_revenue: string;
+    average_order_value: string;
+    cart_conversion_rate: number;
+    top_products: Array<{
+        id: number;
+        name: string;
+        sales: number;
+        revenue: string;
+    }>;
+}
+
+/* ── Delivery Estimation DTO ── */
+export interface DeliveryEstimationDto {
+    earliest_delivery_date: string;
+    max_delivery_days: number;
+    items_breakdown: Array<{
+        product_id: number;
+        product_name: string;
+        quantity: number;
+        delivery_days: number;
+    }>;
+}
+
 /* ── Order DTO from backend ── */
 export interface OrderDto {
     id: number;
@@ -129,6 +158,18 @@ export const ordersApi = {
         payment_url?: string;
     }> => {
         const res = await api.post("/orders/checkout/", data);
+        return res.data;
+    },
+
+    /* ── Dashboard Analytics (Admin Only) ── */
+    getDashboardAnalytics: async (): Promise<DashboardAnalyticsDto> => {
+        const res = await api.get<DashboardAnalyticsDto>("/orders/dashboard_analytics/");
+        return res.data;
+    },
+
+    /* ── Delivery Estimation ── */
+    estimateDelivery: async (): Promise<DeliveryEstimationDto> => {
+        const res = await api.get<DeliveryEstimationDto>("/orders/estimate_delivery/");
         return res.data;
     },
 };

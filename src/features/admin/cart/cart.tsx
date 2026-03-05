@@ -99,6 +99,21 @@ const CartManagement: React.FC = () => {
   /* --- Detail drawer --- */
   const [selectedCart, setSelectedCart] = useState<AdminCart | null>(null);
 
+  /* --- View mode (carts vs all items) --- */
+  const [viewMode, setViewMode] = useState<"carts" | "items">("carts");
+
+  /* --- All items flattened --- */
+  const allItems = useMemo(() => {
+    return carts.flatMap(cart =>
+      cart.items.map(item => ({
+        ...item,
+        cartId: cart.id,
+        userId: cart.userId,
+        cartCreatedAt: cart.createdAt,
+      }))
+    );
+  }, [carts]);
+
   /* --- Outside click for columns dropdown --- */
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -208,30 +223,57 @@ const CartManagement: React.FC = () => {
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
 
-          {/* Left: search + status tabs */}
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={13} />
-              <input
-                type="text"
-                placeholder="Search by user ID…"
-                value={searchTerm}
-                onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
-                className="pl-8 pr-3 py-2 bg-[#F9F9F9] border border-transparent rounded-xl text-xs outline-none focus:bg-white focus:border-[#EEEEEE] w-56 font-medium"
-              />
-            </div>
-            {(["All", "Active", "Abandoned"] as const).map(s => (
+          {/* Left: search + status tabs + view mode */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+            {/* View mode tabs */}
+            <div className="flex items-center gap-1 bg-[#F9F9F9] p-1 rounded-lg border border-[#EEEEEE]">
               <button
-                key={s}
-                onClick={() => { setStatusFilter(s); setPage(1); }}
-                className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${statusFilter === s
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-[#71717A] border-[#EEEEEE] hover:bg-[#FAFAFA]"
+                onClick={() => { setViewMode("carts"); setPage(1); }}
+                className={`px-3 py-1.5 text-[10px] font-bold rounded transition-all ${viewMode === "carts"
+                    ? "bg-white text-black border border-[#EEEEEE] shadow-sm"
+                    : "text-[#71717A] hover:text-black"
                   }`}
               >
-                {s}
+                Carts
               </button>
-            ))}
+              <button
+                onClick={() => { setViewMode("items"); setPage(1); }}
+                className={`px-3 py-1.5 text-[10px] font-bold rounded transition-all ${viewMode === "items"
+                    ? "bg-white text-black border border-[#EEEEEE] shadow-sm"
+                    : "text-[#71717A] hover:text-black"
+                  }`}
+              >
+                All Items
+              </button>
+            </div>
+
+            {/* Search + filters (only for carts view) */}
+            {viewMode === "carts" && (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={13} />
+                  <input
+                    type="text"
+                    placeholder="Search by user ID…"
+                    value={searchTerm}
+                    onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
+                    className="pl-8 pr-3 py-2 bg-[#F9F9F9] border border-transparent rounded-xl text-xs outline-none focus:bg-white focus:border-[#EEEEEE] w-56 font-medium"
+                  />
+                </div>
+                {(["All", "Active", "Abandoned"] as const).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => { setStatusFilter(s); setPage(1); }}
+                    className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${statusFilter === s
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-[#71717A] border-[#EEEEEE] hover:bg-[#FAFAFA]"
+                      }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Right: actions */}
@@ -296,120 +338,211 @@ const CartManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[640px]">
-            <thead>
-              <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest bg-[#FAFAFA] border-b border-[#EEEEEE]">
-                {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
-                {isVisible("cartId") && <th className="px-5 py-4">Cart ID</th>}
-                {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
-                {isVisible("items") && <th className="px-5 py-4">Items</th>}
-                {isVisible("total") && <th className="px-5 py-4">Total</th>}
-                {isVisible("status") && <th className="px-5 py-4">Status</th>}
-                {isVisible("updated") && <th className="px-5 py-4">Last Seen</th>}
-                <th className="px-5 py-4 text-right">Detail</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#EEEEEE]">
-              {status === "loading" && filteredCarts.length === 0
-                ? Array.from({ length: limit }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded mx-auto" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-12 bg-gray-100 rounded" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
-                    <td className="px-5 py-4"><div className="h-5 w-16 bg-gray-100 rounded-full" /></td>
-                    <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
-                    <td className="px-5 py-4"><div className="h-6 w-6 bg-gray-100 rounded ml-auto" /></td>
-                  </tr>
-                ))
-                : filteredCarts.map((cart, index) => {
-                  const cartStatus = getCartStatus(cart.updatedAt);
-                  return (
-                    <tr
-                      key={cart.id}
-                      className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
-                      onClick={() => setSelectedCart(cart)}
-                    >
-                      {isVisible("index") && (
-                        <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
-                          {(page - 1) * limit + index + 1}
-                        </td>
-                      )}
-                      {isVisible("cartId") && (
-                        <td className="px-5 py-4">
-                          <span className="text-xs font-mono font-bold">CRT-{cart.id}</span>
-                        </td>
-                      )}
-                      {isVisible("customer") && (
-                        <td className="px-5 py-4">
-                          <p className="text-xs font-bold">User #{cart.userId}</p>
-                          <p className="text-[10px] text-[#A1A1AA]">ID: {cart.userId}</p>
-                        </td>
-                      )}
-                      {isVisible("items") && (
-                        <td className="px-5 py-4 text-xs font-medium">
-                          {cart.totalItems} {cart.totalItems === 1 ? "item" : "items"}
-                        </td>
-                      )}
-                      {isVisible("total") && (
-                        <td className="px-5 py-4 font-mono text-sm font-bold">
-                          {formatCurrency(cart.totalPrice)}
-                        </td>
-                      )}
-                      {isVisible("status") && (
-                        <td className="px-5 py-4">
-                          <span
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${cartStatus === "Active"
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                : "bg-slate-50 text-slate-500 border-slate-200"
-                              }`}
+        {/* Carts Table View */}
+        {viewMode === "carts" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-160">
+              <thead>
+                <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest bg-[#FAFAFA] border-b border-[#EEEEEE]">
+                  {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
+                  {isVisible("cartId") && <th className="px-5 py-4">Cart ID</th>}
+                  {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
+                  {isVisible("items") && <th className="px-5 py-4">Items</th>}
+                  {isVisible("total") && <th className="px-5 py-4">Total</th>}
+                  {isVisible("status") && <th className="px-5 py-4">Status</th>}
+                  {isVisible("updated") && <th className="px-5 py-4">Last Seen</th>}
+                  <th className="px-5 py-4 text-right">Detail</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEEEEE]">
+                {status === "loading" && filteredCarts.length === 0
+                  ? Array.from({ length: limit }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded mx-auto" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-12 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-5 w-16 bg-gray-100 rounded-full" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-6 w-6 bg-gray-100 rounded ml-auto" /></td>
+                    </tr>
+                  ))
+                  : filteredCarts.map((cart, index) => {
+                    const cartStatus = getCartStatus(cart.updatedAt);
+                    return (
+                      <tr
+                        key={cart.id}
+                        className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
+                        onClick={() => setSelectedCart(cart)}
+                      >
+                        {isVisible("index") && (
+                          <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
+                            {(page - 1) * limit + index + 1}
+                          </td>
+                        )}
+                        {isVisible("cartId") && (
+                          <td className="px-5 py-4">
+                            <span className="text-xs font-mono font-bold">CRT-{cart.id}</span>
+                          </td>
+                        )}
+                        {isVisible("customer") && (
+                          <td className="px-5 py-4">
+                            <p className="text-xs font-bold">User #{cart.userId}</p>
+                            <p className="text-[10px] text-[#A1A1AA]">ID: {cart.userId}</p>
+                          </td>
+                        )}
+                        {isVisible("items") && (
+                          <td className="px-5 py-4 text-xs font-medium">
+                            {cart.totalItems} {cart.totalItems === 1 ? "item" : "items"}
+                          </td>
+                        )}
+                        {isVisible("total") && (
+                          <td className="px-5 py-4 font-mono text-sm font-bold">
+                            {formatCurrency(cart.totalPrice)}
+                          </td>
+                        )}
+                        {isVisible("status") && (
+                          <td className="px-5 py-4">
+                            <span
+                              className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${cartStatus === "Active"
+                                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                  : "bg-slate-50 text-slate-500 border-slate-200"
+                                }`}
+                            >
+                              {cartStatus}
+                            </span>
+                          </td>
+                        )}
+                        {isVisible("updated") && (
+                          <td className="px-5 py-4 text-[11px] text-[#52525B] font-medium">
+                            {formatTimeAgo(cart.updatedAt)}
+                          </td>
+                        )}
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            className="p-2 text-[#A1A1AA] hover:text-black hover:bg-[#F4F4F5] rounded-lg transition-all inline-block"
+                            title="View Cart"
+                            onClick={e => { e.stopPropagation(); setSelectedCart(cart); }}
                           >
-                            {cartStatus}
-                          </span>
+                            <ShoppingBag size={15} />
+                          </button>
                         </td>
-                      )}
-                      {isVisible("updated") && (
-                        <td className="px-5 py-4 text-[11px] text-[#52525B] font-medium">
-                          {formatTimeAgo(cart.updatedAt)}
-                        </td>
-                      )}
-                      <td className="px-5 py-4 text-right">
-                        <button
-                          className="p-2 text-[#A1A1AA] hover:text-black hover:bg-[#F4F4F5] rounded-lg transition-all inline-block"
-                          title="View Cart"
-                          onClick={e => { e.stopPropagation(); setSelectedCart(cart); }}
-                        >
-                          <ShoppingBag size={15} />
-                        </button>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+
+            {status !== "loading" && filteredCarts.length === 0 && (
+              <div className="py-20 text-center space-y-3">
+                <ShoppingCart className="mx-auto text-[#D4D4D8]" size={32} />
+                <p className="text-sm font-bold text-[#18181B]">No carts found</p>
+                <p className="text-xs text-[#A1A1AA]">Carts appear here when users add products.</p>
+                {(searchTerm || statusFilter !== "All") && (
+                  <button onClick={handleReset} className="text-xs font-bold underline text-[#A1A1AA] hover:text-black">
+                    Reset filters
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Items Table View */}
+        {viewMode === "items" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-160">
+              <thead>
+                <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest bg-[#FAFAFA] border-b border-[#EEEEEE]">
+                  <th className="px-5 py-4 w-12 text-center">#</th>
+                  <th className="px-5 py-4">Product</th>
+                  <th className="px-5 py-4">SKU</th>
+                  <th className="px-5 py-4">Category</th>
+                  <th className="px-5 py-4">Cart ID</th>
+                  <th className="px-5 py-4">Customer</th>
+                  <th className="px-5 py-4">Unit Price</th>
+                  <th className="px-5 py-4">Qty</th>
+                  <th className="px-5 py-4">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EEEEEE]">
+                {status === "loading" && allItems.length === 0
+                  ? Array.from({ length: limit }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded mx-auto" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-32 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
+                    </tr>
+                  ))
+                  : allItems.slice((page - 1) * limit, page * limit).map((item, index) => (
+                    <tr
+                      key={`${item.cartId}-${item.id || index}`}
+                      className="group hover:bg-[#FBFBFA] transition-colors"
+                    >
+                      <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
+                        {(page - 1) * limit + index + 1}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {item.productImage && (
+                            <img
+                              src={item.productImage}
+                              alt={item.productName}
+                              className="w-8 h-8 rounded shrink-0 object-cover"
+                            />
+                          )}
+                          <div>
+                            <p className="text-xs font-bold">{item.productName}</p>
+                            <p className="text-[10px] text-[#A1A1AA]">ID: {item.productId}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-xs font-mono font-bold">{item.sku || "—"}</td>
+                      <td className="px-5 py-4 text-xs">{item.categoryName || "—"}</td>
+                      <td className="px-5 py-4">
+                        <span className="text-xs font-mono font-bold">CRT-{item.cartId}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-xs font-bold">User #{item.userId}</p>
+                        <p className="text-[10px] text-[#A1A1AA]">ID: {item.userId}</p>
+                      </td>
+                      <td className="px-5 py-4 font-mono text-xs font-bold">
+                        {formatCurrency(item.finalPrice)}
+                      </td>
+                      <td className="px-5 py-4 text-xs font-medium text-center">{item.quantity}</td>
+                      <td className="px-5 py-4 font-mono text-sm font-bold">
+                        {formatCurrency((item.finalPrice || 0) * (item.quantity || 1))}
                       </td>
                     </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+                  ))}
+              </tbody>
+            </table>
 
-          {status !== "loading" && filteredCarts.length === 0 && (
-            <div className="py-20 text-center space-y-3">
-              <ShoppingCart className="mx-auto text-[#D4D4D8]" size={32} />
-              <p className="text-sm font-bold text-[#18181B]">No carts found</p>
-              <p className="text-xs text-[#A1A1AA]">Carts appear here when users add products.</p>
-              {(searchTerm || statusFilter !== "All") && (
-                <button onClick={handleReset} className="text-xs font-bold underline text-[#A1A1AA] hover:text-black">
-                  Reset filters
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            {status !== "loading" && allItems.length === 0 && (
+              <div className="py-20 text-center space-y-3">
+                <ShoppingCart className="mx-auto text-[#D4D4D8]" size={32} />
+                <p className="text-sm font-bold text-[#18181B]">No items found</p>
+                <p className="text-xs text-[#A1A1AA]">Items from carts appear here.</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {filteredCarts.length} of {totalCount} carts
+              {viewMode === "carts"
+                ? `Showing ${filteredCarts.length} of ${totalCount} carts`
+                : `Showing ${allItems.length} total items`
+              }
             </div>
             <select
               value={limit}
@@ -433,7 +566,7 @@ const CartManagement: React.FC = () => {
             <span className="text-xs font-bold px-2">Page {page}</span>
             <button
               onClick={() => setPage(p => p + 1)}
-              disabled={filteredCarts.length < limit || status === "loading"}
+              disabled={(viewMode === "carts" ? filteredCarts : allItems).length < limit || status === "loading"}
               className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />
@@ -465,7 +598,7 @@ const CartDetailDrawer = ({
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-[60] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
 
         {/* Header */}
         <div className="p-6 border-b border-[#EEEEEE] flex justify-between items-start bg-[#FAFAFA]">
@@ -533,10 +666,10 @@ const CartItemRow = ({ item }: { item: AdminCartItem }) => (
       <img
         src={item.productImage}
         alt={item.productName}
-        className="w-12 h-12 rounded-lg object-cover border border-[#EEEEEE] flex-shrink-0"
+        className="w-12 h-12 rounded-lg object-cover border border-[#EEEEEE] shrink-0"
       />
     ) : (
-      <div className="w-12 h-12 rounded-lg bg-[#F4F4F5] flex items-center justify-center flex-shrink-0">
+      <div className="w-12 h-12 rounded-lg bg-[#F4F4F5] flex items-center justify-center shrink-0">
         <ShoppingBag size={18} className="text-[#D4D4D8]" />
       </div>
     )}
@@ -547,7 +680,7 @@ const CartItemRow = ({ item }: { item: AdminCartItem }) => (
         {formatCurrency(item.finalPrice)} × {item.quantity}
       </p>
     </div>
-    <div className="text-right flex-shrink-0">
+    <div className="text-right shrink-0">
       <p className="text-sm font-bold font-mono">{formatCurrency(item.subtotal)}</p>
       <p className="text-[10px] text-[#A1A1AA]">qty {item.quantity}</p>
     </div>

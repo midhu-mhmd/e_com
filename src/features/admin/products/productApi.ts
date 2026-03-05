@@ -20,16 +20,21 @@ export interface ProductVideoDto {
 /* ── Discount Tier DTO ── */
 export interface DiscountTierDto {
   id?: number;
+  product?: number;
   min_quantity: number;
-  discount_price: string;
+  discount_percentage?: number;
+  discount_price?: string;
 }
 
 /* ── Delivery Tier DTO ── */
 export interface DeliveryTierDto {
   id?: number;
-  name: string;
-  cost: string;
-  estimated_days: string;
+  product?: number;
+  min_quantity: number;
+  delivery_days: number;
+  name?: string;
+  cost?: string;
+  estimated_days?: string;
 }
 
 /* ── Product DTO returned by backend ── */
@@ -138,5 +143,75 @@ export const productsApi = {
   createCategory: async (payload: Partial<CategoryDto>): Promise<CategoryDto> => {
     const res = await api.post<CategoryDto>("/products/categories/", payload);
     return res.data;
+  },
+
+  /* ── Delivery Tiers ── */
+  listDeliveryTiers: async (
+    productId?: number
+  ): Promise<{ results: DeliveryTierDto[]; count: number }> => {
+    const res = await api.get<{ results: DeliveryTierDto[]; count: number }>(
+      "/products/delivery-tiers/",
+      { params: { ...(productId && { product: productId }) } }
+    );
+    return res.data;
+  },
+
+  createDeliveryTier: async (payload: {
+    product: number;
+    min_quantity: number;
+    delivery_days: number;
+  }): Promise<DeliveryTierDto> => {
+    const res = await api.post<DeliveryTierDto>("/products/delivery-tiers/", payload);
+    return res.data;
+  },
+
+  updateDeliveryTier: async (
+    id: number,
+    payload: Partial<DeliveryTierDto>
+  ): Promise<DeliveryTierDto> => {
+    const res = await api.patch<DeliveryTierDto>(
+      `/products/delivery-tiers/${id}/`,
+      payload
+    );
+    return res.data;
+  },
+
+  deleteDeliveryTier: async (id: number): Promise<void> => {
+    await api.delete(`/products/delivery-tiers/${id}/`);
+  },
+
+  /* ── Discount Tiers ── */
+  listDiscountTiers: async (
+    productId?: number
+  ): Promise<{ results: DiscountTierDto[]; count: number }> => {
+    const res = await api.get<{ results: DiscountTierDto[]; count: number }>(
+      "/products/discount-tiers/",
+      { params: { ...(productId && { product: productId }) } }
+    );
+    return res.data;
+  },
+
+  createDiscountTier: async (payload: {
+    product: number;
+    min_quantity: number;
+    discount_percentage: number;
+  }): Promise<DiscountTierDto> => {
+    const res = await api.post<DiscountTierDto>("/products/discount-tiers/", payload);
+    return res.data;
+  },
+
+  updateDiscountTier: async (
+    id: number,
+    payload: Partial<DiscountTierDto>
+  ): Promise<DiscountTierDto> => {
+    const res = await api.patch<DiscountTierDto>(
+      `/products/discount-tiers/${id}/`,
+      payload
+    );
+    return res.data;
+  },
+
+  deleteDiscountTier: async (id: number): Promise<void> => {
+    await api.delete(`/products/discount-tiers/${id}/`);
   },
 };

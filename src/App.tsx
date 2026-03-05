@@ -5,6 +5,7 @@ import { checkAuth } from "./features/auth/authSlice";
 import { AppRoutes } from "./routes/AppRoutes";
 import ShrimpLoader from "./components/loader/preloader";
 import { useToast } from "./components/ui/Toast";
+import { useInitializeCart } from "./hooks/useInitializeCart";
 
 function App() {
   const dispatch = useDispatch();
@@ -12,6 +13,9 @@ function App() {
   const [minDelayDone, setMinDelayDone] = useState(false);
   const toast = useToast();
   const wasAuthenticated = useRef(false);
+
+  // Initialize cart data on app load for authenticated users
+  useInitializeCart();
 
   useEffect(() => {
     dispatch(checkAuth() as any);

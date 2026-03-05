@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, UploadCloud, Plus, Trash2, Image as ImageIcon, Film, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle } from "lucide-react";
 import {
     productsActions,
     selectProductsStatus,
@@ -10,6 +10,9 @@ import {
 } from "./productsSlice";
 import type { ProductDto } from "./productApi";
 import { productsApi } from "./productApi";
+import DeliveryTiersManager from "./DeliveryTiersManager";
+import DiscountTiersManager from "./DiscountTiersManager";
+import type { DeliveryTierDto, DiscountTierDto } from "./tierApi";
 
 /* ─────────────────────────────────────────────
    Extended Interface for Form Handling
@@ -92,20 +95,16 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
     const [validationError, setValidationError] = useState<string | null>(null);
+    
+    // State for new tier managers
+    const [deliveryTiers, setDeliveryTiers] = useState<DeliveryTierDto[]>([]);
+    const [discountTiers, setDiscountTiers] = useState<DiscountTierDto[]>([]);
 
-    const { register, control, handleSubmit, watch, reset, formState: { errors } } = useForm<ProductFormValues>({
+    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<ProductFormValues>({
         defaultValues: dto
     });
 
-    const { fields: discountFields, append: appendDiscount, remove: removeDiscount } = useFieldArray({
-        control,
-        name: "discount_tiers"
-    });
-
-    const { fields: deliveryFields, append: appendDelivery, remove: removeDelivery } = useFieldArray({
-        control,
-        name: "delivery_tiers"
-    });
+    // NOTE: Removed useFieldArray for discount/delivery tiers - using new tier managers instead
 
     useEffect(() => {
         if (dto) {
@@ -120,8 +119,6 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                 sku: dto.sku || "",
                 is_available: dto.is_available,
                 expected_delivery_time: dto.expected_delivery_time || "",
-                discount_tiers: dto.discount_tiers || [],
-                delivery_tiers: dto.delivery_tiers || [],
             });
             setExistingImages(dto.images || []);
             setExistingVideos(dto.videos || []);
@@ -168,9 +165,10 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         if (data.sku) formData.append("sku", data.sku);
         if (data.expected_delivery_time) formData.append("expected_delivery_time", data.expected_delivery_time);
 
-        // 2. Append Arrays (Sent as JSON strings, standard for nested DRF processing)
-        formData.append("discount_tiers", JSON.stringify(data.discount_tiers || []));
-        formData.append("delivery_tiers", JSON.stringify(data.delivery_tiers || []));
+        // 2. Append Tiers from state (managed by tier manager components)
+        // NOTE: Tier managers handle these independently, but we include them here for completeness
+        formData.append("delivery_tiers", JSON.stringify(deliveryTiers || []));
+        formData.append("discount_tiers", JSON.stringify(discountTiers || []));
 
         formData.append("retained_image_ids", JSON.stringify(existingImages.map(img => img.id)));
         formData.append("retained_video_ids", JSON.stringify(existingVideos.map(vid => vid.id)));
@@ -212,7 +210,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
             {/* Error Displays */}
             {(backendError || validationError) && (
                 <div className="max-w-4xl mx-auto bg-rose-50 text-rose-700 p-4 rounded-xl text-sm font-medium border border-rose-200 flex items-start gap-3">
-                    <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                    <AlertCircle size={18} className="mt-0.5 shrink-0" />
                     <div>
                         <p className="font-bold">Failed to save changes</p>
                         <p className="opacity-90">{validationError || (typeof backendError === 'string' ? backendError : JSON.stringify(backendError))}</p>
@@ -288,75 +286,24 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                 {/* Advanced Tiers Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Discount Tiers */}
-                    <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold">Discount Tiers</h2>
-                            <button
-                                type="button"
-                                onClick={() => appendDiscount({ min_quantity: 1, discount_price: "" as any })}
-                                className="text-xs font-bold text-cyan-600 flex items-center gap-1 hover:text-cyan-700"
-                            >
-                                <Plus size={14} /> Add Tier
-                            </button>
-                        </div>
-                        <div className="space-y-3">
-                            {discountFields.map((item, index) => (
-                                <div key={item.id} className="flex gap-3 items-center bg-[#FAFAFA] p-3 rounded-xl border border-slate-100">
-                                    <div className="flex-1 space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Min Qty</label>
-                                        <input type="number" {...register(`discount_tiers.${index}.min_quantity` as const)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-black" />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Price</label>
-                                        <input type="number" step="0.01" {...register(`discount_tiers.${index}.discount_price` as const)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-black" />
-                                    </div>
-                                    <button type="button" onClick={() => removeDiscount(index)} className="mt-5 p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            ))}
-                            {discountFields.length === 0 && <p className="text-sm text-slate-400 text-center py-4">No wholesale tiers configured.</p>}
-                        </div>
-                    </section>
+                    {/* Discount Tiers Manager */}
+                    <DiscountTiersManager 
+                        productId={productId}
+                        finalPrice={dto.final_price}
+                        onTiersChange={(tiers) => {
+                            setDiscountTiers(tiers);
+                            console.log("Discount tiers updated:", tiers);
+                        }}
+                    />
 
-                    {/* Delivery Tiers */}
-                    <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold">Delivery Tiers</h2>
-                            <button
-                                type="button"
-                                onClick={() => appendDelivery({ name: "", cost: "" as any, estimated_days: "" })}
-                                className="text-xs font-bold text-cyan-600 flex items-center gap-1 hover:text-cyan-700"
-                            >
-                                <Plus size={14} /> Add Tier
-                            </button>
-                        </div>
-                        <div className="space-y-3">
-                            {deliveryFields.map((item, index) => (
-                                <div key={item.id} className="flex flex-col gap-3 bg-[#FAFAFA] p-3 rounded-xl border border-slate-100 relative">
-                                    <button type="button" onClick={() => removeDelivery(index)} className="absolute top-3 right-3 text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg transition-colors">
-                                        <Trash2 size={14} />
-                                    </button>
-                                    <div className="space-y-1 pr-8">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase">Region / Name</label>
-                                        <input type="text" {...register(`delivery_tiers.${index}.name` as const)} placeholder="e.g. Dubai" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-black" />
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Cost (AED)</label>
-                                            <input type="number" step="0.01" {...register(`delivery_tiers.${index}.cost` as const)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-black" />
-                                        </div>
-                                        <div className="flex-1 space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase">Time</label>
-                                            <input type="text" {...register(`delivery_tiers.${index}.estimated_days` as const)} placeholder="e.g. 1 Day" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-black" />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            {deliveryFields.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Standard delivery applies.</p>}
-                        </div>
-                    </section>
+                    {/* Delivery Tiers Manager */}
+                    <DeliveryTiersManager 
+                        productId={productId}
+                        onTiersChange={(tiers) => {
+                            setDeliveryTiers(tiers);
+                            console.log("Delivery tiers updated:", tiers);
+                        }}
+                    />
                 </div>
 
                 {/* Organization */}
@@ -418,7 +365,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                         {existingImages.length > 0 && (
                             <div className="flex gap-4 overflow-x-auto pb-2">
                                 {existingImages.map((img) => (
-                                    <div key={img.id} className="relative w-24 h-24 rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 group">
+                                    <div key={img.id} className="relative w-24 h-24 rounded-xl border border-slate-200 overflow-hidden shrink-0 group">
                                         <img src={img.image} alt="Gallery" className="w-full h-full object-cover" />
                                         <button
                                             type="button"
