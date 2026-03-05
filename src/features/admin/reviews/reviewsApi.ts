@@ -60,6 +60,7 @@ export const reviewsApi = {
 
     create: async (data: {
         product: number;
+        product_name?: string;
         rating: number;
         title: string;
         comment: string;

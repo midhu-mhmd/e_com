@@ -20,7 +20,8 @@ const DELIVERY_SLOTS = [
   { value: "evening", label: "Evening (5 PM – 9 PM)" },
 ];
 
-const TIP_PRESETS = [0, 5, 10, 15];
+// ✅ Updated Tip Presets
+const TIP_PRESETS = [0, 1, 3, 5];
 
 const ADDRESS_TYPES = [
   { value: "home", label: "Home" },
@@ -57,7 +58,7 @@ const CheckoutPage: React.FC = () => {
   const [deliveryNotes, setDeliveryNotes] = useState("");
 
   const [tipAmount, setTipAmount] = useState(0);
-  const [customTip, setCustomTip] = useState("");
+  const [customTip, setCustomTip] = useState<string>("");
   const [isCustomTip, setIsCustomTip] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "TELR">("COD");
@@ -540,17 +541,30 @@ const CheckoutPage: React.FC = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                 >
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2 mt-2">
                     <span className="text-sm font-bold text-slate-500">AED</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={customTip}
-                      onChange={(e) => setCustomTip(e.target.value)}
-                      placeholder="0"
-                      className="w-32 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
-                    />
+                    {/* ✅ Updated Input with hide-arrows class and + Button */}
+                    <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all overflow-hidden">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={customTip}
+                        onChange={(e) => setCustomTip(e.target.value)}
+                        placeholder="0.0"
+                        className="w-24 px-3 py-2.5 bg-transparent text-sm font-bold outline-none text-center hide-arrows"
+                      />
+                      <button
+                        onClick={() => {
+                          const currentVal = parseFloat(customTip) || 0;
+                          setCustomTip((currentVal + 0.5).toString());
+                        }}
+                        className="h-full px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 border-l border-slate-200 transition-colors flex items-center justify-center"
+                        title="Add 0.5 AED"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -690,6 +704,18 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* ✅ CSS to hide number input arrows */}
+      <style>{`
+        .hide-arrows::-webkit-outer-spin-button,
+        .hide-arrows::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .hide-arrows {
+          -moz-appearance: textfield; /* Firefox */
+        }
+      `}</style>
     </div>
   );
 };

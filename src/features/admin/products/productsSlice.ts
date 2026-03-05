@@ -22,9 +22,12 @@ export interface Product {
     status: "Active" | "Draft" | "Out of Stock";
     imageUrl: string | null;
     images: { id: number; url: string; isFeature: boolean }[];
+    videos: { id: number; url: string; title?: string }[];
     averageRating: number;
     totalReviews: number;
     expectedDeliveryTime: string | null;
+    discountTiers: { id?: number; minQuantity: number; discountPrice: number }[];
+    deliveryTiers: { id?: number; name: string; cost: number; estimatedDays: string }[];
     createdAt: string;
     updatedAt: string;
 }

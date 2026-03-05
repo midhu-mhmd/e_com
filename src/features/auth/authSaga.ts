@@ -29,7 +29,20 @@ function* handleSendOtp(action: ReturnType<typeof requestOtp>): Generator<any, a
     yield call(authApi.sendOtp, payload);
     yield put(setStep("otp"));
   } catch (err: any) {
-    yield put(authError(getErrMsg(err, "Failed to send OTP")));
+    const msg = getErrMsg(err, "Failed to send OTP");
+    const status = err?.response?.status;
+    const data = err?.response?.data;
+
+    // Detect inactive/blocked user from status code, response flag, or message keywords
+    if (
+      status === 403 ||
+      data?.is_active === false ||
+      /blocked|inactive|disabled|deactivated/i.test(msg)
+    ) {
+      yield put(authError("ACCOUNT_INACTIVE"));
+    } else {
+      yield put(authError(msg));
+    }
   }
 }
 
@@ -65,7 +78,7 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
       try {
         const meRes: { data: any } = yield call(authApi.me);
         user = meRes.data?.user ?? meRes.data;
-        
+
         // ✅ Verify the flags are actually persisted
         if (action.payload.otp_type === 'email') {
           if (user?.is_email_verified) {

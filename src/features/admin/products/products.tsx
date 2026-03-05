@@ -911,6 +911,77 @@ const ProductDetailPanel = ({
                             <p className="text-sm text-[#52525B] leading-relaxed">{product.description}</p>
                         </div>
                     )}
+
+                    {/* Videos */}
+                    {product.videos && product.videos.length > 0 && (
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Videos</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                                {product.videos.map((vid) => (
+                                    <div key={vid.id} className="aspect-video rounded-lg overflow-hidden border border-[#EEEEEE] relative bg-slate-100 flex items-center justify-center">
+                                        <video src={vid.url} controls className="max-w-full max-h-full" />
+                                        {vid.title && (
+                                            <span className="absolute bottom-1 left-1 text-[8px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded-full truncate max-w-[90%]">
+                                                {vid.title}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Discount Tiers */}
+                    {product.discountTiers && product.discountTiers.length > 0 && (
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Discount Tiers</h4>
+                            <div className="border border-[#EEEEEE] rounded-xl overflow-hidden">
+                                <table className="w-full text-left text-xs text-[#52525B]">
+                                    <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE] text-[10px] font-bold text-[#A1A1AA] uppercase">
+                                        <tr>
+                                            <th className="px-4 py-2">Min Quantity</th>
+                                            <th className="px-4 py-2">Discount Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#EEEEEE]">
+                                        {product.discountTiers.map((tier, i) => (
+                                            <tr key={tier.id || i} className="hover:bg-[#FBFBFA]">
+                                                <td className="px-4 py-2 font-medium">{tier.minQuantity}</td>
+                                                <td className="px-4 py-2 font-bold text-emerald-600">AED {tier.discountPrice.toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delivery Tiers */}
+                    {product.deliveryTiers && product.deliveryTiers.length > 0 && (
+                        <div className="space-y-3">
+                            <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Delivery Tiers</h4>
+                            <div className="border border-[#EEEEEE] rounded-xl overflow-hidden">
+                                <table className="w-full text-left text-xs text-[#52525B]">
+                                    <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE] text-[10px] font-bold text-[#A1A1AA] uppercase">
+                                        <tr>
+                                            <th className="px-4 py-2">Name</th>
+                                            <th className="px-4 py-2">Cost</th>
+                                            <th className="px-4 py-2">Est. Days</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#EEEEEE]">
+                                        {product.deliveryTiers.map((tier, i) => (
+                                            <tr key={tier.id || i} className="hover:bg-[#FBFBFA]">
+                                                <td className="px-4 py-2 font-medium">{tier.name}</td>
+                                                <td className="px-4 py-2">AED {tier.cost.toLocaleString()}</td>
+                                                <td className="px-4 py-2 text-[#A1A1AA]">{tier.estimatedDays}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}

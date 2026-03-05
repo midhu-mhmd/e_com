@@ -8,7 +8,8 @@ import {
   Check,
   Timer,
   ChevronDown,
-  AlertCircle
+  AlertCircle,
+  ShieldX
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -170,8 +171,9 @@ const Login: React.FC = () => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localValue.trim());
   }, [localValue]);
 
-  const canSendOtp = !isLoading && agreeTerms && (otp_type === "phone" ? isPhoneValid : isEmailValid);
-  const canVerifyOtp = !isLoading && !isExpired && otp.trim().length === 6;
+  const isAccountInactive = error === "ACCOUNT_INACTIVE";
+  const canSendOtp = !isLoading && !isAccountInactive && agreeTerms && (otp_type === "phone" ? isPhoneValid : isEmailValid);
+  const canVerifyOtp = !isLoading && !isExpired && !isAccountInactive && otp.trim().length === 6;
 
   const onSwitchMethod = (m: AuthMethod) => {
     setOtp("");
@@ -220,7 +222,7 @@ const Login: React.FC = () => {
   };
 
   const onResendOtp = () => {
-    if (isLoading || !canResend) return;
+    if (isLoading || !canResend || isAccountInactive) return;
     const v = (value || localValue).trim();
     if (!v) return;
 
@@ -237,6 +239,9 @@ const Login: React.FC = () => {
   // ✅ Clean up backend errors to be user friendly
   const displayError = useMemo(() => {
     if (!error) return null;
+    if (error === "ACCOUNT_INACTIVE") {
+      return "Your account has been deactivated. Please contact the administrator.";
+    }
     if (error.includes("400") || error.includes("Request failed")) {
       return step === "otp" ? "Invalid or expired OTP." : "Invalid details provided. Please check and try again.";
     }
@@ -372,11 +377,20 @@ const Login: React.FC = () => {
                   </span>
                 </label>
 
-                {/* ✅ Clean Text Error */}
+                {/* ✅ Clean Text Error / Inactive Account Alert */}
                 {displayError && (
-                  <p className="text-[11px] font-semibold text-rose-600 mt-2">
-                    {displayError}
-                  </p>
+                  isAccountInactive ? (
+                    <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                      <ShieldX size={16} className="text-rose-500 shrink-0" />
+                      <p className="text-[11px] font-bold text-rose-600">
+                        {displayError}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] font-semibold text-rose-600 mt-2">
+                      {displayError}
+                    </p>
+                  )
                 )}
               </div>
 

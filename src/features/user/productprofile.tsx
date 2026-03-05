@@ -158,6 +158,12 @@ const ProductProfile: React.FC = () => {
 
   const skuLabel = product.sku || t("details.perUnitFallback");
 
+  // ✅ Calculate total dynamic price based on quantity
+  const basePriceTotal = (parseFloat(product.price) * quantity).toFixed(2);
+  const discountPriceTotal = product.discount_price 
+    ? (parseFloat(product.discount_price) * quantity).toFixed(2) 
+    : null;
+
   const toast = useToast();
 
   const addItemToCart = (goTo: "cart" | "checkout") => {
@@ -309,22 +315,24 @@ const ProductProfile: React.FC = () => {
           <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
               <p className="text-sm text-stone-400 font-bold mb-1">
-                {t("details.pricePer", { sku: skuLabel })}
+                {/* Dynamically adjust label if quantity > 1 */}
+                {quantity > 1 ? t("summary.total") : t("details.pricePer", { sku: skuLabel })}
               </p>
 
               <div className="flex items-baseline gap-3">
-                {product.discount_price ? (
+                {/* ✅ Render dynamically computed prices */}
+                {discountPriceTotal ? (
                   <>
                     <span className="text-4xl font-black text-stone-900">
-                      {t("details.currencyAed", { value: product.discount_price })}
+                      {t("details.currencyAed", { value: discountPriceTotal })}
                     </span>
                     <span className="text-xl text-stone-400 line-through font-bold">
-                      {t("details.currencyAed", { value: product.price })}
+                      {t("details.currencyAed", { value: basePriceTotal })}
                     </span>
                   </>
                 ) : (
                   <span className="text-4xl font-black text-stone-900">
-                    {t("details.currencyAed", { value: product.price })}
+                    {t("details.currencyAed", { value: basePriceTotal })}
                   </span>
                 )}
               </div>

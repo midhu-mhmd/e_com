@@ -18,6 +18,7 @@ import Navbar from '../components/layout/userside/navbar';
 import Footer from '../components/layout/userside/footer';
 import OrderPage from '../features/user/order';
 import ProfilePage from '../features/user/profile';
+import SupportPage from '../features/user/support';
 // import WishlistPage from '../features/user/wishlist';
 
 // Admin components
@@ -79,6 +80,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/products/:id" element={<ProductProfile />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/support" element={<SupportPage />} />
 
         {/* Protected user routes — require login */}
         <Route element={<PrivateRoute />}>

@@ -17,6 +17,21 @@ export interface ProductVideoDto {
   created_at: string;
 }
 
+/* ── Discount Tier DTO ── */
+export interface DiscountTierDto {
+  id?: number;
+  min_quantity: number;
+  discount_price: string;
+}
+
+/* ── Delivery Tier DTO ── */
+export interface DeliveryTierDto {
+  id?: number;
+  name: string;
+  cost: string;
+  estimated_days: string;
+}
+
 /* ── Product DTO returned by backend ── */
 export interface ProductDto {
   id: number;
@@ -35,6 +50,8 @@ export interface ProductDto {
   expected_delivery_time: string | null;
   images: ProductImageDto[];
   videos: ProductVideoDto[];
+  discount_tiers: DiscountTierDto[];
+  delivery_tiers: DeliveryTierDto[];
   average_rating: number;
   total_reviews: number;
   created_at: string;

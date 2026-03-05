@@ -34,50 +34,104 @@ const formatDateTime = (d: string) =>
     new Date(d).toLocaleString("en-AE", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /* ══════════════════════════════════════════════════
-   REVIEW MODAL
+   REVIEW MODAL (MINIMAL & INDUSTRY STANDARD)
    ══════════════════════════════════════════════════ */
 interface ReviewForm {
     product: number;
     product_name: string;
+    product_image?: string | null;
     rating: number;
     title: string;
     comment: string;
 }
 
-const StarRating: React.FC<{ value: number; onChange: (v: number) => void }> = ({ value, onChange }) => (
-    <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((s) => (
-            <button
-                key={s}
-                type="button"
-                onClick={() => onChange(s)}
-                className="transition-transform hover:scale-125 active:scale-95"
-            >
-                <Star
-                    size={28}
-                    className={s <= value ? "text-amber-400 fill-amber-400" : "text-slate-200"}
-                />
-            </button>
-        ))}
-    </div>
-);
+const StarRating: React.FC<{ value: number; onChange: (v: number) => void }> = ({ value, onChange }) => {
+    const [hover, setHover] = useState(0);
+
+    return (
+        <div className="flex gap-1.5" onMouseLeave={() => setHover(0)}>
+            {[1, 2, 3, 4, 5].map((s) => {
+                const isActive = s <= (hover || value);
+                return (
+                    <button
+                        key={s}
+                        type="button"
+                        onClick={() => onChange(s)}
+                        onMouseEnter={() => setHover(s)}
+                        className="transition-transform hover:scale-110 active:scale-90 focus:outline-none p-1"
+                    >
+                        <Star
+                            size={32}
+                            strokeWidth={isActive ? 0 : 1.5}
+                            className={`transition-all duration-200 ${isActive
+                                ? "text-yellow-400 fill-yellow-400 drop-shadow-sm"
+                                : "text-slate-300 fill-transparent"
+                                }`}
+                        />
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
+const getRatingText = (rating: number) => {
+    switch (rating) {
+        case 1: return "Poor";
+        case 2: return "Fair";
+        case 3: return "Good";
+        case 4: return "Very Good";
+        case 5: return "Excellent";
+        default: return "Tap to rate";
+    }
+};
 
 const ReviewModal: React.FC<{
     items: OrderItemDto[];
     onClose: () => void;
 }> = ({ items, onClose }) => {
     const toast = useToast();
+
+    // Filter out items that do not have a valid product ID (e.g., deleted products)
+    const validItems = items.filter((item) => {
+        const pid = (item as any).product?.id || item.product || (item as any).product_id;
+        return !!pid;
+    });
+
     const [forms, setForms] = useState<ReviewForm[]>(
-        items.map((item) => ({
-            product: item.product,
-            product_name: item.product_name,
-            rating: 5,
-            title: "",
-            comment: "",
-        }))
+        validItems.map((item) => {
+            const possibleProductId = (item as any).product?.id || item.product || (item as any).product_id;
+            return {
+                product: possibleProductId,
+                product_name: item.product_name,
+                product_image: item.product_image,
+                rating: 0, // Default to 0 to encourage active selection
+                title: "",
+                comment: "",
+            };
+        })
     );
     const [submitting, setSubmitting] = useState(false);
     const [currentIdx, setCurrentIdx] = useState(0);
+    const [direction, setDirection] = useState(1);
+
+    if (validItems.length === 0) {
+        return (
+            <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+                <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose} />
+                <div className="relative bg-white rounded-[24px] p-8 max-w-sm w-full shadow-2xl z-10 text-center">
+                    <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle size={32} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Unavailable</h3>
+                    <p className="text-slate-500 mb-6">These products are no longer in the catalog and cannot be reviewed.</p>
+                    <button onClick={onClose} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const current = forms[currentIdx];
     const isLast = currentIdx === forms.length - 1;
@@ -88,6 +142,16 @@ const ReviewModal: React.FC<{
         );
     };
 
+    const handleNext = () => {
+        setDirection(1);
+        setCurrentIdx((i) => i + 1);
+    };
+
+    const handleBack = () => {
+        setDirection(-1);
+        setCurrentIdx((i) => Math.max(0, i - 1));
+    };
+
     const handleSubmitAll = async () => {
         setSubmitting(true);
         try {
@@ -95,6 +159,7 @@ const ReviewModal: React.FC<{
                 if (f.rating > 0) {
                     await reviewsApi.create({
                         product: f.product,
+                        product_name: f.product_name,
                         rating: f.rating,
                         title: f.title || `Review for ${f.product_name}`,
                         comment: f.comment,
@@ -103,138 +168,149 @@ const ReviewModal: React.FC<{
             }
             toast.show("Reviews submitted! Thank you 🎉", "success");
             onClose();
-        } catch {
-            // 400 error modal will handle API validation errors
+        } catch (err: any) {
+            toast.show(`Error: ${JSON.stringify(err.response?.data || err.message)} (Debug payload sent: ${JSON.stringify(forms[0])})`, "error");
         } finally {
             setSubmitting(false);
         }
     };
 
+    const slideVariants = {
+        enter: (direction: number) => ({ x: direction > 0 ? 20 : -20, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (direction: number) => ({ x: direction < 0 ? 20 : -20, opacity: 0 })
+    };
+
     return (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
-            {/* Backdrop */}
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+            {/* Minimal Blur Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            {/* Modal */}
+            {/* Modal Container */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 24 }}
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 24 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden z-10"
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="relative w-full max-w-[420px] bg-white rounded-[24px] shadow-2xl overflow-hidden z-10 flex flex-col"
             >
-                {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-black text-slate-900">Write a Review</h2>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                            Product {currentIdx + 1} of {forms.length}
-                        </p>
-                    </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-all">
-                        <X size={20} />
-                    </button>
+                {/* Absolute Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 z-20 p-2 text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                    <X size={18} />
+                </button>
+
+                <div className="relative overflow-hidden flex-1">
+                    <AnimatePresence initial={false} custom={direction} mode="wait">
+                        <motion.div
+                            key={currentIdx}
+                            custom={direction}
+                            variants={slideVariants}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="p-6 pt-8 space-y-8"
+                        >
+                            {/* Product Header Context */}
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    {current.product_image ? (
+                                        <img src={current.product_image} alt={current.product_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Package size={24} className="text-slate-300" />
+                                    )}
+                                </div>
+                                <div className="pr-6">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate your purchase</p>
+                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">{current.product_name}</h3>
+                                </div>
+                            </div>
+
+                            {/* Interactive Star Rating */}
+                            <div className="flex flex-col items-center justify-center space-y-3 py-2">
+                                <StarRating value={current.rating} onChange={(v) => updateField("rating", v)} />
+                                <span className={`text-[11px] font-bold uppercase tracking-widest h-4 transition-colors ${current.rating > 0 ? 'text-slate-900' : 'text-slate-300'}`}>
+                                    {getRatingText(current.rating)}
+                                </span>
+                            </div>
+
+                            {/* Minimal Inputs */}
+                            <div className="space-y-4">
+                                <div>
+                                    <input
+                                        value={current.title}
+                                        onChange={(e) => updateField("title", e.target.value)}
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm font-medium placeholder:text-slate-400"
+                                        placeholder="Review Title (Optional)"
+                                    />
+                                </div>
+                                <div>
+                                    <textarea
+                                        rows={3}
+                                        value={current.comment}
+                                        onChange={(e) => updateField("comment", e.target.value)}
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm font-medium placeholder:text-slate-400 resize-none"
+                                        placeholder="Share details of your experience..."
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
-                {/* Body */}
-                <div className="p-6 space-y-5">
-                    {/* Product Name */}
-                    <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-4">
-                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                            <Package size={18} className="text-slate-400" />
-                        </div>
-                        <span className="text-sm font-bold text-slate-900 line-clamp-1">{current.product_name}</span>
-                    </div>
+                {/* Minimal Footer */}
+                <div className="p-6 pt-2 pb-6">
+                    <div className="flex items-center justify-between gap-4">
+                        {forms.length > 1 ? (
+                            // Progress dots for multiple items
+                            <div className="flex gap-1.5 ml-2">
+                                {forms.map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`h-1.5 rounded-full transition-all duration-300 ${i === currentIdx ? "bg-slate-900 w-5" : "bg-slate-200 w-1.5"}`}
+                                    />
+                                ))}
+                            </div>
+                        ) : <div />}
 
-                    {/* Star Rating */}
-                    <div className="text-center space-y-2">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Rating</p>
-                        <div className="flex justify-center">
-                            <StarRating value={current.rating} onChange={(v) => updateField("rating", v)} />
-                        </div>
-                    </div>
-
-                    {/* Title */}
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Review Title</label>
-                        <input
-                            value={current.title}
-                            onChange={(e) => updateField("title", e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all font-semibold text-sm placeholder:text-slate-300"
-                            placeholder="e.g. Amazing quality!"
-                        />
-                    </div>
-
-                    {/* Comment */}
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Your Review</label>
-                        <textarea
-                            rows={3}
-                            value={current.comment}
-                            onChange={(e) => updateField("comment", e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all font-medium text-sm placeholder:text-slate-300 resize-none"
-                            placeholder="Tell us about your experience…"
-                        />
-                    </div>
-
-                    {/* Progress dots */}
-                    {forms.length > 1 && (
-                        <div className="flex justify-center gap-1.5">
-                            {forms.map((_, i) => (
+                        <div className="flex gap-2 flex-1 justify-end">
+                            {currentIdx > 0 && (
                                 <button
-                                    key={i}
-                                    onClick={() => setCurrentIdx(i)}
-                                    className={`w-2 h-2 rounded-full transition-all ${i === currentIdx ? "bg-slate-900 w-6" : "bg-slate-200 hover:bg-slate-300"}`}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="p-6 pt-0 flex gap-3">
-                    {!isLast ? (
-                        <>
-                            <button
-                                onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
-                                disabled={currentIdx === 0}
-                                className="flex-1 py-3.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-30"
-                            >
-                                Back
-                            </button>
-                            <button
-                                onClick={() => setCurrentIdx((i) => i + 1)}
-                                className="flex-[2] py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
-                            >
-                                Next Product →
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            {forms.length > 1 && (
-                                <button
-                                    onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
-                                    className="flex-1 py-3.5 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95"
+                                    onClick={handleBack}
+                                    className="px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
                                 >
                                     Back
                                 </button>
                             )}
-                            <button
-                                onClick={handleSubmitAll}
-                                disabled={submitting}
-                                className="flex-[2] py-3.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-60"
-                            >
-                                {submitting ? <Loader2 size={18} className="animate-spin" /> : <Star size={18} className="fill-current" />}
-                                {submitting ? "Submitting…" : "Submit Reviews"}
-                            </button>
-                        </>
-                    )}
+
+                            {!isLast ? (
+                                <button
+                                    onClick={handleNext}
+                                    className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    Next <ChevronRight size={16} />
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSubmitAll}
+                                    disabled={submitting || current.rating === 0}
+                                    className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                                    {submitting ? "Submitting..." : "Submit Review"}
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </motion.div>
         </div>
@@ -394,9 +470,13 @@ const OrderList: React.FC = () => {
                                         >
                                             <div className="flex justify-between items-start mb-8 border-b border-slate-100 pb-6">
                                                 <div className="flex -space-x-4">
-                                                    {order.items.slice(0, 3).map((_, i) => (
-                                                        <div key={i} className="w-14 h-14 rounded-2xl bg-slate-50 border-4 border-white flex items-center justify-center shadow-sm relative z-10 hover:z-20 hover:scale-110 transition-transform">
-                                                            <Package size={20} className="text-slate-400" />
+                                                    {order.items.slice(0, 3).map((item, i) => (
+                                                        <div key={i} className="w-14 h-14 rounded-2xl bg-slate-50 border-4 border-white flex items-center justify-center shadow-sm relative z-10 hover:z-20 hover:scale-110 transition-transform overflow-hidden">
+                                                            {item.product_image ? (
+                                                                <img src={item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <Package size={20} className="text-slate-400" />
+                                                            )}
                                                         </div>
                                                     ))}
                                                     {order.items.length > 3 && (
@@ -426,9 +506,9 @@ const OrderList: React.FC = () => {
                                                         e.stopPropagation();
                                                         setReviewOrder(order);
                                                     }}
-                                                    className="mt-6 w-full py-3 px-4 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl flex items-center justify-center gap-2 font-bold text-amber-700 transition-all duration-200 hover:shadow-md"
+                                                    className="mt-6 w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center gap-2 font-bold text-slate-700 transition-all duration-200"
                                                 >
-                                                    <Star size={18} className="fill-current" />
+                                                    <Star size={16} className="text-slate-400" />
                                                     Write Review
                                                 </button>
                                             )}
@@ -450,7 +530,7 @@ const OrderList: React.FC = () => {
                 )}
             </main>
 
-            {/* Review Modal */}
+            {/* Review Modal Wrapper */}
             <AnimatePresence>
                 {reviewOrder && (
                     <ReviewModal
@@ -560,9 +640,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         {order.status.toLowerCase() === "delivered" && (
                             <button
                                 onClick={() => setReviewOpen(true)}
-                                className="relative z-10 mt-4 sm:mt-0 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl font-bold text-amber-700 transition-all duration-200 hover:shadow-md"
+                                className="relative z-10 mt-4 sm:mt-0 inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg active:scale-95"
                             >
-                                <Star size={18} className="fill-current" />
+                                <Star size={18} className="text-yellow-400 fill-current" />
                                 Write Review
                             </button>
                         )}
@@ -586,8 +666,13 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                             {order.items.map((item) => (
                                 <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-4 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                                    <div className="w-24 h-24 bg-white rounded-[1.2rem] flex items-center justify-center flex-shrink-0 shadow-sm">
-                                        <Package size={32} className="text-slate-300" />
+                                    <div className="w-24 h-24 bg-white rounded-[1.2rem] flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                                        {/* ✅ Safely render the item image if available, else fallback to icon */}
+                                        {item.product_image ? (
+                                            <img src={item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Package size={32} className="text-slate-300" />
+                                        )}
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
                                         <h3 className="text-lg font-bold text-slate-900 mb-1 line-clamp-2">{item.product_name}</h3>
@@ -858,7 +943,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                 </div>
             </main>
 
-            {/* Review Modal */}
+            {/* Review Modal Wrapper */}
             <AnimatePresence>
                 {reviewOpen && order && (
                     <ReviewModal

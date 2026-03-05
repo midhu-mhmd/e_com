@@ -5,6 +5,7 @@ export interface OrderItemDto {
     id: number;
     product: number;
     product_name: string;
+    product_image: string | null;
     quantity: number;
     price: string;
     subtotal: string;
