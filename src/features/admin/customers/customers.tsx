@@ -880,7 +880,7 @@ const CustomerManagement: React.FC = () => {
   const [verifiedFilter, setVerifiedFilter] = useState("");
   const [phoneFilter, setPhoneFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(1000);
+  const [limit, setLimit] = useState(10);
 
   // Prefill phone filter from URL ?phone= query
   useEffect(() => {

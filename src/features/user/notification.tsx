@@ -17,15 +17,22 @@ interface Notification {
     date: string;
     read: boolean;
     created_at?: string;
+    action_url?: string | null;
 }
 
 /* ── API helpers ── */
 const notificationsApi = {
-    list: async (): Promise<Notification[]> => {
-        const res = await api.get('/notifications/');
+    list: async (opts?: { limit?: number; offset?: number; is_read?: boolean | null }): Promise<{ results: Notification[]; next?: string | null; count?: number }> => {
+        const params: Record<string, any> = {};
+        if (opts?.limit != null) params.limit = opts.limit;
+        if (opts?.offset != null) params.offset = opts.offset;
+        if (typeof opts?.is_read === 'boolean') params.is_read = opts.is_read;
+        const res = await api.get('/notifications/', { params });
         const data = res.data;
-        // Handle paginated or flat response
-        return Array.isArray(data) ? data : (data.results || []);
+        const results = Array.isArray(data) ? data : (data.results || []);
+        const next = Array.isArray(data) ? null : (data.next || null);
+        const count = Array.isArray(data) ? results.length : (data.count ?? results.length);
+        return { results, next, count };
     },
 
     markAsRead: async (id: number) => {
@@ -64,29 +71,53 @@ const NotificationPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [markingAll, setMarkingAll] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+    const [limit] = useState<number>(20);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+    const loadMoreRef = React.useRef<HTMLDivElement>(null);
 
     // Fetch notifications
-    const fetchNotifications = useCallback(async () => {
+    const fetchNotifications = useCallback(async (reset: boolean = false) => {
         try {
-            const data = await notificationsApi.list();
-            setNotifications(
-                data.map((n: any) => ({
-                    ...n,
-                    type: n.type || 'system',
-                    read: n.read ?? n.is_read ?? false,
-                    date: n.date || formatDate(n.created_at),
-                }))
-            );
+            const is_read = filter === 'unread' ? false : filter === 'read' ? true : null;
+            const pageOffset = reset ? 0 : notifications.length;
+            const { results, next } = await notificationsApi.list({ limit, offset: pageOffset, is_read });
+            const mapped = results.map((n: any) => ({
+                ...n,
+                type: n.type || 'system',
+                read: n.read ?? n.is_read ?? false,
+                date: n.date || formatDate(n.created_at),
+                action_url: n.action_url || null,
+            }));
+            if (reset) setNotifications(mapped);
+            else setNotifications(prev => [...prev, ...mapped]);
+            setHasMore(Boolean(next) || mapped.length === limit);
         } catch {
-            // silently fail — empty list will be shown
+            setHasMore(false);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [filter, limit, notifications.length]);
 
     useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
+        setLoading(true);
+        setHasMore(true);
+        fetchNotifications(true);
+    }, [filter]);
+
+    useEffect(() => {
+        const el = loadMoreRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver((entries) => {
+            const [entry] = entries;
+            if (entry.isIntersecting && hasMore && !loading && !isLoadingMore) {
+                setIsLoadingMore(true);
+                fetchNotifications(false).finally(() => setIsLoadingMore(false));
+            }
+        }, { root: null, rootMargin: '200px', threshold: 0 });
+        io.observe(el);
+        return () => io.disconnect();
+    }, [hasMore, loading, isLoadingMore, filter, limit]);
 
     // Mark single as read
     const markAsRead = async (id: number) => {
@@ -240,6 +271,23 @@ const NotificationPage: React.FC = () => {
 
                                     {/* ✅ Actions (Absolute corner to preserve card height) */}
                                     <div className={`absolute bottom-4 ${isArabic ? 'left-4' : 'right-4'} flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300`}>
+                                        {notification.action_url && (
+                                            <button
+                                                onClick={() => {
+                                                    const url = String(notification.action_url || '').trim();
+                                                    if (!url) return;
+                                                    if (/^https?:\/\//i.test(url)) {
+                                                        window.location.href = url;
+                                                    } else if (url.startsWith('/')) {
+                                                        navigate(url);
+                                                    }
+                                                }}
+                                                className="p-1.5 bg-white text-violet-600 rounded-lg shadow-sm border border-slate-100 hover:bg-violet-50 transition-colors"
+                                                title="Open"
+                                            >
+                                                Open
+                                            </button>
+                                        )}
                                         {!notification.read && (
                                             <button
                                                 onClick={() => markAsRead(notification.id)}
@@ -265,6 +313,12 @@ const NotificationPage: React.FC = () => {
                                 </motion.div>
                             ))}
                         </AnimatePresence>
+                        <div ref={loadMoreRef} className="h-8" />
+                        {isLoadingMore && (
+                            <div className="flex items-center justify-center py-4">
+                                <Loader2 size={20} className="animate-spin text-slate-300" />
+                            </div>
+                        )}
                     </div>
                 )}
             </main>

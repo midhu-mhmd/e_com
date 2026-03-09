@@ -8,6 +8,7 @@ import { addToCart } from "../admin/cart/cartSlice";
 import { useTranslation } from "react-i18next";
 import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
+import { API_BASE_URL } from "../../config/constants";
 
 /** Unified media item for the gallery */
 type MediaItem =
@@ -57,6 +58,17 @@ const buildMediaList = (product: ProductDto): MediaItem[] => {
   }
 
   return items;
+};
+
+const normalizeReviewImage = (src: string): string => {
+  if (!src) return "";
+  const s = String(src);
+  if (/^https?:\/\//i.test(s)) return s;
+  const base =
+    (import.meta as any).env?.VITE_MEDIA_BASE_URL ||
+    ((API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL)) ? new URL(API_BASE_URL as any).origin : window.location.origin);
+  if (s.startsWith("/")) return `${base}${s}`;
+  return `${base}/${s.replace(/^\.?\/*/, "")}`;
 };
 
 const ProductProfile: React.FC = () => {
@@ -521,18 +533,22 @@ const ProductProfile: React.FC = () => {
                     {/* Images */}
                     {Array.isArray((r as any).images) && (r as any).images.length > 0 && (
                       <div className="flex gap-2 mt-3 flex-wrap">
-                        {(r as any).images.slice(0, 6).map((src: string, idx: number) => (
+                        {(r as any).images.slice(0, 6).map((entry: any, idx: number) => {
+                          const raw = typeof entry === "string" ? entry : entry?.image;
+                          const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
+                          const url = normalizeReviewImage(cleaned);
+                          return (
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => setViewerUrl(src)}
+                            onClick={() => setViewerUrl(url)}
                             className="group relative"
                             aria-label="Expand image"
                           >
-                            <img src={src} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
+                            <img src={url} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
                             <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
                           </button>
-                        ))}
+                        )})}
                       </div>
                     )}
                     {/* Admin Response */}
@@ -573,7 +589,7 @@ const ProductProfile: React.FC = () => {
               >
                 <X size={18} />
               </button>
-              <img src={viewerUrl} alt="review" className="w-full h-auto max-h-[85vh] object-contain rounded-xl" />
+              <img src={viewerUrl || ""} alt="review" className="w-full h-auto max-h-[85vh] object-contain rounded-xl" />
             </div>
           </motion.div>
         )}

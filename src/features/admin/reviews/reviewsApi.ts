@@ -9,7 +9,7 @@ export interface ReviewDto {
     user_name?: string;
     rating: number;
     comment: string;
-    images?: string[];
+    images?: Array<{ id: number; image: string; created_at: string }>;
     admin_response?: string | null;
     is_visible: boolean;
     created_at: string;
@@ -19,7 +19,7 @@ export interface ReviewDto {
 export type ReviewsQuery = {
     q?: string;
     rating?: number;
-    is_approved?: boolean;
+    is_visible?: boolean;
     product?: number;
     user?: number;
     page?: number;
@@ -98,12 +98,14 @@ export const reviewsApi = {
     },
     
     toggleVisibility: async (id: number): Promise<{ message: string; is_visible?: boolean }> => {
-        const res = await api.post<{ message: string; is_visible?: boolean }>(`/reviews/${id}/toggle-visibility/`);
+        const res = await api.post<{ message: string; is_visible?: boolean }>(`/reviews/${id}/toggle_visibility/`);
         return res.data;
     },
     
     setAdminResponse: async (id: number, admin_response: string): Promise<ReviewDto> => {
-        const res = await api.patch<ReviewDto>(`/reviews/${id}/`, { admin_response });
+        const form = new FormData();
+        form.append("admin_response", admin_response ?? "");
+        const res = await api.patch<ReviewDto>(`/reviews/${id}/`, form, { suppressGlobal5xx: true } as any);
         return res.data;
     },
 };

@@ -460,6 +460,8 @@ const OrderList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState("all");
     const [reviewOrder, setReviewOrder] = useState<OrderDto | null>(null);
+    const userId = useAppSelector((s) => (s as any).auth.user?.id);
+    const [myReviewProducts, setMyReviewProducts] = useState<Set<number>>(new Set());
 
     useEffect(() => { fetchOrders(); }, []);
 
@@ -474,6 +476,22 @@ const OrderList: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            if (!userId) return;
+            try {
+                const res = await reviewsApi.list({ user: userId, limit: 200 });
+                const results = res?.results || [];
+                const ids = new Set<number>(results.map((r: any) => Number(r.product)));
+                if (mounted) setMyReviewProducts(ids);
+            } catch {
+                // silent
+            }
+        })();
+        return () => { mounted = false; };
+    }, [userId]);
 
     const filtered = filter === "all"
         ? orders
@@ -633,7 +651,10 @@ const OrderList: React.FC = () => {
                                                     className="mt-6 w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center gap-2 font-bold text-slate-700 transition-all duration-200"
                                                 >
                                                     <Star size={16} className="text-slate-400" />
-                                                    Write Review
+                                                    {order.items.some((item) => {
+                                                        const pid = (item as any).product?.id || item.product || (item as any).product_id;
+                                                        return !!pid && myReviewProducts.has(Number(pid));
+                                                    }) ? "Edit Review" : "Write Review"}
                                                 </button>
                                             )}
 

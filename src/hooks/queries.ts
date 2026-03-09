@@ -66,7 +66,7 @@ export const useProductDetails = (id: number | undefined) =>
 export const useProductReviews = (id: number | undefined, limit: number = 10) =>
     useQuery({
         queryKey: ["product-reviews", id, limit],
-        queryFn: () => reviewsApi.list({ product: id!, is_approved: true, limit }),
+        queryFn: () => reviewsApi.list({ product: id!, is_visible: true, limit }),
         enabled: !!id,
         staleTime: 2 * 60 * 1000,
     });
