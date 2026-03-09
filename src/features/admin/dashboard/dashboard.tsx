@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Package,
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal,
   ShoppingCart,
   Users,
   CreditCard,
@@ -13,6 +12,7 @@ import {
   TrendingUp,
   ChevronRight,
   MessageSquare,
+  CalendarDays,
 } from "lucide-react";
 
 /* ── Redux selectors ── */
@@ -31,6 +31,9 @@ import type { Product } from "../products/productsSlice";
 /* ── MAIN COMPONENT ── */
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
+  const pendingStatusSet = useMemo(() => new Set(["pending", "confirmed", "processing"]), []);
+  const cancelledStatusSet = useMemo(() => new Set(["cancelled", "canceled"]), []);
+  const successfulPaymentSet = useMemo(() => new Set(["success", "paid", "completed"]), []);
 
   // Selectors
   const orders = useSelector(selectOrders);
@@ -48,7 +51,8 @@ const Dashboard: React.FC = () => {
   // Dispatch fetches on mount if data is empty
   useEffect(() => {
     if (orders.length === 0 && ordersStatus !== "loading") {
-      dispatch(ordersActions.fetchOrdersRequest({ limit: 10, page: 1 }));
+      // Dashboard KPIs need a broad dataset, not a single small page.
+      dispatch(ordersActions.fetchOrdersRequest({ limit: 1000, page: 1 }));
     }
     if (products.length === 0 && productsStatus !== "loading") {
       dispatch(productsActions.fetchProductsRequest({ limit: 20, page: 1 }));
@@ -65,22 +69,29 @@ const Dashboard: React.FC = () => {
   }, [dispatch]);
 
   // Computed stats
-  const completedOrders = useMemo(
-    () => orders.filter((o) => (o.status as any) === "Delivered").length,
-    [orders]
-  );
+  const completedOrders = useMemo(() => {
+    return orders.filter((o) => o.status.toLowerCase() === "delivered").length;
+  }, [orders]);
   const pendingOrders = useMemo(
-    () => orders.filter((o) => ["Pending", "Confirmed", "Processing"].includes(o.status)).length,
-    [orders]
+    () => orders.filter((o) => pendingStatusSet.has(o.status.toLowerCase())).length,
+    [orders, pendingStatusSet]
   );
   const canceledOrders = useMemo(
-    () => orders.filter((o) => (o.status as any) === "Cancelled").length,
-    [orders]
+    () => orders.filter((o) => cancelledStatusSet.has(o.status.toLowerCase())).length,
+    [orders, cancelledStatusSet]
   );
-  const totalRevenue = useMemo(
-    () => payments.filter((p) => p.paymentStatus === "Success").reduce((s, p) => s + p.amount, 0),
-    [payments]
-  );
+  const paidOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const orderStatus = o.status.toLowerCase();
+      const paymentStatus = o.paymentStatus.toLowerCase();
+      if (cancelledStatusSet.has(orderStatus)) return false;
+      return successfulPaymentSet.has(paymentStatus) || orderStatus === "delivered";
+    });
+  }, [orders, cancelledStatusSet, successfulPaymentSet]);
+
+  const totalRevenue = useMemo(() => {
+    return paidOrders.reduce((sum, order) => sum + (Number.isFinite(order.total) ? order.total : 0), 0);
+  }, [paidOrders]);
   const avgRating = useMemo(
     () => reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "0.0",
     [reviews]
@@ -93,6 +104,74 @@ const Dashboard: React.FC = () => {
     () => [...orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
     [orders]
   );
+  // Chart period state
+  const [chartPeriod, setChartPeriod] = useState<"year" | "6months" | "30days">("year");
+
+  const chartData = useMemo(() => {
+    const ALL_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+
+    let labels: string[];
+    let bucketFn: (date: Date) => number;
+    let bucketCount: number;
+
+    if (chartPeriod === "30days") {
+      // Last 30 days → 4 weekly buckets
+      bucketCount = 4;
+      labels = Array.from({ length: 4 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(d.getDate() - (3 - i) * 7);
+        return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+      });
+      bucketFn = (date: Date) => {
+        const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+        if (diff < 0 || diff > 28) return -1;
+        return 3 - Math.floor(diff / 7);
+      };
+    } else if (chartPeriod === "6months") {
+      bucketCount = 6;
+      labels = Array.from({ length: 6 }, (_, i) => {
+        const m = (now.getMonth() - 5 + i + 12) % 12;
+        return ALL_MONTHS[m];
+      });
+      bucketFn = (date: Date) => {
+        const monthDiff = (now.getFullYear() - date.getFullYear()) * 12 + now.getMonth() - date.getMonth();
+        if (monthDiff < 0 || monthDiff > 5) return -1;
+        return 5 - monthDiff;
+      };
+    } else {
+      bucketCount = 12;
+      labels = ALL_MONTHS;
+      bucketFn = (date: Date) => {
+        if (date.getFullYear() !== now.getFullYear()) return -1;
+        return date.getMonth();
+      };
+    }
+
+    const orderCounts = new Array(bucketCount).fill(0);
+    const revenueAmounts = new Array(bucketCount).fill(0);
+
+    orders.forEach((order) => {
+      const date = new Date(order.createdAt);
+      if (Number.isNaN(date.getTime())) return;
+      const idx = bucketFn(date);
+      if (idx < 0 || idx >= bucketCount) return;
+
+      orderCounts[idx] += 1;
+
+      const os = order.status.toLowerCase();
+      const ps = order.paymentStatus.toLowerCase();
+      if (!cancelledStatusSet.has(os) && (successfulPaymentSet.has(ps) || os === "delivered")) {
+        revenueAmounts[idx] += Number.isFinite(order.total) ? order.total : 0;
+      }
+    });
+
+    return { labels, orderCounts, revenueAmounts };
+  }, [orders, chartPeriod, cancelledStatusSet, successfulPaymentSet]);
+
+  const revenueMax = useMemo(() => Math.max(...chartData.revenueAmounts, 1), [chartData]);
+  const ordersMax = useMemo(() => Math.max(...chartData.orderCounts, 1), [chartData]);
+
   const activeProducts = useMemo(
     () => products.filter((p) => p.status === "Active").length,
     [products]
@@ -176,43 +255,14 @@ const Dashboard: React.FC = () => {
         {/* LEFT COLUMN - 9/12 */}
         <div className="lg:col-span-9 space-y-6">
 
-          {/* CUSTOMER ACTIVITY CHART (aesthetic placeholder with real legend) */}
-          <div className="bg-white rounded-2xl border border-[#EEEEEE] p-5 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest">Revenue Overview</h2>
-              <div className="flex items-center gap-4">
-                <div className="hidden sm:flex items-center gap-4">
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#5D5FEF]" /><span className="text-[10px] font-bold text-gray-400">Orders</span></div>
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#FFB340]" /><span className="text-[10px] font-bold text-gray-400">Revenue</span></div>
-                </div>
-                <MoreHorizontal size={16} className="text-gray-400 cursor-pointer" />
-              </div>
-            </div>
-
-            <div className="h-48 w-full relative">
-              <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-gray-400 font-bold h-[80%] pointer-events-none">
-                <span>AED {(totalRevenue * 1.2).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                <span>AED {(totalRevenue * 0.6).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                <span>AED 0</span>
-              </div>
-
-              <div className="ml-12 h-full relative">
-                <div className="absolute inset-0 flex flex-col justify-between h-[80%] pt-1 pointer-events-none opacity-40">
-                  {[...Array(3)].map((_, i) => <div key={i} className="w-full border-t border-dashed border-gray-200" />)}
-                </div>
-
-                <svg className="w-full h-full pt-2 pb-8 overflow-visible" viewBox="0 0 1000 100" preserveAspectRatio="none">
-                  <path d="M0,80 C150,75 300,85 500,60 C700,40 850,55 1000,45" fill="none" stroke="#FFB340" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M0,60 C150,55 300,40 500,45 C700,20 850,15 1000,5" fill="none" stroke="#5D5FEF" strokeWidth="2.5" strokeLinecap="round" />
-                  <circle cx="700" cy="20" r="3" fill="white" stroke="#121212" strokeWidth="2" />
-                </svg>
-
-                <div className="flex justify-between absolute bottom-0 w-full text-[9px] text-gray-400 font-bold uppercase">
-                  {['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'].map(m => <span key={m}>{m}</span>)}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* REVENUE OVERVIEW — interactive bar chart */}
+          <RevenueChart
+            chartData={chartData}
+            revenueMax={revenueMax}
+            ordersMax={ordersMax}
+            chartPeriod={chartPeriod}
+            onPeriodChange={setChartPeriod}
+          />
 
           {/* RECENT ORDERS — from real data */}
           <div className="bg-white rounded-2xl border border-[#EEEEEE] overflow-hidden shadow-sm">
@@ -360,6 +410,162 @@ const MiniStat = ({ label, value, color }: { label: string; value: string; color
   </div>
 );
 
+/* ── Revenue Overview Chart ── */
+const PERIOD_OPTIONS = [
+  { key: "year" as const, label: "This Year" },
+  { key: "6months" as const, label: "6 Months" },
+  { key: "30days" as const, label: "30 Days" },
+];
+
+const RevenueChart = ({
+  chartData,
+  revenueMax,
+  ordersMax,
+  chartPeriod,
+  onPeriodChange,
+}: {
+  chartData: { labels: string[]; orderCounts: number[]; revenueAmounts: number[] };
+  revenueMax: number;
+  ordersMax: number;
+  chartPeriod: "year" | "6months" | "30days";
+  onPeriodChange: (p: "year" | "6months" | "30days") => void;
+}) => {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const barCount = chartData.labels.length;
+
+  const formatAED = (v: number) =>
+    v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : v.toLocaleString("en-IN");
+
+  // Y-axis guide values (4 lines)
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(revenueMax * f));
+
+  const totalRevInPeriod = chartData.revenueAmounts.reduce((s, v) => s + v, 0);
+  const totalOrdersInPeriod = chartData.orderCounts.reduce((s, v) => s + v, 0);
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#EEEEEE] p-5 shadow-sm">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+        <div>
+          <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest flex items-center gap-2">
+            <CalendarDays size={14} className="text-[#A1A1AA]" />
+            Revenue Overview
+          </h2>
+          <p className="text-[10px] text-[#A1A1AA] mt-1">
+            AED {totalRevInPeriod.toLocaleString("en-IN", { maximumFractionDigits: 0 })} revenue &middot; {totalOrdersInPeriod} orders
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          {/* Legend */}
+          <div className="hidden sm:flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded bg-[#5D5FEF]" />
+              <span className="text-[10px] font-bold text-gray-400">Revenue</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded bg-[#FFB340]" />
+              <span className="text-[10px] font-bold text-gray-400">Orders</span>
+            </div>
+          </div>
+          {/* Period Toggle */}
+          <div className="flex bg-[#F4F4F5] rounded-lg p-0.5">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => onPeriodChange(opt.key)}
+                className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+                  chartPeriod === opt.key
+                    ? "bg-white text-black shadow-sm"
+                    : "text-[#71717A] hover:text-black"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Chart Area */}
+      <div className="relative flex" style={{ height: 220 }}>
+        {/* Y-axis labels */}
+        <div className="flex flex-col justify-between pr-3 py-1 text-[9px] font-bold text-[#A1A1AA] w-12 shrink-0">
+          {[...yTicks].reverse().map((v, i) => (
+            <span key={i} className="leading-none">{formatAED(v)}</span>
+          ))}
+        </div>
+
+        {/* Bars area */}
+        <div className="flex-1 relative">
+          {/* Grid lines */}
+          <div className="absolute inset-0 flex flex-col justify-between py-1 pointer-events-none">
+            {yTicks.map((_, i) => (
+              <div key={i} className="w-full border-t border-dashed border-gray-100" />
+            ))}
+          </div>
+
+          {/* Bars */}
+          <div className="relative flex items-end justify-between h-full gap-0.5 px-1" style={{ paddingBottom: 28 }}>
+            {chartData.labels.map((label, idx) => {
+              const revH = revenueMax > 0 ? (chartData.revenueAmounts[idx] / revenueMax) * 100 : 0;
+              const ordH = ordersMax > 0 ? (chartData.orderCounts[idx] / ordersMax) * 100 : 0;
+              const isHovered = hoverIdx === idx;
+              const hasData = chartData.revenueAmounts[idx] > 0 || chartData.orderCounts[idx] > 0;
+
+              return (
+                <div
+                  key={label}
+                  className="flex-1 flex flex-col items-center relative group"
+                  style={{ height: "100%" }}
+                  onMouseEnter={() => setHoverIdx(idx)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                >
+                  {/* Tooltip */}
+                  {isHovered && hasData && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full z-20 bg-[#18181B] text-white rounded-xl px-3 py-2 shadow-xl pointer-events-none min-w-[120px]">
+                      <p className="text-[10px] font-bold text-gray-300 mb-1">{label}</p>
+                      <p className="text-[11px] font-bold">AED {chartData.revenueAmounts[idx].toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
+                      <p className="text-[10px] text-gray-400">{chartData.orderCounts[idx]} orders</p>
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#18181B]" />
+                    </div>
+                  )}
+
+                  {/* Bar group */}
+                  <div className="flex items-end gap-px flex-1 w-full justify-center">
+                    {/* Revenue bar */}
+                    <div
+                      className={`rounded-t transition-all duration-300 ${isHovered ? "bg-[#5D5FEF]" : "bg-[#5D5FEF]/70"}`}
+                      style={{
+                        height: `${Math.max(revH, hasData ? 2 : 0)}%`,
+                        width: barCount > 8 ? "40%" : "35%",
+                        minHeight: chartData.revenueAmounts[idx] > 0 ? 3 : 0,
+                      }}
+                    />
+                    {/* Orders bar */}
+                    <div
+                      className={`rounded-t transition-all duration-300 ${isHovered ? "bg-[#FFB340]" : "bg-[#FFB340]/70"}`}
+                      style={{
+                        height: `${Math.max(ordH, hasData ? 2 : 0)}%`,
+                        width: barCount > 8 ? "40%" : "35%",
+                        minHeight: chartData.orderCounts[idx] > 0 ? 3 : 0,
+                      }}
+                    />
+                  </div>
+
+                  {/* X-axis label */}
+                  <span className={`absolute -bottom-0 text-[9px] font-bold transition-colors ${isHovered ? "text-black" : "text-[#A1A1AA]"}`}>
+                    {label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RecentOrderRow = ({ order }: { order: Order }) => {
   const itemNames = order.items.length > 0
     ? order.items.map((i) => i.productName).join(", ")
@@ -385,6 +591,7 @@ const RecentOrderRow = ({ order }: { order: Order }) => {
 };
 
 const OrderStatusBadge = ({ status }: { status: string }) => {
+  const normalizedStatus = status.toLowerCase();
   const styles: Record<string, string> = {
     delivered: "border-emerald-100 text-emerald-600 bg-emerald-50",
     confirmed: "border-blue-100 text-blue-600 bg-blue-50",
@@ -394,8 +601,8 @@ const OrderStatusBadge = ({ status }: { status: string }) => {
     cancelled: "border-rose-100 text-rose-600 bg-rose-50",
   };
   return (
-    <span className={`text-[9px] font-bold px-2 py-0.5 rounded border capitalize ${styles[status] || "border-gray-200 text-gray-600 bg-gray-50"}`}>
-      {status}
+    <span className={`text-[9px] font-bold px-2 py-0.5 rounded border capitalize ${styles[normalizedStatus] || "border-gray-200 text-gray-600 bg-gray-50"}`}>
+      {normalizedStatus}
     </span>
   );
 };
@@ -425,6 +632,7 @@ const BreakdownBar = ({ label, percentage, color }: { label: string; percentage:
 );
 
 function statusColor(status: string): string {
+  const normalizedStatus = status.toLowerCase();
   const colors: Record<string, string> = {
     delivered: "bg-emerald-500",
     confirmed: "bg-blue-500",
@@ -433,7 +641,7 @@ function statusColor(status: string): string {
     shipped: "bg-indigo-500",
     cancelled: "bg-rose-500",
   };
-  return colors[status] ?? "bg-gray-300";
+  return colors[normalizedStatus] ?? "bg-gray-300";
 }
 
 function methodColor(method: string): string {

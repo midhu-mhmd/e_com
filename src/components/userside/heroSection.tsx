@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useBanners } from '../../hooks/queries';
 
 const Hero: React.FC = () => {
   const { t } = useTranslation('home');
+  const navigate = useNavigate();
 
   const [current, setCurrent] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
@@ -182,7 +184,7 @@ const Hero: React.FC = () => {
                     )}
 
                     <button
-                      onClick={() => media.cta_link && (window.location.href = media.cta_link)}
+                      onClick={() => navigate('/products')}
                       className="group relative px-6 py-3 bg-cyan-600 text-white rounded-full font-bold text-sm sm:text-base shadow-lg shadow-cyan-600/30 overflow-hidden transition-transform hover:scale-105 active:scale-95"
                     >
                       <span className="relative z-10 flex items-center gap-2">

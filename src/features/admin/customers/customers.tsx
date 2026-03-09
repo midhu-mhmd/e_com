@@ -880,7 +880,7 @@ const CustomerManagement: React.FC = () => {
   const [verifiedFilter, setVerifiedFilter] = useState("");
   const [phoneFilter, setPhoneFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(1000);
 
   // Prefill phone filter from URL ?phone= query
   useEffect(() => {
@@ -934,7 +934,7 @@ const CustomerManagement: React.FC = () => {
     dispatch(
       customersActions.fetchCustomersRequest({
         q: debouncedSearch || undefined,
-        status: statusFilter === "All" ? undefined : statusFilter,
+        status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
         role: roleFilter === "All" ? undefined : roleFilter,
         page,
         limit,
@@ -956,8 +956,13 @@ const CustomerManagement: React.FC = () => {
   const { filteredCustomers, stats } = useMemo(() => {
     let result = customers;
 
-    // Redundant now that it is server-side triggered via fetch useEffect
-    // if (roleFilter !== "All") result = result.filter((c) => c.role === roleFilter);
+    if (statusFilter !== "All") {
+      result = result.filter((c) => c.status === statusFilter);
+    }
+
+    if (roleFilter !== "All") {
+      result = result.filter((c) => c.role === roleFilter);
+    }
 
     if (verifiedFilter === "email") result = result.filter((c) => c.isEmailVerified);
     else if (verifiedFilter === "phone") result = result.filter((c) => c.isPhoneVerified);
@@ -980,7 +985,7 @@ const CustomerManagement: React.FC = () => {
     }
 
     return { filteredCustomers: result, stats: { active, blocked, admins } };
-  }, [customers, verifiedFilter, phoneFilter]);
+  }, [customers, statusFilter, roleFilter, verifiedFilter, phoneFilter]);
 
   // If phone filter is present in URL and exactly one match, open details panel
   useEffect(() => {
@@ -1081,12 +1086,27 @@ const CustomerManagement: React.FC = () => {
     }, 0);
   }, [filteredCustomers]);
 
-  const toggleRoleQuick = useCallback(() => {
-    setRoleFilter((prev) => {
-      // if All -> admin (quick view), admin -> user, user -> admin
-      if (prev === "All") return "admin";
-      return prev === "admin" ? "user" : "admin";
-    });
+  const showAllUsers = useCallback(() => {
+    setStatusFilter("All");
+    setRoleFilter("All");
+    setPage(1);
+  }, []);
+
+  const showAdmins = useCallback(() => {
+    setRoleFilter("admin");
+    setStatusFilter("All");
+    setPage(1);
+  }, []);
+
+  const showActive = useCallback(() => {
+    setStatusFilter("Active");
+    setRoleFilter("All");
+    setPage(1);
+  }, []);
+
+  const showBlocked = useCallback(() => {
+    setStatusFilter("Blocked");
+    setRoleFilter("All");
     setPage(1);
   }, []);
 
@@ -1161,6 +1181,7 @@ const CustomerManagement: React.FC = () => {
           icon={<CheckCircle2 size={16} className="text-emerald-500" />}
           onClick={() => {
             setStatusFilter("Active");
+            setRoleFilter("All");
             setPage(1);
           }}
           active={statusFilter === "Active"}
@@ -1172,6 +1193,7 @@ const CustomerManagement: React.FC = () => {
           icon={<XCircle size={16} className="text-rose-500" />}
           onClick={() => {
             setStatusFilter("Blocked");
+            setRoleFilter("All");
             setPage(1);
           }}
           active={statusFilter === "Blocked"}
@@ -1183,6 +1205,7 @@ const CustomerManagement: React.FC = () => {
           icon={<Shield size={16} className="text-blue-500" />}
           onClick={() => {
             setRoleFilter("admin");
+            setStatusFilter("All");
             setPage(1);
           }}
           active={roleFilter === "admin"}
@@ -1194,17 +1217,48 @@ const CustomerManagement: React.FC = () => {
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            {/* User/Admin Toggle */}
             <button
-              onClick={toggleRoleQuick}
-              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${roleFilter === "admin"
-                ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                : "bg-black text-white border-black hover:bg-gray-800"
+              onClick={showAllUsers}
+              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "All" && roleFilter === "All"
+                ? "bg-black text-white border-black"
+                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
                 }`}
-              title="Quick toggle: Admins ↔ Users (All -> Admins)"
+              title="Show all users"
             >
-              {roleFilter === "admin" ? <Shield size={14} /> : <User size={14} />}
-              {roleFilter === "admin" ? "Show Users" : "Show Admins"}
+              <User size={14} /> All
+            </button>
+
+            <button
+              onClick={showAdmins}
+              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${roleFilter === "admin"
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
+                }`}
+              title="Show all admins"
+            >
+              <Shield size={14} /> Admins
+            </button>
+
+            <button
+              onClick={showActive}
+              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "Active"
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
+                }`}
+              title="Show active users"
+            >
+              <CheckCircle2 size={14} /> Active
+            </button>
+
+            <button
+              onClick={showBlocked}
+              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "Blocked"
+                ? "bg-rose-600 text-white border-rose-600"
+                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
+                }`}
+              title="Show blocked users"
+            >
+              <Ban size={14} /> Blocked
             </button>
 
             <div className="h-6 w-px bg-[#EEEEEE] mx-1" />

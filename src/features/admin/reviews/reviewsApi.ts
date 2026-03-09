@@ -98,7 +98,7 @@ export const reviewsApi = {
     },
     
     toggleVisibility: async (id: number): Promise<{ message: string; is_visible?: boolean }> => {
-        const res = await api.post<{ message: string; is_visible?: boolean }>(`/reviews/${id}/toggle_visibility/`);
+        const res = await api.post<{ message: string; is_visible?: boolean }>(`/reviews/${id}/toggle-visibility/`);
         return res.data;
     },
     
