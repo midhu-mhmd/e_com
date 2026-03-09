@@ -45,6 +45,7 @@ export interface ProductDto {
   description: string;
   category: number;
   category_name: string;
+  unit?: string;
   price: string;
   discount_price: string | null;
   final_price: string;
@@ -84,7 +85,6 @@ export interface CategoryDto {
   description: string;
   parent?: number | null;
   image?: string | null;
-  is_active: boolean;
   product_count?: number;
 }
 
@@ -136,13 +136,23 @@ export const productsApi = {
 
   /* ── Categories ── */
   listCategories: async (): Promise<CategoryDto[]> => {
-    const res = await api.get<CategoryDto[]>("/products/categories/");
-    return res.data;
+    const res = await api.get<any>("/products/categories/");
+    const data = res.data;
+    return Array.isArray(data) ? data : (data?.results ?? []);
   },
 
   createCategory: async (payload: Partial<CategoryDto>): Promise<CategoryDto> => {
     const res = await api.post<CategoryDto>("/products/categories/", payload);
     return res.data;
+  },
+  
+  updateCategory: async (id: number, payload: Partial<CategoryDto>): Promise<CategoryDto> => {
+    const res = await api.patch<CategoryDto>(`/products/categories/${id}/`, payload);
+    return res.data;
+  },
+  
+  deleteCategory: async (id: number): Promise<void> => {
+    await api.delete(`/products/categories/${id}/`);
   },
 
   /* ── Delivery Tiers ── */

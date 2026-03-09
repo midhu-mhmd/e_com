@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 import type { AuthMethod } from "../../types/types";
 import { requestOtp, verifyOtp, setMethod, setStep, authError } from "../auth/authSlice";
@@ -93,6 +95,8 @@ const useOtpTimer = () => {
 const RegisterWithOtp: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isArabic } = useLanguageToggle();
+  const { t } = useTranslation("common");
 
   const { otp_type, step, isLoading, error, value, isAuthenticated, user } = useSelector(
     (s: any) => s.auth
@@ -257,12 +261,8 @@ const RegisterWithOtp: React.FC = () => {
       <div className="w-full max-w-105">
         <div className="mt-4 rounded-2xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.06)] bg-white">
           <div className="px-6 pt-7 pb-6">
-            <h1 className="text-[26px] leading-tight font-semibold tracking-tight">
-              Create account
-            </h1>
-            <p className="mt-2 text-sm text-gray-500">
-              Register using OTP. No password needed.
-            </p>
+            <h1 className="text-[26px] leading-tight font-semibold tracking-tight">{t("auth.createAccount", "Create account")}</h1>
+            <p className="mt-2 text-sm text-gray-500">{t("auth.registerUsingOtp", "Register using OTP. No password needed.")}</p>
 
             <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-gray-50 p-1">
               <button
@@ -270,9 +270,7 @@ const RegisterWithOtp: React.FC = () => {
                 onClick={() => onChangeMethod("phone")}
                 className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "phone" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"}`}
               >
-                <span className="inline-flex items-center gap-2 justify-center">
-                  <Phone size={14} /> Phone
-                </span>
+                <span className="inline-flex items-center gap-2 justify-center"><Phone size={14} /> {t("auth.phone", "Phone")}</span>
               </button>
 
               <button
@@ -280,25 +278,23 @@ const RegisterWithOtp: React.FC = () => {
                 onClick={() => onChangeMethod("email")}
                 className={`h-10 rounded-xl text-[11px] font-semibold uppercase tracking-[0.18em] transition ${otp_type === "email" ? "bg-white shadow-sm text-cyan-600" : "text-gray-500 hover:text-cyan-600"}`}
               >
-                <span className="inline-flex items-center gap-2 justify-center">
-                  <Mail size={14} /> Email
-                </span>
+                <span className="inline-flex items-center gap-2 justify-center"><Mail size={14} /> {t("auth.email", "Email")}</span>
               </button>
             </div>
 
             {step === "input" && (
               <form onSubmit={onSendOtp} className="mt-6 space-y-5">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="First Name">
+                  <Field label={t("auth.firstName", "First Name")}>
                     <div className="relative">
-                      <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <User size={16} className={`absolute ${isArabic ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400`} />
                       <input
                         type="text"
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         onBlur={() => setFirstNameTouched(true)}
-                        placeholder="First name"
+                        placeholder={t("auth.firstNamePlaceholder", "First name")}
                         className={`w-full h-11 rounded-xl border bg-white pl-9 pr-3 text-sm outline-none transition
                                    focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300
                                    ${firstNameTouched && !isFirstNameValid ? "border-rose-400" : "border-gray-200"}`}
@@ -306,25 +302,23 @@ const RegisterWithOtp: React.FC = () => {
                     </div>
                     {firstNameTouched && !isFirstNameValid && (
                       <p className="text-[11px] text-rose-500 mt-1">
-                        {firstName.trim().length < 2
-                          ? "At least 2 characters."
-                          : "Letters and spaces only."}
+                        {firstName.trim().length < 2 ? t("auth.firstNameTooShort", "At least 2 characters.") : t("auth.firstNameOnlyLetters", "Letters and spaces only.")}
                       </p>
                     )}
                   </Field>
-                  <Field label="Last Name">
+                  <Field label={t("auth.lastName", "Last Name")}>
                     <input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Last name"
+                      placeholder={t("auth.lastNamePlaceholder", "Last name")}
                       className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none transition
                                  focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
                     />
                   </Field>
                 </div>
 
-                <Field label={otp_type === "phone" ? "Phone number" : "Email"}>
+                <Field label={otp_type === "phone" ? t("auth.phoneNumber", "Phone number") : t("auth.email", "Email")}>
                   {otp_type === "phone" ? (
                     <div className="flex gap-2">
                       <div className="relative" ref={dropdownRef}>
@@ -341,7 +335,7 @@ const RegisterWithOtp: React.FC = () => {
                         </button>
 
                         {dropdownOpen && (
-                          <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                          <div className={`absolute top-full ${isArabic ? 'right-0' : 'left-0'} mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden`}>
                             {countries.map((c) => (
                               <button
                                 key={c.code}
@@ -355,7 +349,7 @@ const RegisterWithOtp: React.FC = () => {
                               >
                                 <img src={c.flag} alt={c.name} className="w-5 h-3.5 object-cover rounded-sm shadow-sm" />
                                 <span className="font-medium">{c.name}</span>
-                                <span className="ml-auto text-gray-400 text-xs">{c.code}</span>
+                                <span className={`${isArabic ? 'mr-auto' : 'ml-auto'} text-gray-400 text-xs`}>{c.code}</span>
                               </button>
                             ))}
                           </div>
@@ -368,7 +362,7 @@ const RegisterWithOtp: React.FC = () => {
                         maxLength={phoneRequirements.length}
                         value={localValue}
                         onChange={(e) => setLocalValue(e.target.value.replace(/[^\d]/g, ''))}
-                        placeholder={`${phoneRequirements.length} digits`}
+                        placeholder={t("auth.phoneDigits", "{{n}} digits").replace("{{n}}", String(phoneRequirements.length))}
                         className="flex-1 h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none transition
                                    focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
                       />
@@ -379,7 +373,7 @@ const RegisterWithOtp: React.FC = () => {
                       required
                       value={localValue}
                       onChange={(e) => setLocalValue(e.target.value)}
-                      placeholder="name@domain.com"
+                      placeholder={t("auth.emailPlaceholder", "name@domain.com")}
                       className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none transition
                                  focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
                     />
@@ -400,10 +394,7 @@ const RegisterWithOtp: React.FC = () => {
                       className="opacity-0 peer-checked:opacity-100 transition-opacity text-cyan-600"
                     />
                   </span>
-                  <span className="text-xs text-gray-500 leading-relaxed">
-                    I agree to the <span className="text-cyan-600">Terms</span> and{" "}
-                    <span className="text-cyan-600">Privacy Policy</span>.
-                  </span>
+                  <span className="text-xs text-gray-500 leading-relaxed">{t("auth.termsSentence", "I agree to the Terms and Privacy Policy.")}</span>
                 </label>
 
                 {displayError && (
@@ -423,7 +414,7 @@ const RegisterWithOtp: React.FC = () => {
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <>
-                      Send OTP <ArrowRight size={14} />
+                      {t("auth.sendOtp", "Send OTP")} <ArrowRight size={14} />
                     </>
                   )}
                 </button>
@@ -434,12 +425,7 @@ const RegisterWithOtp: React.FC = () => {
               <form onSubmit={onVerifyOtp} className="mt-6 space-y-5">
                 <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs text-gray-500">
-                      OTP sent to{" "}
-                      <span className="text-cyan-600 font-semibold">
-                        {value || localValue}
-                      </span>
-                    </p>
+                    <p className="text-xs text-gray-500">{t("auth.otpSentTo", "OTP sent to")} <span className="text-cyan-600 font-semibold">{value || localValue}</span></p>
                     <div className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ${isExpired ? "text-rose-500" : "text-cyan-600"}`}>
                       <Timer size={12} />
                       {isExpired ? "Expired" : formattedExpiration}
@@ -455,7 +441,7 @@ const RegisterWithOtp: React.FC = () => {
                   </button>
                 </div>
 
-                <Field label="OTP (6 digits)">
+                <Field label={t("auth.otpSixDigits", "OTP (6 digits)")}>
                   <input
                     inputMode="numeric"
                     pattern="\d*"
@@ -470,9 +456,7 @@ const RegisterWithOtp: React.FC = () => {
                 </Field>
 
                 {isExpired ? (
-                  <p className="text-[11px] font-semibold text-rose-600 text-center flex items-center justify-center gap-1.5">
-                    <AlertCircle size={14} /> This OTP has expired. Please request a new one.
-                  </p>
+                  <p className="text-[11px] font-semibold text-rose-600 text-center flex items-center justify-center gap-1.5"><AlertCircle size={14} /> {t("auth.otpExpiredText", "This OTP has expired. Please request a new one.")}</p>
                 ) : displayError ? (
                   <p className="text-[11px] font-semibold text-rose-600 text-center">
                     {displayError}
@@ -490,7 +474,7 @@ const RegisterWithOtp: React.FC = () => {
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <>
-                      Verify & Continue <ArrowRight size={14} />
+                      {t("auth.verifyContinue", "Verify & Continue")} <ArrowRight size={14} />
                     </>
                   )}
                 </button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Plus, AlertCircle } from "lucide-react";
-import { tierApi, DiscountTierDto } from "./tierApi";
+import { tierApi } from "./tierApi";
+import type { DiscountTierDto } from "./tierApi";
 
 interface DiscountTiersManagerProps {
   productId: number;

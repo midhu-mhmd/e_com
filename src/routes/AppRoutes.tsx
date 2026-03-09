@@ -1,9 +1,11 @@
-import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
+import { setNavigator } from '../utils/navigate';
 
 // ✅ import your language hook (ONLY user side)
 import useLanguageToggle from '../hooks/useLanguageToggle';
+import { useAppSelector } from '../hooks';
 
 // User components
 import Home from '../features/user/home';
@@ -25,16 +27,21 @@ import SupportPage from '../features/user/support';
 import Dashboard from '../features/admin/dashboard/dashboard';
 import AdminLayout from '../components/layout/adminside/AdminLayout';
 import OrderManagement from '../features/admin/orders/orders';
+import OrderDetailsPage from '../features/admin/orders/OrderDetailsPage';
 import CartManagement from '../features/admin/cart/cart';
 import CustomerManagement from '../features/admin/customers/customers';
+import CustomerDetailsPage from '../features/admin/customers/CustomerDetailsPage';
 import ReviewsManagement from '../features/admin/reviews/reviews';
 import PaymentManagement from '../features/admin/payments/payments';
 import SettingsPage from '../features/admin/settings/settings';
 import ProductManagement from '../features/admin/products/products';
 import AddProduct from '../features/admin/products/AddProduct';
 import EditProduct from '../features/admin/products/EditProduct';
+import ProductDetailsPage from '../features/admin/products/ProductDetailsPage';
+import CategoriesPage from '../features/admin/products/Categories';
 import BannersManagement from '../features/admin/banners/banner';
 import AdminNotificationsPage from '../features/admin/notifications/AdminNotificationsPage';
+import ContactMessagesPage from '../features/admin/support/ContactMessages';
 
 // Error Pages
 import BadRequest400 from '../pages/errors/BadRequest400';
@@ -47,21 +54,45 @@ import NetworkError from '../pages/errors/NetworkError';
 /* ✅ Layout wrapper that adds Navbar to user-facing pages
    ✅ applies language + RTL only on user side
 */
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+  return null;
+};
+
 const UserLayout: React.FC = () => {
   // This hook sets <html lang="..."> and <html dir="rtl/ltr">
   // Runs ONLY on user routes because UserLayout is only used there.
   useLanguageToggle();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAppSelector((s) => s.auth);
+
+  // If admin is browsing user routes (e.g., after refresh), redirect them to /admin
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'admin') {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
       <Navbar />
-      <Outlet />
+      <div className="flex-1">
+        <Outlet />
+      </div>
       <Footer />
     </div>
   );
 };
 
 export const AppRoutes: React.FC = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setNavigator((to, options) => navigate(to, options));
+  }, [navigate]);
   return (
     <Routes>
       {/* --- ERROR ROUTES (Outside Layouts to be full screen) --- */}
@@ -104,15 +135,20 @@ export const AppRoutes: React.FC = () => {
           {/* These children will render inside the <Outlet /> of AdminLayout */}
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="orders" element={<OrderManagement />} />
+          <Route path="orders/:id" element={<OrderDetailsPage />} />
           <Route path="cart" element={<CartManagement />} />
           <Route path="users" element={<CustomerManagement />} />
+          <Route path="users/:id" element={<CustomerDetailsPage />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="products/add" element={<AddProduct />} />
           <Route path="products/edit/:id" element={<EditProduct />} />
+          <Route path="products/:id" element={<ProductDetailsPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
           <Route path="reviews" element={<ReviewsManagement />} />
           <Route path="payments" element={<PaymentManagement />} />
           <Route path="banners" element={<BannersManagement />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
+          <Route path="support" element={<ContactMessagesPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>

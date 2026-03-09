@@ -33,11 +33,19 @@
     "viewImage": "عرض {{index}}",
     "ratingText": "{{rating}} ({{reviews}} مراجعات)",
     "pricePer": "السعر لكل {{sku}}",
+    "priceFor": "سعر {{count}} {{unit}}",
     "perUnitFallback": "وحدة",
+    "total": "الإجمالي",
     "currencyAed": "AED {{value}}",
     "qtyIncrease": "زيادة الكمية",
     "qtyDecrease": "تقليل الكمية",
     "qtyLabel": "الكمية {{value}}",
+    "reviews": {
+      "title": "المراجعات",
+      "basedOn": "استنادًا إلى {{count}} مراجعات",
+      "empty": "لا توجد مراجعات بعد",
+      "anonymous": "مستخدم"
+    },
     "bulkOrder": {
       "title": "طلبيات الجملة",
       "subtitle": "وفر أكثر مع أسعار الجملة",

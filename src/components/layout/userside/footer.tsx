@@ -50,13 +50,13 @@ const Footer: React.FC = () => {
                                 {t("footer.newsletter.subtitle")}
                             </p>
                         </div>
-                        <div className="relative flex w-full sm:w-auto gap-2">
+                        <div className="relative flex flex-col sm:flex-row w-full sm:w-auto gap-2">
                             <input
                                 type="email"
                                 placeholder={t("footer.newsletter.placeholder")}
-                                className="flex-1 sm:w-64 px-4 py-3 bg-cyan-950/50 border border-cyan-800 rounded-xl text-sm text-white placeholder:text-cyan-300/50 focus:outline-none focus:border-yellow-500 transition-colors"
+                                className="w-full sm:w-64 px-4 py-3 bg-cyan-950/50 border border-cyan-800 rounded-xl text-sm text-white placeholder:text-cyan-300/50 focus:outline-none focus:border-yellow-500 transition-colors"
                             />
-                            <button className="px-5 py-3 bg-yellow-500 text-cyan-900 rounded-xl text-sm font-bold hover:bg-yellow-400 transition-all shadow-lg hover:shadow-yellow-500/25 active:scale-[0.98] flex items-center gap-1.5">
+                            <button className="w-full sm:w-auto px-5 py-3 bg-yellow-500 text-cyan-900 rounded-xl text-sm font-bold hover:bg-yellow-400 transition-all shadow-lg hover:shadow-yellow-500/25 active:scale-[0.98] flex items-center justify-center gap-1.5">
                                 {t("footer.newsletter.subscribe")}
                                 <ArrowRight size={14} />
                             </button>

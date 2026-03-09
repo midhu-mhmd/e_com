@@ -8,10 +8,6 @@ import type { RootState } from "../../../app/store";
 
 /* ── Map backend DTO → UI Review ── */
 function mapReviewDtoToReview(dto: ReviewDto): Review {
-    let status: Review["status"] = "Pending";
-    if (dto.is_approved === true) status = "Approved";
-    else if (dto.is_approved === false) status = "Rejected";
-
     return {
         id: dto.id,
         productId: dto.product,
@@ -19,9 +15,9 @@ function mapReviewDtoToReview(dto: ReviewDto): Review {
         userId: dto.user,
         userName: dto.user_name ?? `User #${dto.user}`,
         rating: dto.rating,
-        title: dto.title ?? "",
         comment: dto.comment ?? "",
-        status,
+        isVisible: dto.is_visible,
+        adminResponse: dto.admin_response ?? null,
         createdAt: dto.created_at,
         updatedAt: dto.updated_at,
     };

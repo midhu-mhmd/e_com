@@ -1,0 +1,620 @@
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft, Download, Package, MessageSquare, Send } from "lucide-react";
+import { ordersApi } from "./ordersApi";
+import type { OrderStatus, PaymentStatus } from "./ordersSlice";
+import { useDispatch } from "react-redux";
+import { ordersActions } from "./ordersSlice";
+
+type OrderItem = {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+};
+
+type ShippingAddress = {
+  id: string;
+  label: string;
+  fullName: string;
+  phoneNumber: string;
+  streetAddress: string;
+  area: string;
+  city: string;
+  emirate: string;
+  country: string;
+};
+
+type Payment = {
+  transactionId: string;
+  amount: number;
+  status: string;
+  paymentMethod: string;
+  receiptNumber: string | null;
+  createdAt: string;
+} | null;
+
+type StatusHistoryEntry = {
+  status: string;
+  notes: string;
+  createdAt: string;
+};
+
+type Order = {
+  id: number;
+  orderNumber: string;
+  userId?: string | number | null;
+  status: OrderStatus;
+  shippingAddress: ShippingAddress;
+  total: number;
+  deliveryDate: string | null;
+  deliverySlot: string | null;
+  deliveryNotes: string | null;
+  items: OrderItem[];
+  statusHistory: StatusHistoryEntry[];
+  payment: Payment;
+  paymentStatus: PaymentStatus;
+  paymentMethod: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function normalizeOrderStatus(raw: string): OrderStatus {
+  const map: Record<string, OrderStatus> = {
+    pending: "PENDING",
+    paid: "PAID",
+    processing: "PROCESSING",
+    shipped: "SHIPPED",
+    delivered: "DELIVERED",
+    cancelled: "CANCELLED",
+  };
+  return map[raw?.toLowerCase?.()] ?? "PENDING";
+}
+
+function normalizePaymentStatus(raw: string): PaymentStatus {
+  const map: Record<string, PaymentStatus> = {
+    paid: "Paid",
+    success: "Success",
+    pending: "Pending",
+    refunded: "Refunded",
+    failed: "Failed",
+  };
+  return map[raw?.toLowerCase?.()] ?? "Pending";
+}
+
+function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  const styles: Record<OrderStatus, string> = {
+    PENDING: "bg-gray-50 text-gray-600 border-gray-200",
+    PAID: "bg-green-50 text-green-700 border-green-200",
+    PROCESSING: "bg-amber-50 text-amber-600 border-amber-100",
+    SHIPPED: "bg-indigo-50 text-indigo-600 border-indigo-100",
+    DELIVERED: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    CANCELLED: "bg-rose-50 text-rose-600 border-rose-100",
+  };
+  const dots: Record<OrderStatus, string> = {
+    PENDING: "bg-gray-400",
+    PAID: "bg-green-600",
+    PROCESSING: "bg-amber-500",
+    SHIPPED: "bg-indigo-500",
+    DELIVERED: "bg-emerald-500",
+    CANCELLED: "bg-rose-500",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dots[status]}`} />
+      {status}
+    </span>
+  );
+}
+
+function PaymentBadge({ status }: { status: PaymentStatus }) {
+  const styles: Record<PaymentStatus, string> = {
+    Paid: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    Success: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    Pending: "bg-amber-50 text-amber-600 border-amber-100",
+    Refunded: "bg-violet-50 text-violet-600 border-violet-100",
+    Failed: "bg-rose-50 text-rose-600 border-rose-100",
+  };
+  return (
+    <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}>
+      {status}
+    </span>
+  );
+}
+
+function InfoField({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide">{label}</p>
+      {children ?? <p className="text-sm font-bold text-[#18181B]">{value}</p>}
+    </div>
+  );
+}
+
+const OrderDetailsPage: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "">("");
+  const [statusNotes, setStatusNotes] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const fetch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const raw = await ordersApi.details(Number(id));
+        const addr = raw.shipping_address_details;
+        const shippingAddress: ShippingAddress = addr
+          ? {
+              id: addr.id,
+              label: addr.label ?? "",
+              fullName: addr.full_name ?? "",
+              phoneNumber: addr.phone_number ?? "",
+              streetAddress: addr.street_address ?? "",
+              area: addr.area ?? "",
+              city: addr.city ?? "",
+              emirate: addr.emirate ?? "",
+              country: addr.country ?? "",
+            }
+          : {
+              id: "",
+              label: "",
+              fullName: "",
+              phoneNumber: "",
+              streetAddress: "",
+              area: "",
+              city: "",
+              emirate: "",
+              country: "",
+            };
+        const payment: Payment =
+          raw.payment
+            ? {
+                transactionId: raw.payment.transaction_id ?? "",
+                amount: parseFloat(raw.payment.amount) || 0,
+                status: raw.payment.status ?? "",
+                paymentMethod: raw.payment.payment_method ?? "",
+                receiptNumber: raw.payment.receipt?.receipt_number ?? null,
+                createdAt: raw.payment.created_at ?? "",
+              }
+            : null;
+        const statusHistory: StatusHistoryEntry[] = Array.isArray(raw.status_history)
+          ? raw.status_history.map((h) => ({
+              status: h.status ?? "",
+              notes: h.notes ?? "",
+              createdAt: h.created_at ?? "",
+            }))
+          : [];
+        let uid: any = (addr as any)?.user ?? null;
+        if (uid && typeof uid === "object") uid = uid.id ?? null;
+        const shaped: Order = {
+          id: raw.id,
+          orderNumber: `ORD-${raw.id}`,
+          userId: uid ?? null,
+          status: normalizeOrderStatus(raw.status ?? "pending"),
+          shippingAddress,
+          total: parseFloat(raw.total_amount) || 0,
+          deliveryDate: raw.preferred_delivery_date ?? null,
+          deliverySlot: raw.preferred_delivery_slot ?? null,
+          deliveryNotes: raw.delivery_notes ?? null,
+          items: Array.isArray(raw.items)
+            ? raw.items.map((dto) => ({
+                id: dto.id,
+                productId: dto.product,
+                productName: dto.product_name ?? `Product #${dto.product}`,
+                quantity: dto.quantity,
+                price: parseFloat(dto.price) || 0,
+                subtotal: parseFloat(dto.subtotal) || 0,
+              }))
+            : [],
+          statusHistory,
+          payment,
+          paymentStatus: payment ? normalizePaymentStatus(payment.status) : "Pending",
+          paymentMethod: payment?.paymentMethod ?? "N/A",
+          createdAt: raw.created_at,
+          updatedAt: raw.updated_at,
+        };
+        if (active) setOrder(shaped);
+      } catch (e: any) {
+        if (active) setError(e?.message || "Failed to load order");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetch();
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const canDownloadReceipt = useMemo(
+    () => order && (order.paymentStatus === "Paid" || order.paymentStatus === "Success"),
+    [order]
+  );
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!order) return;
+    const blob = await ordersApi.receiptPdf(order.id);
+    downloadBlob(blob, `receipt_${order.orderNumber}.pdf`);
+  }, [order]);
+
+  const handleDownloadImage = useCallback(async () => {
+    if (!order) return;
+    const blob = await ordersApi.receiptImage(order.id);
+    downloadBlob(blob, `receipt_${order.orderNumber}.png`);
+  }, [order]);
+
+  const handleDownloadAdminReceipt = useCallback(async () => {
+    if (!order) return;
+    const blob = await ordersApi.adminReceiptPdf(order.id);
+    downloadBlob(blob, `delivery_details_${order.orderNumber}.pdf`);
+  }, [order]);
+
+  const statusOptions: OrderStatus[] = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+  return (
+    <div className="min-h-screen w-full text-[#18181B] bg-[#FDFDFD]">
+      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/admin/orders")}
+              className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-gray-50 transition-colors"
+              title="Back"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gray-900 text-white rounded-xl">
+                <Package size={18} />
+              </div>
+              <div>
+                <h2 className="text-lg md:text-xl font-black">{order ? order.orderNumber : "Order"}</h2>
+                <span className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">
+                  Order Details
+                </span>
+              </div>
+            </div>
+          </div>
+          {order && (
+            <div className="flex items-center gap-2">
+              <OrderStatusBadge status={order.status} />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadAdminReceipt}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
+                  title="Delivery details PDF (all orders)"
+                >
+                  <Download size={14} /> Delivery Details (PDF)
+                </button>
+                {canDownloadReceipt && (
+                  <>
+                    <button
+                      onClick={handleDownloadPdf}
+                      className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-gray-800"
+                      title="Payment receipt PDF"
+                    >
+                      <Download size={14} /> Payment Receipt (PDF)
+                    </button>
+                    <button
+                      onClick={handleDownloadImage}
+                      className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
+                      title="Payment receipt Image"
+                    >
+                      <Download size={14} /> Payment Receipt (Image)
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {loading && <div className="p-6 bg-white border border-[#EEEEEE] rounded-2xl">Loading…</div>}
+        {error && <div className="p-6 bg-white border border-[#EEEEEE] rounded-2xl text-rose-600">{error}</div>}
+        {order && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-bold text-[#A1A1AA] uppercase">Current Status</p>
+                    <div className="mt-1">
+                      <OrderStatusBadge status={order.status} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsStatusOpen(!isStatusOpen)}
+                    className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-800 transition-colors"
+                  >
+                    Update Status <ChevronLeft size={14} className={`transition-transform rotate-90 ${isStatusOpen ? 'rotate-[-90deg]' : ''}`} />
+                  </button>
+                </div>
+                {isStatusOpen && (
+                  <div className="border-t border-[#EEEEEE] pt-4 space-y-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide block mb-1.5">New Status</label>
+                      <div className="flex flex-wrap gap-2">
+                        {statusOptions.map(s => (
+                          <button
+                            key={s}
+                            onClick={() => setSelectedStatus(s)}
+                            className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${selectedStatus === s
+                              ? 'bg-black text-white border-black'
+                              : order.status === s
+                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-default'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                              }`}
+                            disabled={order.status === s}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <MessageSquare size={10} /> Admin Notes <span className="text-[#D4D4D8] font-normal">(optional)</span>
+                      </label>
+                      <textarea
+                        value={statusNotes}
+                        onChange={(e) => setStatusNotes(e.target.value)}
+                        placeholder="e.g. Handed over to courier, Customer requested reschedule..."
+                        rows={2}
+                        className="w-full p-3 bg-white border border-[#EEEEEE] rounded-lg text-xs outline-none resize-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-all placeholder:text-gray-300"
+                      />
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!selectedStatus) return;
+                        setIsUpdating(true);
+                        try {
+                          await ordersApi.updateStatus(order.id, selectedStatus, statusNotes.trim() || undefined);
+                          const raw = await ordersApi.details(order.id);
+                          const addr = raw.shipping_address_details;
+                          const shippingAddress: ShippingAddress = addr
+                            ? {
+                                id: addr.id,
+                                label: addr.label ?? "",
+                                fullName: addr.full_name ?? "",
+                                phoneNumber: addr.phone_number ?? "",
+                                streetAddress: addr.street_address ?? "",
+                                area: addr.area ?? "",
+                                city: addr.city ?? "",
+                                emirate: addr.emirate ?? "",
+                                country: addr.country ?? "",
+                              }
+                            : {
+                                id: "",
+                                label: "",
+                                fullName: "",
+                                phoneNumber: "",
+                                streetAddress: "",
+                                area: "",
+                                city: "",
+                                emirate: "",
+                                country: "",
+                              };
+                          const payment: Payment =
+                            raw.payment
+                              ? {
+                                  transactionId: raw.payment.transaction_id ?? "",
+                                  amount: parseFloat(raw.payment.amount) || 0,
+                                  status: raw.payment.status ?? "",
+                                  paymentMethod: raw.payment.payment_method ?? "",
+                                  receiptNumber: raw.payment.receipt?.receipt_number ?? null,
+                                  createdAt: raw.payment.created_at ?? "",
+                                }
+                              : null;
+                          const statusHistory: StatusHistoryEntry[] = Array.isArray(raw.status_history)
+                            ? raw.status_history.map((h: any) => ({
+                                status: h.status ?? "",
+                                notes: h.notes ?? "",
+                                createdAt: h.created_at ?? "",
+                              }))
+                            : [];
+                          let uid: any = (addr as any)?.user ?? null;
+                          if (uid && typeof uid === "object") uid = uid.id ?? null;
+                          const shaped: Order = {
+                            id: raw.id,
+                            orderNumber: `ORD-${raw.id}`,
+                            userId: uid ?? null,
+                            status: normalizeOrderStatus(raw.status ?? "pending"),
+                            shippingAddress,
+                            total: parseFloat(raw.total_amount) || 0,
+                            deliveryDate: raw.preferred_delivery_date ?? null,
+                            deliverySlot: raw.preferred_delivery_slot ?? null,
+                            deliveryNotes: raw.delivery_notes ?? null,
+                            items: Array.isArray(raw.items)
+                              ? raw.items.map((dto: any) => ({
+                                  id: dto.id,
+                                  productId: dto.product,
+                                  productName: dto.product_name ?? `Product #${dto.product}`,
+                                  quantity: dto.quantity,
+                                  price: parseFloat(dto.price) || 0,
+                                  subtotal: parseFloat(dto.subtotal) || 0,
+                                }))
+                              : [],
+                            statusHistory,
+                            payment,
+                            paymentStatus: payment ? normalizePaymentStatus(payment.status) : "Pending",
+                            paymentMethod: payment?.paymentMethod ?? "N/A",
+                            createdAt: raw.created_at,
+                            updatedAt: raw.updated_at,
+                          };
+                          setOrder(shaped);
+                          dispatch(ordersActions.updateStatusSuccess(shaped));
+                          setIsStatusOpen(false);
+                          setSelectedStatus("");
+                          setStatusNotes("");
+                        } finally {
+                          setIsUpdating(false);
+                        }
+                      }}
+                      disabled={!selectedStatus || isUpdating}
+                      className="w-full py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                    >
+                      <Send size={12} />
+                      {isUpdating ? 'Updating...' : selectedStatus ? `Update to "${selectedStatus}"` : 'Select a status above'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 space-y-4">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2">
+                  Purchased Items
+                </h4>
+                {order.items.length > 0 ? (
+                  order.items.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center py-3 border-b border-dashed border-[#EEEEEE] last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[#F4F4F5] flex items-center justify-center">
+                          <Package size={16} className="text-[#A1A1AA]" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold">
+                            <button
+                              onClick={() => navigate(`/admin/products/${item.productId}`)}
+                              className="hover:underline"
+                              title="Open Product"
+                            >
+                              {item.productName || "Unknown Product"}
+                            </button>
+                          </p>
+                          <p className="text-[10px] text-[#A1A1AA]">
+                            Qty: {item.quantity || 0} · AED {(item.price || 0).toFixed(2)}/ea
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold">AED {(item.subtotal || 0).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-[#A1A1AA] italic">No items in this order.</p>
+                )}
+                <div className="pt-4 space-y-2 border-t border-[#EEEEEE]">
+                  <div className="flex justify-between items-center pt-1">
+                    <span className="text-sm font-bold">Total Amount</span>
+                    <span className="text-xl font-black text-emerald-600">
+                      AED {(order.total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {order.deliveryNotes && (
+                <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2">Delivery Notes</h4>
+                  <p className="text-xs text-[#52525B] bg-[#FAFAFA] p-3 rounded-lg border border-[#EEEEEE]">
+                    {order.deliveryNotes}
+                  </p>
+                </div>
+              )}
+
+              {order.statusHistory.length > 0 && (
+                <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 border-b border-[#EEEEEE] pb-2">
+                    Status History
+                  </h4>
+                  <div className="space-y-3">
+                    {order.statusHistory.map((entry, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold text-[#18181B]">{entry.status}</p>
+                          <p className="text-[10px] text-[#A1A1AA]">
+                            {entry.notes} ·{" "}
+                            {entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }) : "-"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 grid grid-cols-2 gap-5">
+                <InfoField label="Customer">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold">{order.shippingAddress.fullName || "—"}</span>
+                    {order.userId && (
+                      <button
+                        onClick={() => { navigate(`/admin/users/${order.userId}`); }}
+                        className="text-[10px] font-bold px-2 py-1 rounded-full border border-[#EEEEEE] hover:bg-gray-50"
+                        title="Open user details"
+                      >
+                        View User
+                      </button>
+                    )}
+                  </div>
+                </InfoField>
+                <InfoField label="Phone" value={order.shippingAddress.phoneNumber || "—"} />
+                <InfoField label="City" value={order.shippingAddress.city || "—"} />
+                <InfoField label="Area" value={order.shippingAddress.area || "—"} />
+                <InfoField label="Address" value={order.shippingAddress.streetAddress || "—"} />
+                <InfoField label="Emirate" value={order.shippingAddress.emirate || "—"} />
+                <InfoField label="Payment Method" value={order.paymentMethod} />
+                <InfoField label="Payment">
+                  <PaymentBadge status={order.paymentStatus} />
+                </InfoField>
+                <InfoField
+                  label="Order Date"
+                  value={new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                />
+                {order.deliveryDate && (
+                  <InfoField
+                    label="Delivery Date"
+                    value={new Date(order.deliveryDate).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  />
+                )}
+                {order.deliverySlot && <InfoField label="Delivery Slot" value={order.deliverySlot} />}
+                {order.payment?.transactionId && <InfoField label="Transaction ID" value={order.payment.transactionId} />}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default OrderDetailsPage;

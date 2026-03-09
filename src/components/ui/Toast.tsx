@@ -53,6 +53,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
+
+
+    React.useEffect(() => {
+        const handler = (e: Event) => {
+            const ev = e as CustomEvent<{ message: string; type?: ToastType }>;
+            if (ev?.detail?.message) {
+                show(ev.detail.message, ev.detail.type || "success");
+            }
+        };
+        window.addEventListener("app:toast" as any, handler as any);
+        return () => window.removeEventListener("app:toast" as any, handler as any);
+    }, [show]);
+
     return (
         <ToastContext.Provider value={{ show }}>
             {children}
@@ -87,4 +100,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             </div>
         </ToastContext.Provider>
     );
+};
+
+export const emitToast = (message: string, type: ToastType = "success") => {
+    try {
+        const ev = new CustomEvent("app:toast", { detail: { message, type } });
+        window.dispatchEvent(ev);
+    } catch {}
 };

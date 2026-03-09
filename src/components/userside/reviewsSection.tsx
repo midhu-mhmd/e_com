@@ -231,9 +231,19 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
             </div>
 
             {/* Comment */}
-            <p className="text-sm text-zinc-600 leading-relaxed mb-5 line-clamp-3 sm:line-clamp-4 italic">
+            <p className="text-sm text-zinc-600 leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 italic">
                 "{review.comment}"
             </p>
+
+            {/* Images hidden on Home as requested */}
+
+            {/* Admin Response */}
+            {review.admin_response && (
+                <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-3 mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
+                    <p className="text-xs text-zinc-700">{review.admin_response}</p>
+                </div>
+            )}
 
             {/* Product tag */}
             {review.product_name && (
@@ -282,12 +292,12 @@ function getTimeAgo(dateStr: string, t: any): string {
 
 /* ── Fallback reviews ── */
 const fallbackReviews: ReviewDto[] = [
-    { id: 1, product: 0, user: 0, rating: 5, title: "Fresh Prawns", comment: "The prawns were incredibly fresh — like they just came off the boat! Packaging was ice-cold and delivery was right on time. Best seafood service in Mumbai!", product_name: "Tiger Prawns (500g)", created_at: new Date(Date.now() - 2 * 86400000).toISOString(), is_approved: true, updated_at: "" },
-    { id: 2, product: 0, user: 0, rating: 5, title: "Pomfret Quality", comment: "I've tried multiple online fish shops and nothing comes close to FreshCatch. The Pomfret was cleaned perfectly and vacuum-sealed. Will order again!", product_name: "White Pomfret", created_at: new Date(Date.now() - 5 * 86400000).toISOString(), is_approved: true, updated_at: "" },
-    { id: 3, product: 0, user: 0, rating: 4, title: "Surmai Steaks", comment: "Ordered the Surmai steaks for a family dinner. Everyone loved it! The quality is restaurant-grade. Only wish they had more cut options.", product_name: "Surmai Steaks", created_at: new Date(Date.now() - 7 * 86400000).toISOString(), is_approved: true, updated_at: "" },
-    { id: 4, product: 0, user: 0, rating: 5, title: "Speedy Delivery", comment: "Same-day delivery, perfectly cold packaging, and the fish was fresh beyond my expectations. This is how seafood delivery should be done.", product_name: "Rohu Fish", created_at: new Date(Date.now() - 10 * 86400000).toISOString(), is_approved: true, updated_at: "" },
-    { id: 5, product: 0, user: 0, rating: 5, title: "Massive Crab", comment: "The crab was massive and super fresh. My mother-in-law said it tasted just like the ones from the market. Huge compliment! Thank you FreshCatch!", product_name: "Live Mud Crab", created_at: new Date(Date.now() - 14 * 86400000).toISOString(), is_approved: true, updated_at: "" },
-    { id: 6, product: 0, user: 0, rating: 4, title: "Convenient Prep", comment: "Great squid rings — cleaned, cut, and ready to fry. Saved me so much prep time. The app is easy to use and the delivery slot system is very convenient.", product_name: "Squid Rings (300g)", created_at: new Date(Date.now() - 21 * 86400000).toISOString(), is_approved: true, updated_at: "" },
+    { id: 1, product: 0, user: 0, rating: 5, comment: "The prawns were incredibly fresh — like they just came off the boat! Packaging was ice-cold and delivery was right on time. Best seafood service in Mumbai!", product_name: "Tiger Prawns (500g)", created_at: new Date(Date.now() - 2 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
+    { id: 2, product: 0, user: 0, rating: 5, comment: "I've tried multiple online fish shops and nothing comes close to FreshCatch. The Pomfret was cleaned perfectly and vacuum-sealed. Will order again!", product_name: "White Pomfret", created_at: new Date(Date.now() - 5 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
+    { id: 3, product: 0, user: 0, rating: 4, comment: "Ordered the Surmai steaks for a family dinner. Everyone loved it! The quality is restaurant-grade. Only wish they had more cut options.", product_name: "Surmai Steaks", created_at: new Date(Date.now() - 7 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
+    { id: 4, product: 0, user: 0, rating: 5, comment: "Same-day delivery, perfectly cold packaging, and the fish was fresh beyond my expectations. This is how seafood delivery should be done.", product_name: "Rohu Fish", created_at: new Date(Date.now() - 10 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
+    { id: 5, product: 0, user: 0, rating: 5, comment: "The crab was massive and super fresh. My mother-in-law said it tasted just like the ones from the market. Huge compliment! Thank you FreshCatch!", product_name: "Live Mud Crab", created_at: new Date(Date.now() - 14 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
+    { id: 6, product: 0, user: 0, rating: 4, comment: "Great squid rings — cleaned, cut, and ready to fry. Saved me so much prep time. The app is easy to use and the delivery slot system is very convenient.", product_name: "Squid Rings (300g)", created_at: new Date(Date.now() - 21 * 86400000).toISOString(), is_visible: true, updated_at: "", admin_response: null, images: [] },
 ];
 
 export default ReviewsSection;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { useDeliveryEstimation } from "../../hooks/useDeliveryEstimation";
@@ -7,12 +7,16 @@ import { ordersApi } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
   CheckCircle, MapPin, CreditCard, Truck, ArrowLeft, Loader2,
-  Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info
+  Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info, Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../components/ui/Toast";
 import { MdDeliveryDining } from "react-icons/md";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
+  import { profileApi } from "./profileApi";
+  import { setUser } from "../auth/authSlice";
+  import { tokenManager } from "../../services/api";
 
 /* ─── Delivery Slot Options ─── */
 const DELIVERY_SLOTS = [
@@ -42,12 +46,14 @@ const EMIRATES = [
 
 const CheckoutPage: React.FC = () => {
   const { t } = useTranslation("checkout");
+  const { isArabic } = useLanguageToggle();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const toast = useToast();
 
   const cartItems = useAppSelector(selectCartItems);
   const cartTotal = useAppSelector(selectCartTotal);
+  const { user } = useAppSelector((s: any) => s.auth);
 
   // ─── Delivery Estimation from Tiers ───
   const { estimation, loading: estimationLoading } = useDeliveryEstimation();
@@ -72,6 +78,18 @@ const CheckoutPage: React.FC = () => {
   const [successOrderId, setSuccessOrderId] = useState<number | null>(null);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
+  // ─── Phone Verification Gate ───
+  const phoneVerified: boolean = Boolean(user?.is_phone_verified ?? user?.profile?.is_phone_verified);
+  const existingPhone: string = user?.phone_number || "";
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyStep, setVerifyStep] = useState<"input" | "otp">("input");
+  const [verifyCountry, setVerifyCountry] = useState("+971");
+  const [verifyPhone, setVerifyPhone] = useState(existingPhone.replace(/[^\d]/g, "").replace(/^(\+971)/, "") || "");
+  const [verifyOtp, setVerifyOtp] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+
   // Add address form
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressForm, setAddressForm] = useState({
@@ -79,6 +97,38 @@ const CheckoutPage: React.FC = () => {
     flat_villa_number: "", street_address: "", area: "", city: "",
     emirate: "", country: "AE", address_type: "home"
   });
+  const [addrCountryCode, setAddrCountryCode] = useState("+971");
+  const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
+  const addrDropdownRef = useRef<HTMLDivElement>(null);
+  const addressCountries = [
+    { code: "+971", flag: "https://flagcdn.com/w40/ae.png", name: "UAE" },
+    { code: "+91", flag: "https://flagcdn.com/w40/in.png", name: "India" },
+    { code: "+86", flag: "https://flagcdn.com/w40/cn.png", name: "China" },
+  ];
+  const getPhoneRequirements = (code: string) => {
+    switch (code) {
+      case "+971": return { length: 9, pattern: /^5/, name: "UAE" };
+      case "+91": return { length: 10, pattern: /^[6-9]/, name: "India" };
+      case "+86": return { length: 11, pattern: /^1/, name: "China" };
+      default: return { length: 10, pattern: null, name: "Phone" };
+    }
+  };
+  const verifyReq = getPhoneRequirements(verifyCountry);
+  const isVerifyPhoneValid = (() => {
+    const digits = verifyPhone.replace(/[^\d]/g, "");
+    if (digits.length !== verifyReq.length) return false;
+    return verifyReq.pattern ? verifyReq.pattern.test(digits) : true;
+  })();
+  const allowedUaeCities = EMIRATES.map(e => e.label.toLowerCase());
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (addrDropdownRef.current && !addrDropdownRef.current.contains(e.target as Node)) {
+        setAddrDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
 
@@ -87,8 +137,16 @@ const CheckoutPage: React.FC = () => {
     if (!addressForm.full_name || addressForm.full_name.trim().length < 3) {
       errors.full_name = "Full name must be at least 3 characters";
     }
-    if (!addressForm.phone_number || !/^\+?[0-9]{10,15}$/.test(addressForm.phone_number.replace(/\s/g, ""))) {
-      errors.phone_number = "Enter a valid phone number (+971...)";
+    const req = getPhoneRequirements(addrCountryCode);
+    const digitsOnly = (addressForm.phone_number || "").replace(/[^\d]/g, "");
+    if (digitsOnly.length !== req.length || (req.pattern && !req.pattern.test(digitsOnly))) {
+      errors.phone_number = `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`;
+    }
+    if (addrCountryCode === "+971" && addressForm.city) {
+      const c = addressForm.city.trim().toLowerCase();
+      if (!allowedUaeCities.includes(c)) {
+        errors.city = "Select a valid UAE city/emirate";
+      }
     }
     if (!addressForm.street_address) errors.street_address = "Street address is required";
     if (!addressForm.area) errors.area = "Area is required";
@@ -133,7 +191,10 @@ const CheckoutPage: React.FC = () => {
 
     setSavingAddress(true);
     try {
-      const newAddr = await customersApi.createAddress(addressForm as any);
+      const newAddr = await customersApi.createAddress({
+        ...addressForm,
+        phone_number: `${addrCountryCode}${(addressForm.phone_number || "").replace(/[^\d]/g, "").replace(/^0+/, "")}`
+      } as any);
       setAddresses((prev) => [...prev, newAddr]);
       setSelectedAddressId(newAddr.id);
       setShowAddressForm(false);
@@ -155,6 +216,13 @@ const CheckoutPage: React.FC = () => {
   // ─── Submit Checkout ───
   const handlePlaceOrder = async () => {
     setAttemptedSubmit(true);
+
+    if (!phoneVerified) {
+      // Open verification modal if not verified
+      setVerifyOpen(true);
+      setVerifyStep("input");
+      return;
+    }
 
     if (!selectedAddressId) {
       toast.show(t("alerts.selectAddress"), "error");
@@ -286,7 +354,7 @@ const CheckoutPage: React.FC = () => {
                     <button
                       key={addr.id}
                       onClick={() => setSelectedAddressId(addr.id)}
-                      className={`relative text-left p-4 rounded-2xl border-2 transition-all duration-200 ${selectedAddressId === addr.id
+                      className={`relative ${isArabic ? 'text-right' : 'text-left'} p-4 rounded-2xl border-2 transition-all duration-200 ${selectedAddressId === addr.id
                         ? "border-cyan-500 bg-cyan-50/50 ring-2 ring-cyan-500/20 shadow-md"
                         : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm"
                         }`}
@@ -301,8 +369,13 @@ const CheckoutPage: React.FC = () => {
                         <span className="text-xs font-bold uppercase tracking-wider text-cyan-600">
                           {addr.label || "Address"}
                         </span>
+                        {selectedAddressId === addr.id && (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-cyan-600 text-white">
+                            <Check size={12} />
+                          </span>
+                        )}
                         {addr.is_default && (
-                          <span className="ml-auto text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md">
+                          <span className={`${isArabic ? 'mr-auto' : 'ml-auto'} text-[10px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md`}>
                             {t("address.default")}
                           </span>
                         )}
@@ -318,12 +391,7 @@ const CheckoutPage: React.FC = () => {
                       </p>
                       <p className="text-xs text-slate-400 mt-1">{addr.phone_number}</p>
 
-                      {/* Selected indicator */}
-                      {selectedAddressId === addr.id && (
-                        <div className="absolute top-3 right-3 w-5 h-5 bg-cyan-600 rounded-full flex items-center justify-center">
-                          <CheckCircle size={14} className="text-white" />
-                        </div>
-                      )}
+                      {/* Selected state is indicated by border + ring; no extra badge to avoid overlap with Default */}
                     </button>
                   ))}
                 </div>
@@ -364,14 +432,13 @@ const CheckoutPage: React.FC = () => {
                               <option key={t.value} value={t.value}>{t.label}</option>
                             ))}
                           </select>
-                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                          <ChevronDown size={14} className={`absolute ${isArabic ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
                         </div>
                       </div>
 
                       {/* Text fields */}
                       {([
                         ["full_name", "Full Name", "John Doe"],
-                        ["phone_number", "Phone", "+971 50 123 4567"],
                         ["building_name", "Building", "Al Reem Tower"],
                         ["flat_villa_number", "Flat / Villa", "Apt 4B"],
                         ["street_address", "Street Address", "123 Ocean Drive"],
@@ -400,6 +467,60 @@ const CheckoutPage: React.FC = () => {
                           )}
                         </div>
                       ))}
+                      {/* Phone with country flag selector */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone</label>
+                        <div className="flex gap-2">
+                          <div className="relative" ref={addrDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setAddrDropdownOpen(!addrDropdownOpen)}
+                              className="h-[42px] px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-2 text-sm hover:bg-slate-50"
+                            >
+                              <img src={(addressCountries.find(c => c.code === addrCountryCode) || addressCountries[0]).flag} alt="flag" className="w-5 h-[14px] object-cover rounded-sm" />
+                              <span className="text-xs font-medium text-slate-700">{addrCountryCode}</span>
+                              <ChevronDown size={12} className={`text-slate-400 transition-transform ${addrDropdownOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {addrDropdownOpen && (
+                          <div className={`absolute top-full ${isArabic ? 'right-0' : 'left-0'} mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50`}>
+                                {addressCountries.map((c) => (
+                                  <button
+                                    key={c.code}
+                                    type="button"
+                                    onClick={() => { setAddrCountryCode(c.code); setAddrDropdownOpen(false); }}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-cyan-50 ${c.code === addrCountryCode ? "bg-cyan-50 text-cyan-600" : "text-slate-700"}`}
+                                  >
+                                    <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm" />
+                                    <span className="font-medium">{c.name}</span>
+                                    <span className="ms-auto text-slate-400">{c.code}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            value={addressForm.phone_number}
+                            onChange={(e) => {
+                              const v = e.target.value.replace(/[^\d]/g, "");
+                              setAddressForm((prev) => ({ ...prev, phone_number: v }));
+                              if (addressErrors.phone_number) {
+                                setAddressErrors(prev => {
+                                  const next = { ...prev };
+                                  delete next.phone_number;
+                                  return next;
+                                });
+                              }
+                            }}
+                            placeholder={`${getPhoneRequirements(addrCountryCode).length} digits`}
+                            maxLength={getPhoneRequirements(addrCountryCode).length}
+                            className={`w-full px-3.5 py-2.5 bg-white border ${addressErrors.phone_number ? "border-rose-400 focus:ring-rose-500/30" : "border-slate-200 focus:ring-cyan-500/30"} rounded-xl text-sm focus:ring-2 focus:border-cyan-400 outline-none transition-all`}
+                            inputMode="tel"
+                          />
+                        </div>
+                        {addressErrors.phone_number && (
+                          <p className="text-[10px] text-rose-500 font-medium px-1">{addressErrors.phone_number}</p>
+                        )}
+                      </div>
 
                       {/* Emirate Dropdown */}
                       <div className="space-y-1">
@@ -495,8 +616,8 @@ const CheckoutPage: React.FC = () => {
                       {estimation.items_breakdown.map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between items-center text-xs">
                           <span className="text-slate-700 font-medium truncate flex-1">{item.product_name || `Product ${idx + 1}`}</span>
-                          <span className="text-slate-500 ml-2">Qty: {item.quantity}</span>
-                          <span className="ml-2 px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
+                          <span className={`text-slate-500 ${isArabic ? 'mr-2' : 'ml-2'}`}>Qty: {item.quantity}</span>
+                          <span className={`${isArabic ? 'mr-2' : 'ml-2'} px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold`}>
                             {item.delivery_days}d
                           </span>
                         </div>
@@ -539,7 +660,7 @@ const CheckoutPage: React.FC = () => {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
-                  <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={16} className={`absolute ${isArabic ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
                 </div>
               </div>
             </div>
@@ -756,6 +877,23 @@ const CheckoutPage: React.FC = () => {
 
             {/* Place Order */}
             <div className="space-y-2">
+              {!phoneVerified && (
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex gap-2">
+                  <Info size={16} className="text-amber-700 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-amber-800 font-medium">
+                      Verify your phone number to place an order. This helps prevent fake orders.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setVerifyOpen(true); setVerifyStep("input"); }}
+                      className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700"
+                    >
+                      Verify Phone
+                    </button>
+                  </div>
+                </div>
+              )}
               {attemptedSubmit && !deliveryDate && (
                 <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 flex gap-2">
                   <Info size={16} className="text-rose-600 shrink-0 mt-0.5" />
@@ -766,7 +904,7 @@ const CheckoutPage: React.FC = () => {
               )}
               <button
                 onClick={handlePlaceOrder}
-                disabled={submitting || !selectedAddressId}
+                disabled={submitting || !selectedAddressId || !phoneVerified}
                 className="w-full py-4 bg-linear-to-r from-cyan-600 to-cyan-700 text-white rounded-2xl font-black text-base hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-xl shadow-cyan-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {submitting ? (
@@ -782,6 +920,143 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* ─── Phone Verification Modal ─── */}
+      <AnimatePresence>
+        {verifyOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/50" onClick={() => setVerifyOpen(false)} />
+            <div className="relative bg-white rounded-2xl border border-slate-200 w-full max-w-sm p-5 z-10">
+              <h3 className="text-sm font-black text-slate-900 mb-2">Verify Phone Number</h3>
+              <p className="text-xs text-slate-500 mb-3">
+                Only users with a verified phone can place orders.
+              </p>
+              {verifyError && (
+                <div className="mb-3 p-2.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-medium">
+                  {verifyError}
+                </div>
+              )}
+              {verifyStep === "input" ? (
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="relative">
+                      <select
+                        value={verifyCountry}
+                        onChange={(e) => { setVerifyCountry(e.target.value); }}
+                        className="h-[42px] px-2 rounded-xl border border-slate-200 bg-white text-sm"
+                      >
+                        {addressCountries.map((c) => (
+                          <option key={c.code} value={c.code}>{c.code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <input
+                      value={verifyPhone}
+                      onChange={(e) => setVerifyPhone(e.target.value.replace(/[^\d]/g, ""))}
+                      placeholder={`${verifyReq.length} digits`}
+                      maxLength={verifyReq.length}
+                      className="flex-1 px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
+                      inputMode="tel"
+                    />
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setVerifyError(null);
+                      if (!isVerifyPhoneValid) {
+                        setVerifyError(`${verifyReq.name}: ${verifyReq.length} digits${verifyReq.pattern ? ", specific starting digits required" : ""}`);
+                        return;
+                      }
+                      try {
+                        setSendingOtp(true);
+                        const composed = `${verifyCountry}${verifyPhone.replace(/^0+/, "")}`;
+                        const isChanged = composed !== (user?.phone_number || "");
+                        if (user?.id && isChanged) {
+                          await profileApi.updateProfile(user.id, { phone_number: composed } as any);
+                          const me = await profileApi.getMe();
+                          dispatch(setUser(me));
+                        }
+                        await profileApi.sendProfileOtp({
+                          otp_type: "phone",
+                          phone_number: composed,
+                        } as any);
+                        setVerifyStep("otp");
+                      } catch (err: any) {
+                        const apiErr = err?.response?.data;
+                        const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "Failed to send OTP. Try again.");
+                        setVerifyError(detail);
+                      } finally {
+                        setSendingOtp(false);
+                      }
+                    }}
+                    disabled={sendingOtp || !isVerifyPhoneValid}
+                    className="w-full px-4 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 disabled:opacity-50"
+                  >
+                    {sendingOtp ? "Sending..." : "Send OTP"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Enter OTP</label>
+                  <input
+                    value={verifyOtp}
+                    onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, ""))}
+                    maxLength={6}
+                    placeholder="6 digits"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setVerifyStep("input")}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit Phone
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setVerifyError(null);
+                        if (verifyOtp.length < 6) {
+                          setVerifyError("Enter the 6-digit OTP.");
+                          return;
+                        }
+                        try {
+                          setVerifyingOtp(true);
+                          const composed = `${verifyCountry}${verifyPhone.replace(/^0+/, "")}`;
+                          const res: any = await profileApi.verifyProfileOtp({
+                            otp_type: "phone",
+                            otp_code: verifyOtp,
+                            phone_number: composed,
+                          } as any);
+                          const access = res?.access || res?.accessToken || res?.token;
+                          if (access) tokenManager.set(access);
+                          const me = res?.user || (await profileApi.getMe());
+                          dispatch(setUser(me));
+                          setVerifyOpen(false);
+                          toast.show("Phone verified. You can now place your order.", "success");
+                        } catch (err: any) {
+                          const apiErr = err?.response?.data;
+                          const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "OTP verification failed.");
+                          setVerifyError(detail);
+                        } finally {
+                          setVerifyingOtp(false);
+                        }
+                      }}
+                      disabled={verifyingOtp || verifyOtp.length < 6}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {verifyingOtp ? "Verifying..." : "Verify & Continue"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ✅ CSS to hide number input arrows */}
       <style>{`

@@ -2,6 +2,7 @@ import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-qu
 import { bannerApi, type BannerDto } from "../features/admin/banners/bannerApi";
 import { productsApi, type ProductsQuery } from "../features/admin/products/productApi";
 import { profileApi } from "../features/user/profileApi";
+import { reviewsApi } from "../features/admin/reviews/reviewsApi";
 
 /* ══════════════════════════════════════════
    Banner Hooks
@@ -60,6 +61,14 @@ export const useProductDetails = (id: number | undefined) =>
         queryFn: () => productsApi.details(id!),
         enabled: !!id,
         staleTime: 3 * 60 * 1000,
+    });
+
+export const useProductReviews = (id: number | undefined, limit: number = 10) =>
+    useQuery({
+        queryKey: ["product-reviews", id, limit],
+        queryFn: () => reviewsApi.list({ product: id!, is_approved: true, limit }),
+        enabled: !!id,
+        staleTime: 2 * 60 * 1000,
     });
 
 /* ══════════════════════════════════════════

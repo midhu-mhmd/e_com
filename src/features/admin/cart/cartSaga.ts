@@ -176,11 +176,6 @@ function* fetchUserCartWorker(): SagaIterator {
     }
 }
 
-/* ── Load cart when user logs in or session is restored ── */
-function* onAuthSuccess(): SagaIterator {
-    yield put(fetchCartRequest());
-}
-
 /* ── Clear cart on logout ── */
 function* onLogout(): SagaIterator {
     yield put(clearCart());
@@ -248,9 +243,6 @@ function* clearCartWorker(): SagaIterator {
 }
 
 export function* userCartSaga(): SagaIterator {
-    // Fetch cart when auth is confirmed
-    yield takeEvery(setUser.type, onAuthSuccess);
-
     // Fetch cart on explicit request
     yield takeLatest(fetchCartRequest.type, fetchUserCartWorker);
 

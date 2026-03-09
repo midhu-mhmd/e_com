@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Plus, AlertCircle } from "lucide-react";
-import { tierApi, DeliveryTierDto } from "./tierApi";
+import { tierApi } from "./tierApi";
+import type { DeliveryTierDto } from "./tierApi";
 
 interface DeliveryTiersManagerProps {
   productId: number;

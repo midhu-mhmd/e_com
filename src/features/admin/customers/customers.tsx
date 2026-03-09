@@ -52,6 +52,8 @@ import {
   selectActionError,
 } from "./customersSlice";
 import type { Customer } from "./customersApi";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 /* --- Column visibility --- */
 type ColumnKey =
@@ -321,8 +323,14 @@ const CustomerRow = memo(function CustomerRow({
   joinedLabel: string;
   lastLoginLabel: string;
 }) {
+  const navigate = useNavigate();
+  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, a, input, [role='button']")) return;
+    navigate(`/admin/users/${customer.id}`);
+  };
   return (
-    <tr className={`group hover:bg-[#FBFBFA] transition-colors ${customer.isDeleted ? "opacity-50" : ""}`}>
+    <tr onClick={handleRowClick} className={`group hover:bg-[#FBFBFA] transition-colors cursor-pointer ${customer.isDeleted ? "opacity-50" : ""}`}>
       {isVisible("index") && (
         <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
           {(page - 1) * limit + index + 1}
@@ -874,6 +882,20 @@ const CustomerManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
 
+  // Prefill phone filter from URL ?phone= query
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const phone = params.get("phone");
+      if (phone) {
+        setPhoneFilter(phone);
+        setPage(1);
+      }
+    } catch (_) {
+      // ignore
+    }
+  }, []);
+
   // smoother typing
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const debouncedSearch = useDebounce(deferredSearchTerm, 500);
@@ -960,6 +982,17 @@ const CustomerManagement: React.FC = () => {
     return { filteredCustomers: result, stats: { active, blocked, admins } };
   }, [customers, verifiedFilter, phoneFilter]);
 
+  // If phone filter is present in URL and exactly one match, open details panel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const phone = params.get("phone");
+    if (phone && filteredCustomers.length === 1) {
+      dispatch(customersActions.setSelectedCustomerId(filteredCustomers[0].id));
+    }
+  }, [filteredCustomers, dispatch]);
+
+  const navigate = useNavigate();
+  const location = useLocation();
   const selectedCustomer = useMemo(
     () => filteredCustomers.find((c) => c.id === selectedCustomerId) ?? null,
     [filteredCustomers, selectedCustomerId]
@@ -986,14 +1019,25 @@ const CustomerManagement: React.FC = () => {
     return map;
   }, [filteredCustomers]);
 
-  // View handler (no inline function per row)
+  // View handler navigates to full-page user details
   const onViewCustomer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const id = (e.currentTarget.dataset.id as string) || "";
-      if (id) dispatch(customersActions.setSelectedCustomerId(id));
+      if (id) navigate(`/admin/users/${id}`);
     },
-    [dispatch]
+    [navigate]
   );
+
+  // If navigated with ?phone=..., auto open details page when unique
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const phone = params.get("phone");
+    if (!phone) return;
+    const matches = filteredCustomers.filter((c: Customer) => c.phone && c.phone.includes(phone));
+    if (matches.length === 1) {
+      navigate(`/admin/users/${matches[0].id}`, { replace: true });
+    }
+  }, [location.search, filteredCustomers, navigate]);
 
   const onClosePanel = useCallback(() => {
     dispatch(customersActions.setSelectedCustomerId(null));

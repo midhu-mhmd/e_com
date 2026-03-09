@@ -7,10 +7,12 @@ import {
     ArrowRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 /* ── Component ── */
 const FreshnessSection: React.FC = () => {
     const { t } = useTranslation("home");
+    const { isArabic } = useLanguageToggle();
 
     const promises = [
         {
@@ -93,8 +95,10 @@ const FreshnessSection: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Timeline line */}
+                    {/* Timeline line (desktop center rail) */}
                     <div className="absolute left-1/2 -translate-x-px top-[100px] bottom-[60px] w-[2px] bg-cyan-200 hidden sm:block" />
+                    {/* Timeline line (mobile side rail) */}
+                    <div className={`sm:hidden absolute ${isArabic ? 'right-4' : 'left-4'} top-[112px] bottom-[60px] w-[2px] bg-cyan-200`} />
 
                     <div className="space-y-6 sm:space-y-0">
                         {timeline.map((step, i) => (
@@ -177,6 +181,7 @@ const TimelineStep: React.FC<{
     index: number;
     isLeft: boolean;
 }> = ({ step, index, isLeft }) => {
+    const { isArabic } = useLanguageToggle();
     const ref = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(false);
 
@@ -200,14 +205,24 @@ const TimelineStep: React.FC<{
         >
             {/* Content */}
             <div className={`flex-1 w-full flex justify-center ${isLeft ? "sm:text-right sm:pr-10 sm:justify-end" : "sm:text-left sm:pl-10 sm:justify-start"}`}>
-                <div
-                    className={`inline-flex flex-col items-center sm:flex-row gap-3 px-5 py-3 sm:px-4 sm:py-2.5 bg-white border border-zinc-100 rounded-xl shadow-sm hover:shadow-md transition-shadow ${isLeft ? "sm:flex-row-reverse" : ""
-                        }`}
-                >
-                    <span className="text-2xl sm:text-xl">{step.emoji}</span>
-                    <div className={`text-center ${isLeft ? "sm:text-right" : "sm:text-left"}`}>
-                        <p className="text-sm sm:text-xs font-bold text-zinc-900">{step.event}</p>
-                        <p className="text-[11px] sm:text-[10px] text-zinc-400 font-mono">{step.time}</p>
+                <div className="relative w-full sm:w-auto px-8">
+                    {/* Mobile dot on side rail */}
+                    <span className={`sm:hidden absolute top-1/2 -translate-y-1/2 ${isArabic ? 'right-4' : 'left-4'} w-3 h-3 bg-white border-[3px] border-cyan-400 rounded-full shadow-sm`} />
+                    <div
+                        className={`inline-flex w-full sm:w-auto flex-col items-start sm:items-center sm:flex-row gap-3 px-5 py-4 sm:px-4 sm:py-2.5 bg-white border border-zinc-100 rounded-2xl shadow-md hover:shadow-lg transition-all ${isLeft ? "sm:flex-row-reverse" : ""
+                            }`}
+                    >
+                        {/* Step badge (mobile-visible) */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <div className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-50 border border-cyan-100 text-[11px] font-extrabold text-cyan-700">
+                                {String(index + 1).padStart(2, "0")}
+                            </div>
+                            <span className="text-2xl sm:text-xl">{step.emoji}</span>
+                        </div>
+                        <div className={`flex-1 ${isLeft ? "sm:text-right" : "sm:text-left"}`}>
+                            <p className="text-sm sm:text-xs font-bold text-zinc-900">{step.event}</p>
+                            <p className="mt-0.5 text-[11px] sm:text-[10px] text-zinc-400 font-mono">{step.time}</p>
+                        </div>
                     </div>
                 </div>
             </div>

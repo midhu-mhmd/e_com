@@ -117,6 +117,29 @@ export const ordersApi = {
         return res.data;
     },
 
+    /* ── Receipts (Success Payments Only) ── */
+    receiptImage: async (id: number): Promise<Blob> => {
+        const res = await api.get(`/orders/${id}/receipt_image/`, {
+            responseType: "blob",
+        } as any);
+        return res.data as Blob;
+    },
+
+    receiptPdf: async (id: number): Promise<Blob> => {
+        const res = await api.get(`/orders/${id}/receipt_pdf/`, {
+            responseType: "blob",
+        } as any);
+        return res.data as Blob;
+    },
+
+    /* ── Admin Delivery Details (All Orders) ── */
+    adminReceiptPdf: async (id: number): Promise<Blob> => {
+        const res = await api.get(`/orders/${id}/admin_receipt_pdf/`, {
+            responseType: "blob",
+        } as any);
+        return res.data as Blob;
+    },
+
     details: async (id: number): Promise<OrderDto> => {
         const res = await api.get<OrderDto>(`/orders/${id}/`);
         return res.data;

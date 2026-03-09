@@ -1,0 +1,79 @@
+{
+  "hero": {
+    "badge": "客服中心",
+    "title": "我们能帮你什么？",
+    "subtitle": "我们的团队随时为你提供帮助。"
+  },
+  "form": {
+    "title": "发送留言",
+    "subtitle": "我们通常会在24小时内回复",
+    "fields": {
+      "name": "姓名",
+      "email": "邮箱",
+      "subject": "主题",
+      "message": "留言内容"
+    },
+    "placeholders": {
+      "name": "你的姓名",
+      "email": "you@example.com",
+      "subject": "这是关于什么？",
+      "message": "请详细描述你的问题或需求..."
+    },
+    "submit": "发送消息",
+    "sending": "发送中...",
+    "success": {
+      "title": "已发送！",
+      "subtitle": "感谢你的留言，我们会尽快回复。",
+      "again": "再发一条"
+    },
+    "loginBanner": "请先登录再发送消息。",
+    "verify": {
+      "openBtn": "验证邮箱",
+      "email": "邮箱",
+      "send": "发送验证码",
+      "sending": "发送中...",
+      "codePlaceholder": "输入6位验证码",
+      "verify": "验证",
+      "verifying": "验证中...",
+      "sendError": "验证码发送失败，请重试。",
+      "verifyError": "验证码无效或已过期。"
+    },
+    "errors": {
+      "unauthenticated": "请先登录后再发送消息。",
+      "emailNotVerified": "发送消息前需要验证邮箱。",
+      "generic": "出了点问题，请重试。"
+    }
+  },
+  "sidebar": {
+    "call": {
+      "title": "电话客服",
+      "subtitle": "与我们的团队沟通"
+    },
+    "hours": {
+      "title": "工作时间",
+      "value": "周六至周四：9:00 – 21:00"
+    },
+    "email": {
+      "title": "邮件咨询",
+      "value": "support@example.com"
+    }
+  },
+  "quick": {
+    "title": "需要紧急帮助？",
+    "textBefore": "订单相关问题，请访问",
+    "ordersLink": "订单页面",
+    "textAfter": "进行取消或退货等快速操作。",
+    "response": "平均响应：2小时内"
+  },
+  "faq": {
+    "badge": "常见问题",
+    "title": "热门问答",
+    "items": [
+      { "q": "如何查看物流？", "a": "发货后你会收到邮件/短信的跟踪链接；也可在订单页面查看。" },
+      { "q": "退换货政策是什么？", "a": "在签收7天内、未使用且包装完好的商品支持退换。退款一般3–5个工作日到账。" },
+      { "q": "配送需要多久？", "a": "阿联酋境内标准配送约2–4个工作日；部分地区提供加急选项。" },
+      { "q": "能修改或取消订单吗？", "a": "下单后1小时内支持修改/取消；之后进入处理流程无法更改。" },
+      { "q": "支持哪些支付方式？", "a": "Visa、Mastercard、Apple Pay、货到付款、银行转账。"}
+    ]
+  }
+}

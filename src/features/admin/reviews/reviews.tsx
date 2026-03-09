@@ -10,12 +10,12 @@ import {
   Download,
   RotateCcw,
   MessageSquare,
-  ThumbsUp,
-  ThumbsDown,
   ListFilter,
   Columns3,
   X,
   Eye,
+  EyeOff,
+  Info,
   Calendar,
   User,
   Package,
@@ -29,7 +29,9 @@ import {
   selectReviewsTotal,
   selectSelectedReviewId,
 } from "./reviewsSlice";
-import type { Review, ReviewStatus } from "./reviewsSlice";
+import type { Review } from "./reviewsSlice";
+import { reviewsApi } from "./reviewsApi";
+import { useToast } from "../../../components/ui/Toast";
 
 /* --- Column Visibility --- */
 type ColumnKey =
@@ -37,9 +39,8 @@ type ColumnKey =
   | "product"
   | "customer"
   | "rating"
-  | "title"
   | "comment"
-  | "status"
+  | "visibility"
   | "date"
   | "updated"
   | "actions";
@@ -57,15 +58,14 @@ const COLUMNS: ColumnDef[] = [
   { key: "product", label: "Product", icon: <Package size={12} />, defaultVisible: true },
   { key: "customer", label: "Customer", icon: <User size={12} />, defaultVisible: true },
   { key: "rating", label: "Rating", icon: <Star size={12} />, defaultVisible: true },
-  { key: "title", label: "Title", defaultVisible: false },
   { key: "comment", label: "Comment", icon: <MessageSquare size={12} />, defaultVisible: true },
-  { key: "status", label: "Status", defaultVisible: true },
+  { key: "visibility", label: "Visibility", defaultVisible: true },
   { key: "date", label: "Created", icon: <Calendar size={12} />, defaultVisible: true },
   { key: "updated", label: "Updated", icon: <Calendar size={12} />, defaultVisible: false },
   { key: "actions", label: "Actions", defaultVisible: true, alwaysVisible: true },
 ];
 
-type FilterStatus = ReviewStatus | "All";
+ 
 
 // Simple debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -91,13 +91,14 @@ const ReviewsManagement: React.FC = () => {
   // Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<FilterStatus>("All");
   const [filterRating, setFilterRating] = useState<number | "All">("All");
   const [customerFilter, setCustomerFilter] = useState("");
   const [commentFilter, setCommentFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const debouncedSearch = useDebounce(searchTerm, 500);
+  const toast = useToast();
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
@@ -126,12 +127,11 @@ const ReviewsManagement: React.FC = () => {
 
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-  // Fetch when params change (API supports q, rating, is_approved)
+  // Fetch when params change
   useEffect(() => {
     const offset = (page - 1) * limit;
     dispatch(
       reviewsActions.fetchReviewsRequest({
-        q: debouncedSearch || undefined,
         rating: filterRating === "All" ? undefined : filterRating,
         page,
         limit,
@@ -142,7 +142,6 @@ const ReviewsManagement: React.FC = () => {
 
   const handleReset = () => {
     setSearchTerm("");
-    setStatusFilter("All");
     setFilterRating("All");
     setCustomerFilter("");
     setCommentFilter("");
@@ -152,8 +151,10 @@ const ReviewsManagement: React.FC = () => {
   // Client-side filtering for columns not supported by API
   const filteredReviews = useMemo(() => {
     let result = reviews;
-    if (statusFilter !== "All") {
-      result = result.filter((r) => r.status === statusFilter);
+    if (debouncedSearch) {
+      result = result.filter((r) =>
+        r.productName.toLowerCase().includes(debouncedSearch.toLowerCase())
+      );
     }
     if (customerFilter) {
       result = result.filter((r) =>
@@ -162,12 +163,11 @@ const ReviewsManagement: React.FC = () => {
     }
     if (commentFilter) {
       result = result.filter((r) =>
-        r.comment.toLowerCase().includes(commentFilter.toLowerCase()) ||
-        r.title.toLowerCase().includes(commentFilter.toLowerCase())
+        r.comment.toLowerCase().includes(commentFilter.toLowerCase())
       );
     }
     return result;
-  }, [reviews, statusFilter, customerFilter, commentFilter]);
+  }, [reviews, debouncedSearch, customerFilter, commentFilter]);
 
   const selectedReview = useMemo(
     () => filteredReviews.find((r) => r.id === selectedReviewId) ?? null,
@@ -176,15 +176,14 @@ const ReviewsManagement: React.FC = () => {
 
   // Export handler
   const handleExport = () => {
-    const headers = ["ID", "Product", "Customer", "Rating", "Title", "Comment", "Status", "Date"];
+    const headers = ["ID", "Product", "Customer", "Rating", "Comment", "Visibility", "Date"];
     const rows = filteredReviews.map(r => [
       r.id,
       r.productName,
       r.userName,
       r.rating,
-      r.title,
       r.comment,
-      r.status,
+      r.isVisible ? "Visible" : "Hidden",
       new Date(r.createdAt).toLocaleDateString()
     ]);
     const csvContent = [
@@ -210,8 +209,8 @@ const ReviewsManagement: React.FC = () => {
     filteredReviews.length > 0
       ? (filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1)
       : "0.0";
-  const approvedCount = filteredReviews.filter((r) => r.status === "Approved").length;
-  const pendingCount = filteredReviews.filter((r) => r.status === "Pending").length;
+  const visibleCount = filteredReviews.filter((r) => r.isVisible).length;
+  const hiddenCount = filteredReviews.length - visibleCount;
 
   return (
     <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
@@ -236,16 +235,16 @@ const ReviewsManagement: React.FC = () => {
           icon={<Star size={16} className="text-amber-400" />}
         />
         <QuickStat
-          label="Approved"
-          value={`${approvedCount}`}
-          sub="Published"
-          icon={<ThumbsUp size={16} className="text-emerald-500" />}
+          label="Visible"
+          value={`${visibleCount}`}
+          sub="Shown to users"
+          icon={<Eye size={16} className="text-emerald-500" />}
         />
         <QuickStat
-          label="Pending"
-          value={`${pendingCount}`}
-          sub="Awaiting review"
-          icon={<ThumbsDown size={16} className="text-amber-500" />}
+          label="Hidden"
+          value={`${hiddenCount}`}
+          sub="Not visible"
+          icon={<EyeOff size={16} className="text-slate-400" />}
         />
       </div>
 
@@ -339,9 +338,8 @@ const ReviewsManagement: React.FC = () => {
                 {isVisible("product") && <th className="px-5 py-4">Product</th>}
                 {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
                 {isVisible("rating") && <th className="px-5 py-4">Rating</th>}
-                {isVisible("title") && <th className="px-5 py-4">Title</th>}
                 {isVisible("comment") && <th className="px-5 py-4">Comment</th>}
-                {isVisible("status") && <th className="px-5 py-4">Status</th>}
+                {isVisible("visibility") && <th className="px-5 py-4">Visibility</th>}
                 {isVisible("date") && <th className="px-5 py-4">Created</th>}
                 {isVisible("updated") && <th className="px-5 py-4">Updated</th>}
                 {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
@@ -402,9 +400,7 @@ const ReviewsManagement: React.FC = () => {
                       </select>
                     </td>
                   )}
-                  {isVisible("title") && (
-                    <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
-                  )}
+                  
                   {isVisible("comment") && (
                     <td className="px-5 py-3">
                       <div className="relative">
@@ -419,22 +415,7 @@ const ReviewsManagement: React.FC = () => {
                       </div>
                     </td>
                   )}
-                  {isVisible("status") && (
-                    <td className="px-5 py-3">
-                      <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                          setStatusFilter(e.target.value as FilterStatus)
-                        }
-                        className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
-                      >
-                        <option value="All">All Status</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </td>
-                  )}
+                  
                   {isVisible("date") && (
                     <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
                   )}
@@ -510,13 +491,7 @@ const ReviewsManagement: React.FC = () => {
                       </td>
                     )}
 
-                    {isVisible("title") && (
-                      <td className="px-5 py-4">
-                        <p className="text-xs font-bold truncate max-w-[160px]">
-                          {r.title || <span className="italic text-[#A1A1AA]">—</span>}
-                        </p>
-                      </td>
-                    )}
+                    
 
                     {isVisible("comment") && (
                       <td className="px-5 py-4">
@@ -526,9 +501,11 @@ const ReviewsManagement: React.FC = () => {
                       </td>
                     )}
 
-                    {isVisible("status") && (
+                    
+
+                    {isVisible("visibility") && (
                       <td className="px-5 py-4">
-                        <StatusBadge status={r.status} />
+                        <VisibilityBadge visible={r.isVisible} />
                       </td>
                     )}
 
@@ -560,14 +537,43 @@ const ReviewsManagement: React.FC = () => {
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (togglingId) return;
+                              try {
+                                setTogglingId(r.id);
+                                const res = await reviewsApi.toggleVisibility(r.id);
+                                toast.show(res?.message || "Visibility toggled", "success");
+                              } catch (err: any) {
+                                toast.show(err?.response?.data?.detail || "Failed to toggle visibility", "error");
+                              } finally {
+                                setTogglingId(null);
+                                const offset = (page - 1) * limit;
+                                dispatch(
+                                  reviewsActions.fetchReviewsRequest({
+                                    rating: filterRating === "All" ? undefined : filterRating,
+                                    page,
+                                    limit,
+                                    offset,
+                                  })
+                                );
+                              }
+                            }}
+                            disabled={!!togglingId}
+                            className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-lg transition-colors disabled:opacity-50"
+                            title={r.isVisible ? "Hide" : "Show"}
+                          >
+                            {r.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               dispatch(reviewsActions.setSelectedReviewId(r.id));
                             }}
-                            className="p-2 hover:bg-black hover:text-white rounded-lg transition-colors text-[#A1A1AA]"
+                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
                             title="View Details"
                           >
-                            <Eye size={16} />
+                            <Info size={16} />
                           </button>
                         </div>
                       </td>
@@ -648,7 +654,40 @@ const ReviewDetailPanel = ({
 }: {
   review: Review;
   onClose: () => void;
-}) => (
+}) => {
+  const [response, setResponse] = useState(review.adminResponse ?? "");
+  const [saving, setSaving] = useState(false);
+  const [localVisible, setLocalVisible] = useState(review.isVisible);
+  const toast = useToast();
+  const dispatch = useDispatch();
+
+  const handleSaveResponse = async () => {
+    try {
+      setSaving(true);
+      await reviewsApi.setAdminResponse(review.id, response);
+      toast.show("Response saved", "success");
+    } catch (e: any) {
+      toast.show(e?.response?.data?.detail || "Failed to save response", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggle = async () => {
+    try {
+      setSaving(true);
+      const res = await reviewsApi.toggleVisibility(review.id);
+      setLocalVisible((v) => !v);
+      toast.show(res?.message || "Visibility toggled", "success");
+      dispatch(reviewsActions.fetchReviewsRequest(undefined));
+    } catch (e: any) {
+      toast.show(e?.response?.data?.detail || "Failed to toggle visibility", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
   <>
     <div
       className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 transition-opacity"
@@ -673,11 +712,21 @@ const ReviewDetailPanel = ({
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Status + Rating */}
+        {/* Visibility + Rating */}
         <div className="flex items-center justify-between bg-[#FAFAFA] p-4 rounded-xl border border-[#EEEEEE]">
           <div>
-            <p className="text-[10px] font-bold text-[#A1A1AA] uppercase mb-1">Status</p>
-            <StatusBadge status={review.status} />
+            <p className="text-[10px] font-bold text-[#A1A1AA] uppercase mb-1">Visibility</p>
+            <div className="flex items-center gap-2">
+              <VisibilityBadge visible={localVisible} />
+              <button
+                onClick={handleToggle}
+                disabled={saving}
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border hover:bg-emerald-50 text-emerald-600 border-emerald-100 disabled:opacity-50"
+                title={localVisible ? "Hide" : "Show"}
+              >
+                {localVisible ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-bold text-[#A1A1AA] uppercase mb-1">Rating</p>
@@ -711,15 +760,7 @@ const ReviewDetailPanel = ({
           </div>
         </div>
 
-        {/* Title */}
-        {review.title && (
-          <div>
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-3">
-              Title
-            </h4>
-            <p className="text-sm font-bold">{review.title}</p>
-          </div>
-        )}
+        
 
         {/* Comment */}
         <div>
@@ -764,22 +805,38 @@ const ReviewDetailPanel = ({
           </div>
         </div>
       </div>
+
+      {/* Admin Response */}
+      <div className="p-6 space-y-2">
+        <p className="text-[10px] font-bold text-[#A1A1AA] uppercase">Admin Response</p>
+        <textarea
+          value={response}
+          onChange={(e) => setResponse(e.target.value)}
+          className="w-full p-3 bg-white border border-[#EEEEEE] rounded-xl outline-none focus:border-[#D4D4D8] min-h-[100px]"
+          placeholder="Write a response to this review…"
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={handleSaveResponse}
+            disabled={saving}
+            className="px-4 py-2 text-sm font-bold rounded-lg bg-black text-white disabled:opacity-50"
+          >
+            Save Response
+          </button>
+        </div>
+      </div>
     </div>
-  </>
-);
+  </>);
+};
 
 /* --- SUB-COMPONENTS --- */
-const StatusBadge = ({ status }: { status: ReviewStatus }) => {
-  const styles: Record<ReviewStatus, string> = {
-    Pending: "bg-amber-50 text-amber-600 border-amber-100",
-    Approved: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    Rejected: "bg-rose-50 text-rose-600 border-rose-100",
-  };
+const VisibilityBadge = ({ visible }: { visible: boolean }) => {
+  const cls = visible
+    ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+    : "bg-slate-100 text-slate-500 border-slate-200";
   return (
-    <span
-      className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}
-    >
-      {status}
+    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${cls}`}>
+      {visible ? "Visible" : "Hidden"}
     </span>
   );
 };

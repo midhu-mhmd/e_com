@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Package, Tag, Info, CheckCircle, Trash2, ArrowLeft, Loader2, CheckCheck } from 'lucide-react';
+import { Bell, Package, Tag, Info, CheckCircle, Trash2, ArrowLeft, Loader2, CheckCheck, CircleDot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
+import useLanguageToggle from '../../hooks/useLanguageToggle';
+import { useTranslation } from 'react-i18next';
 
 // Notification Types
 type NotificationType = 'order' | 'promo' | 'system';
@@ -56,9 +58,12 @@ function formatDate(dateStr?: string): string {
 
 const NotificationPage: React.FC = () => {
     const navigate = useNavigate();
+    const { isArabic } = useLanguageToggle();
+    const { t } = useTranslation('common');
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [markingAll, setMarkingAll] = useState(false);
+    const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
     // Fetch notifications
     const fetchNotifications = useCallback(async () => {
@@ -121,9 +126,16 @@ const NotificationPage: React.FC = () => {
     };
 
     const hasUnread = notifications.some(n => !n.read);
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const readCount = notifications.filter(n => n.read).length;
+    const filtered = useMemo(() => {
+        if (filter === 'unread') return notifications.filter(n => !n.read);
+        if (filter === 'read') return notifications.filter(n => n.read);
+        return notifications;
+    }, [notifications, filter]);
 
     return (
-        <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-800 pb-20">
+        <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-800 pb-20 overflow-x-hidden">
             {/* Header */}
             <div className="bg-white border-b border-slate-100 sticky top-0 z-20">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -132,7 +144,7 @@ const NotificationPage: React.FC = () => {
                             <ArrowLeft size={20} />
                         </button>
                         <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                            <Bell size={20} /> Notifications
+                            <Bell size={20} /> {t('notifications.title', 'Notifications')}
                         </h1>
                     </div>
                     {hasUnread && (
@@ -142,30 +154,59 @@ const NotificationPage: React.FC = () => {
                             className="flex items-center gap-1.5 text-xs font-bold text-cyan-600 hover:text-cyan-700 transition-colors disabled:opacity-50"
                         >
                             {markingAll ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={14} />}
-                            Mark all read
+                            {t('notifications.markAllRead', 'Mark all read')}
                         </button>
                     )}
                 </div>
             </div>
 
-            <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full overflow-x-hidden">
+                {/* Filter Pills */}
+                <div className="mb-6">
+                    <div className="inline-flex bg-slate-100/60 p-1 rounded-xl border border-slate-200 max-w-full">
+                        <button
+                            onClick={() => setFilter('all')}
+                            className={`px-3.5 py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1.5 transition-colors ${filter === 'all' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                            title={t('notifications.showAll', 'Show all notifications')}
+                        >
+                            <Bell size={14} /> {t('notifications.all', 'All')}
+                            <span className={`${isArabic ? 'mr-1' : 'ml-1'} inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-md text-[10px] font-black bg-white border border-slate-200 text-slate-700`}>{notifications.length}</span>
+                        </button>
+                        <button
+                            onClick={() => setFilter('unread')}
+                            className={`px-3.5 py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1.5 transition-colors ${filter === 'unread' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                            title={t('notifications.showUnread', 'Show unread')}
+                        >
+                            <CircleDot size={14} className="text-rose-500" /> {t('notifications.unread', 'Unread')}
+                            <span className={`${isArabic ? 'mr-1' : 'ml-1'} inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-md text-[10px] font-black bg-white border border-slate-200 text-slate-700`}>{unreadCount}</span>
+                        </button>
+                        <button
+                            onClick={() => setFilter('read')}
+                            className={`px-3.5 py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1.5 transition-colors ${filter === 'read' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                            title={t('notifications.showRead', 'Show read')}
+                        >
+                            <CheckCheck size={14} className="text-emerald-600" /> {t('notifications.read', 'Read')}
+                            <span className={`${isArabic ? 'mr-1' : 'ml-1'} inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-md text-[10px] font-black bg-white border border-slate-200 text-slate-700`}>{readCount}</span>
+                        </button>
+                    </div>
+                </div>
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 size={28} className="animate-spin text-slate-300 mb-3" />
-                        <p className="text-sm text-slate-400 font-medium">Loading notifications…</p>
+                        <p className="text-sm text-slate-400 font-medium">{t('notifications.loading', 'Loading notifications…')}</p>
                     </div>
-                ) : notifications.length === 0 ? (
+                ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                             <Bell size={32} className="text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900">No notifications yet</h3>
-                        <p className="text-slate-500 text-sm">We'll let you know when something important happens.</p>
+                        <h3 className="text-lg font-bold text-slate-900">{filter === 'all' ? t('notifications.emptyAll', 'No notifications yet') : filter === 'unread' ? t('notifications.emptyUnread', 'No unread notifications') : t('notifications.emptyRead', 'No read notifications')}</h3>
+                        <p className="text-slate-500 text-sm">{filter === 'all' ? t('notifications.emptyHintAll', "We'll let you know when something important happens.") : t('notifications.emptyHintOther', 'Try switching filters or check back later.')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         <AnimatePresence>
-                            {notifications.map((notification) => (
+                            {filtered.map((notification) => (
                                 <motion.div
                                     key={notification.id}
                                     layout
@@ -183,10 +224,10 @@ const NotificationPage: React.FC = () => {
                                             {getIcon(notification.type)}
                                         </div>
 
-                                        {/* Added pr-14 to ensure text never overlaps with the absolute buttons */}
-                                        <div className="flex-1 pr-14 sm:pr-0">
+                                        {/* Ensure text never overlaps with the absolute buttons */}
+                                        <div className={`flex-1 ${isArabic ? 'pl-14 sm:pl-0' : 'pr-14 sm:pr-0'}`}>
                                             <div className="flex justify-between items-start">
-                                                <h3 className={`text-sm font-bold pr-4 sm:pr-0 ${notification.read ? 'text-slate-700' : 'text-slate-900'}`}>
+                                                <h3 className={`text-sm font-bold ${isArabic ? 'pl-4 sm:pl-0' : 'pr-4 sm:pr-0'} ${notification.read ? 'text-slate-700' : 'text-slate-900'}`}>
                                                     {notification.title}
                                                 </h3>
                                                 <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{notification.date}</span>
@@ -197,13 +238,13 @@ const NotificationPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* ✅ Actions (Absolute Bottom-Right to preserve card height) */}
-                                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+                                    {/* ✅ Actions (Absolute corner to preserve card height) */}
+                                    <div className={`absolute bottom-4 ${isArabic ? 'left-4' : 'right-4'} flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300`}>
                                         {!notification.read && (
                                             <button
                                                 onClick={() => markAsRead(notification.id)}
                                                 className="p-1.5 bg-white text-emerald-600 rounded-lg shadow-sm border border-slate-100 hover:bg-emerald-50 transition-colors"
-                                                title="Mark as Read"
+                                                title={t('notifications.markRead', 'Mark as Read')}
                                             >
                                                 <CheckCircle size={14} />
                                             </button>
@@ -211,7 +252,7 @@ const NotificationPage: React.FC = () => {
                                         <button
                                             onClick={() => deleteNotification(notification.id)}
                                             className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                            title="Delete"
+                                            title={t('notifications.delete', 'Delete')}
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -219,7 +260,7 @@ const NotificationPage: React.FC = () => {
 
                                     {/* Unread indicator dot */}
                                     {!notification.read && (
-                                        <span className="absolute top-5 right-5 w-2 h-2 bg-rose-500 rounded-full" />
+                                        <span className={`absolute top-5 ${isArabic ? 'left-5' : 'right-5'} w-2 h-2 bg-rose-500 rounded-full`} />
                                     )}
                                 </motion.div>
                             ))}

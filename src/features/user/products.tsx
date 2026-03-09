@@ -10,6 +10,7 @@ import ShrimpLoader from "../../components/loader/preloader";
 import { useTranslation } from "react-i18next";
 import { useInfiniteProducts } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 /** Get the best available image: featured image → first gallery image → main image field */
 const getProductImage = (p: ProductDto): string => {
@@ -30,6 +31,14 @@ const ProductCard = memo(({
     onBuyNow: (e: React.MouseEvent, p: ProductDto) => void;
 }) => {
     const { t } = useTranslation("product");
+    const unitDisplay =
+        product.unit === "kg"
+            ? "Kg"
+            : product.unit === "piece"
+                ? "Piece"
+                : product.unit === "Gram"
+                    ? "100g"
+                    : "";
 
     return (
         <motion.div
@@ -111,11 +120,11 @@ const ProductCard = memo(({
                             <div className="flex flex-col">
                                 {product.discount_price ? (
                                     <>
-                                        <span className="text-[10px] text-slate-400 line-through font-medium">AED {product.price}</span>
-                                        <span className="text-lg font-black text-slate-900">AED {product.discount_price}</span>
+                                        <span className="text-[10px] text-slate-400 line-through font-medium">AED {Number(product.price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
+                                        <span className="text-lg font-black text-slate-900">AED {Number(product.discount_price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
                                     </>
                                 ) : (
-                                    <span className="text-lg font-black text-slate-900">AED {product.price}</span>
+                                    <span className="text-lg font-black text-slate-900">AED {Number(product.price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
                                 )}
                             </div>
 
@@ -145,6 +154,7 @@ const ProductCard = memo(({
 
 const UserProductsPage: React.FC = () => {
     const { t } = useTranslation("product");
+    const { isArabic } = useLanguageToggle();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const requireAuth = useRequireAuth();
@@ -254,13 +264,13 @@ const UserProductsPage: React.FC = () => {
 
                         {/* Search Input */}
                         <div className="relative w-full md:w-96 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors" size={20} />
+                            <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors`} size={20} />
                             <input
                                 type="text"
                                 placeholder={t("list.searchPlaceholder")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:bg-white focus:border-cyan-200 focus:ring-4 focus:ring-cyan-500/10 rounded-2xl text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400"
+                                className={`w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:bg-white focus:border-cyan-200 focus:ring-4 focus:ring-cyan-500/10 rounded-2xl text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400`}
                             />
                         </div>
                     </div>

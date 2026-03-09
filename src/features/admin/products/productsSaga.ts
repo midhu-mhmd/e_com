@@ -56,15 +56,15 @@ function mapProductDtoToProduct(dto: ProductDto): Product {
             ? dto.discount_tiers.map((t) => ({
                 id: t.id,
                 minQuantity: t.min_quantity,
-                discountPrice: parseFloat(t.discount_price) || 0,
+                discountPrice: parseFloat(t.discount_price ?? "0") || 0,
             }))
             : [],
         deliveryTiers: Array.isArray(dto.delivery_tiers)
             ? dto.delivery_tiers.map((t) => ({
                 id: t.id,
-                name: t.name,
-                cost: parseFloat(t.cost) || 0,
-                estimatedDays: t.estimated_days,
+                name: t.name ?? "",
+                cost: parseFloat(t.cost ?? "0") || 0,
+                estimatedDays: t.estimated_days ?? "",
             }))
             : [],
         createdAt: dto.created_at,
@@ -81,7 +81,6 @@ function mapCategoryDtoToCategory(dto: CategoryDto): Category {
         description: dto.description,
         parent: dto.parent,
         image: dto.image,
-        isActive: dto.is_active,
         productCount: dto.product_count ?? 0,
     };
 }

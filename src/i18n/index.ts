@@ -26,6 +26,10 @@ import enProfile from "./locales/en/profile.json";
 import arProfile from "./locales/ar/profile.json";
 import cnProfile from "./locales/cn/profile.json";
 
+import enSupport from "./locales/en/support.json";
+import arSupport from "./locales/ar/support.json";
+import cnSupport from "./locales/cn/support.json";
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -34,12 +38,12 @@ i18n
     supportedLngs: ["en", "ar", "cn"],
 
     resources: {
-      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout, profile: enProfile },
-      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout, profile: arProfile },
-      cn: { common: cnCommon, home: cnHome, product: cnProduct, cart: cnCart, checkout: cnCheckout, profile: cnProfile },
+      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout, profile: enProfile, support: enSupport },
+      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout, profile: arProfile, support: arSupport },
+      cn: { common: cnCommon, home: cnHome, product: cnProduct, cart: cnCart, checkout: cnCheckout, profile: cnProfile, support: cnSupport },
     },
 
-    ns: ["common", "home", "product", "cart", "checkout", "profile"],
+    ns: ["common", "home", "product", "cart", "checkout", "profile", "support"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
 

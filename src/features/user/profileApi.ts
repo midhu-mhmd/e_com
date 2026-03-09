@@ -67,9 +67,8 @@ export const profileApi = {
         return res.data;
     },
 
-    /** POST /auth/otp/login/ — verify OTP for profile updates (standardized) */
     verifyProfileOtp: async (data: VerifyProfileOtpPayload) => {
-        const res = await api.post(`/auth/otp/login/`, data);
+        const res = await api.post(`/auth/otp/verify-update/`, data);
         return res.data;
     },
 };

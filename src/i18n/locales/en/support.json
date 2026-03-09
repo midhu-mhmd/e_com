@@ -1,0 +1,79 @@
+{
+  "hero": {
+    "badge": "Support Center",
+    "title": "How can we help you?",
+    "subtitle": "Our team is here to assist. Reach out and we’ll help."
+  },
+  "form": {
+    "title": "Send us a message",
+    "subtitle": "We’ll get back to you within 24 hours",
+    "fields": {
+      "name": "Full Name",
+      "email": "Email Address",
+      "subject": "Subject",
+      "message": "Message"
+    },
+    "placeholders": {
+      "name": "Your name",
+      "email": "you@example.com",
+      "subject": "What is this about?",
+      "message": "Describe your issue or question in detail..."
+    },
+    "submit": "Send Message",
+    "sending": "Sending...",
+    "success": {
+      "title": "Message Sent!",
+      "subtitle": "Thank you for reaching out. We’ll respond as soon as possible.",
+      "again": "Send Another Message"
+    },
+    "loginBanner": "Please log in to send a message.",
+    "verify": {
+      "openBtn": "Verify Email",
+      "email": "Email",
+      "send": "Send Code",
+      "sending": "Sending...",
+      "codePlaceholder": "Enter 6-digit code",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "sendError": "Failed to send code. Try again.",
+      "verifyError": "Invalid or expired code."
+    },
+    "errors": {
+      "unauthenticated": "Please log in to send a message.",
+      "emailNotVerified": "Your email must be verified to send a message.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "sidebar": {
+    "call": {
+      "title": "Call Support",
+      "subtitle": "Speak to our team"
+    },
+    "hours": {
+      "title": "Working Hours",
+      "value": "Sat – Thu: 9 AM – 9 PM"
+    },
+    "email": {
+      "title": "Email Us",
+      "value": "support@example.com"
+    }
+  },
+  "quick": {
+    "title": "Need urgent help?",
+    "textBefore": "For order-related issues, visit your",
+    "ordersLink": "Orders page",
+    "textAfter": "for quick actions like cancellation or return requests.",
+    "response": "Average response: under 2 hours"
+  },
+  "faq": {
+    "badge": "Frequently Asked",
+    "title": "Common Questions",
+    "items": [
+      { "q": "How do I track my order?", "a": "After shipping, you’ll receive a tracking link via email and SMS. You can also view it on your Orders page." },
+      { "q": "What is your return & refund policy?", "a": "Returns accepted within 7 days if unused and in original packaging. Refunds process in 3–5 business days." },
+      { "q": "How long does delivery take?", "a": "Standard delivery in the UAE takes 2–4 business days. Express options may be available in select areas." },
+      { "q": "Can I change or cancel my order?", "a": "You can modify or cancel within 1 hour of placing the order. After that, it enters processing." },
+      { "q": "What payment methods do you accept?", "a": "Visa, Mastercard, Apple Pay, Cash on Delivery, and bank transfers." }
+    ]
+  }
+}

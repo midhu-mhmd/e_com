@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import {
     User, Mail, Phone, LogOut, Camera, Save, Loader2, Calendar,
-    MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe,
+    MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe, Star,
     ChevronRight, CheckCircle, Hash, Clock, Truck, XCircle, AlertCircle,
     ChevronDown
 } from "lucide-react";
@@ -12,6 +12,7 @@ import { logout, setUser } from "../auth/authSlice";
 import { profileApi, type ProfileUpdatePayload } from "./profileApi";
 import { customersApi, type AddressDto, type UserDto } from "../admin/customers/customersApi";
 import { ordersApi, type OrderDto } from "../admin/orders/ordersApi";
+import { reviewsApi, type ReviewDto } from "../admin/reviews/reviewsApi";
 import { useUserProfile } from "../../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/Toast";
@@ -22,7 +23,7 @@ import { useTranslation } from "react-i18next";
 /* ═══════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════ */
-type TabKey = "profile" | "orders" | "addresses";
+type TabKey = "profile" | "orders" | "addresses" | "reviews";
 
 const EMIRATES = [
     { value: "abu_dhabi", label: "Abu Dhabi" },
@@ -138,6 +139,7 @@ const ProfilePage: React.FC = () => {
     const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
         { key: "profile", label: "Personal Info", icon: <User size={18} /> },
         { key: "orders", label: "My Orders", icon: <Package size={18} /> },
+        { key: "reviews", label: "Reviews", icon: <Star size={18} /> },
         { key: "addresses", label: "Addresses", icon: <MapPin size={18} /> },
     ];
 
@@ -235,6 +237,12 @@ const ProfilePage: React.FC = () => {
                                 />
                             )}
                             {activeTab === "orders" && <OrdersTab key="orders" />}
+                            {activeTab === "reviews" && (
+                                <ReviewsTab
+                                    key="reviews"
+                                    userId={displayUser.id}
+                                />
+                            )}
                             {activeTab === "addresses" && (
                                 <AddressesTab
                                     key="addresses"
@@ -299,6 +307,43 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
         error: null
     });
 
+    // Country selector state for phone verification (reuse login's flags)
+    const otpCountries = [
+        { code: "+971", flag: "https://flagcdn.com/w40/ae.png", name: "UAE" },
+        { code: "+91", flag: "https://flagcdn.com/w40/in.png", name: "India" },
+        { code: "+86", flag: "https://flagcdn.com/w40/cn.png", name: "China" },
+    ];
+    const [otpCountryCode, setOtpCountryCode] = useState("+971");
+    const [otpDropdownOpen, setOtpDropdownOpen] = useState(false);
+    const otpDropdownRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (otpDropdownRef.current && !otpDropdownRef.current.contains(e.target as Node)) {
+                setOtpDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    // Phone requirements by country (same rules as Login)
+    const getPhoneRequirements = (code: string) => {
+        switch (code) {
+            case "+971": return { length: 9, pattern: /^5/, name: "UAE" };
+            case "+91": return { length: 10, pattern: /^[6-9]/, name: "India" };
+            case "+86": return { length: 11, pattern: /^1/, name: "China" };
+            default: return { length: 10, pattern: null, name: "Phone" };
+        }
+    };
+    const otpPhoneReq = getPhoneRequirements(otpCountryCode);
+    const isOtpPhoneValid = otpModalState.type === "phone"
+        ? (() => {
+            const digits = otpModalState.newValue.replace(/[^\d]/g, "");
+            if (digits.length !== otpPhoneReq.length) return false;
+            return otpPhoneReq.pattern ? otpPhoneReq.pattern.test(digits) : true;
+        })()
+        : true;
+
     useLanguageToggle();
 
     useEffect(() => {
@@ -314,6 +359,12 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
 
     const handleSave = async () => {
         if (!firstName.trim()) { onError(t("profile.messages.firstNameRequired")); return; }
+        if (dob) {
+            const birth = new Date(dob + "T00:00:00");
+            const today = new Date();
+            const age = today.getFullYear() - birth.getFullYear() - ((today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) ? 1 : 0);
+            if (age < 10) { onError("You must be at least 10 years old."); return; }
+        }
         setSaving(true);
         try {
             const payload: ProfileUpdatePayload = {
@@ -396,13 +447,17 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
 
             if (isValueChanged) {
                 await profileApi.updateProfile(profileData!.id, {
-                    ...(type === "email" ? { email: newValue } : { phone_number: newValue })
+                    ...(type === "email"
+                        ? { email: newValue }
+                        : { phone_number: `${otpCountryCode}${newValue.replace(/^0+/, "")}` })
                 });
             }
 
             await profileApi.sendProfileOtp({
                 otp_type: type,
-                ...(type === "email" ? { email: newValue } : { phone_number: newValue })
+                ...(type === "email"
+                    ? { email: newValue }
+                    : { phone_number: `${otpCountryCode}${newValue.replace(/^0+/, "")}` })
             });
 
             if (isValueChanged) {
@@ -429,7 +484,9 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
             const res = await profileApi.verifyProfileOtp({
                 otp_type: type,
                 otp_code: otpCode,
-                ...(type === "email" ? { email: newValue } : { phone_number: newValue })
+                ...(type === "email"
+                    ? { email: newValue }
+                    : { phone_number: `${otpCountryCode}${newValue.replace(/^0+/, "")}` })
             });
 
             const accessToken = res?.access || res?.accessToken || res?.token;
@@ -494,22 +551,73 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
 
                             {otpModalState.step === "input" ? (
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ms-1">
-                                            {otpModalState.type === "email" ? t("profile.personalInfo.email") : t("profile.personalInfo.phone")}
-                                        </label>
-                                        <input
-                                            type={otpModalState.type === "email" ? "email" : "tel"}
-                                            value={otpModalState.newValue}
-                                            onChange={(e) => setOtpModalState(prev => ({ ...prev, newValue: e.target.value }))}
-                                            className="profile-field-input mt-1"
-                                            placeholder={otpModalState.type === "email" ? "Enter email..." : "Enter phone..."}
-                                            autoFocus
-                                        />
-                                    </div>
+                                    {otpModalState.type === "email" ? (
+                                        <div>
+                                            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ms-1">
+                                                {t("profile.personalInfo.email")}
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={otpModalState.newValue}
+                                                onChange={(e) => setOtpModalState(prev => ({ ...prev, newValue: e.target.value }))}
+                                                className="profile-field-input mt-1"
+                                                placeholder="Enter email..."
+                                                autoFocus
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ms-1">
+                                                {t("profile.personalInfo.phone")}
+                                            </label>
+                                            <div className="flex gap-2 mt-1">
+                                                <div className="relative" ref={otpDropdownRef}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setOtpDropdownOpen(!otpDropdownOpen)}
+                                                        className="h-11 px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-2 text-sm hover:bg-slate-50"
+                                                    >
+                                                        <img src={(otpCountries.find(c => c.code === otpCountryCode) || otpCountries[0]).flag} alt="flag" className="w-5 h-[14px] object-cover rounded-sm" />
+                                                        <span className="text-xs font-medium text-slate-700">{otpCountryCode}</span>
+                                                        <ChevronDown size={12} className={`text-slate-400 transition-transform ${otpDropdownOpen ? "rotate-180" : ""}`} />
+                                                    </button>
+                                                    {otpDropdownOpen && (
+                                                        <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                                                            {otpCountries.map((c) => (
+                                                                <button
+                                                                    key={c.code}
+                                                                    type="button"
+                                                                    onClick={() => { setOtpCountryCode(c.code); setOtpDropdownOpen(false); }}
+                                                                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-cyan-50 ${c.code === otpCountryCode ? "bg-cyan-50 text-cyan-600" : "text-slate-700"}`}
+                                                                >
+                                                                    <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm" />
+                                                                    <span className="font-medium">{c.name}</span>
+                                                                    <span className="ms-auto text-slate-400">{c.code}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <input
+                                                    type="tel"
+                                                    value={otpModalState.newValue}
+                                                    onChange={(e) => setOtpModalState(prev => ({ ...prev, newValue: e.target.value.replace(/[^\d]/g, "") }))}
+                                                    className={`profile-field-input mt-0 flex-1 ${!isOtpPhoneValid ? "border-rose-400" : ""}`}
+                                                    placeholder={`${otpPhoneReq.length} digits`}
+                                                    maxLength={otpPhoneReq.length}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            {!isOtpPhoneValid && (
+                                                <p className="text-[10px] text-rose-500 font-medium px-1 mt-1">
+                                                    {otpPhoneReq.name}: {otpPhoneReq.length} digits{otpPhoneReq.pattern ? ", specific starting digits required" : ""}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                     <button
                                         onClick={handleSendOtp}
-                                        disabled={otpModalState.sending}
+                                        disabled={otpModalState.sending || !isOtpPhoneValid && otpModalState.type === "phone"}
                                         className="w-full py-3 md:py-3.5 bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                                     >
                                         {otpModalState.sending ? <Loader2 size={16} className="animate-spin" /> : t("profile.otp.send")}
@@ -698,7 +806,14 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                     {editing ? (
                         <div className="relative">
                             <Calendar size={16} className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="profile-field-input ps-11" />
+                            <input
+                                type="date"
+                                value={dob}
+                                onChange={(e) => setDob(e.target.value)}
+                                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 10); return d.toISOString().slice(0,10); })()}
+                                min="1900-01-01"
+                                className="w-full ps-11 pe-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:border-slate-300 outline-none"
+                            />
                         </div>
                     ) : (
                         <div className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs sm:text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -868,6 +983,264 @@ const OrdersTab: React.FC = () => {
 };
 
 /* ═══════════════════════════════════════════════
+   Reviews Tab — list + edit
+   ═══════════════════════════════════════════════ */
+const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
+    const [reviews, setReviews] = useState<ReviewDto[] | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [editing, setEditing] = useState<ReviewDto | null>(null);
+    const [editRating, setEditRating] = useState(0);
+    const [editComment, setEditComment] = useState("");
+    const [editFiles, setEditFiles] = useState<File[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+    const toast = useToast();
+
+    const normalizeMedia = (input: any) => {
+        if (!input) return "";
+        if (typeof File !== "undefined" && input instanceof File) {
+            try { return URL.createObjectURL(input); } catch { /* ignore */ }
+        }
+        if (typeof input === "object") {
+            const candidate = input.url || input.image || input.path || input.src;
+            if (typeof candidate === "string") return normalizeMedia(candidate);
+            return "";
+        }
+        const src: string = String(input);
+        if (!src) return "";
+        if (/^https?:\/\//i.test(src)) return src;
+        const apiBase: string | undefined = (import.meta as any).env?.VITE_API_BASE_URL;
+        const mediaBase =
+            (import.meta as any).env?.VITE_MEDIA_BASE_URL ||
+            ((apiBase && /^https?:\/\//i.test(apiBase)) ? new URL(apiBase).origin : window.location.origin);
+        if (src.startsWith("/")) return `${mediaBase}${src}`;
+        return `${mediaBase}/${src.replace(/^\.?\/*/, "")}`;
+    };
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const res = await reviewsApi.list({ user: userId, limit: 100 });
+                if (mounted) setReviews(res.results || []);
+            } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+                if (mounted) setError(e?.message || "Failed to load reviews");
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [userId]);
+
+    const openEdit = (r: ReviewDto) => {
+        setEditing(r);
+        setEditRating(r.rating);
+        setEditComment(r.comment || "");
+        setEditFiles([]);
+    };
+
+    const submitEdit = async () => {
+        if (!editing) return;
+        setSaving(true);
+        try {
+            const updated = await reviewsApi.update(editing.id, {
+                rating: editRating,
+                comment: editComment.trim(),
+                uploaded_images: editFiles.length ? editFiles : undefined,
+            });
+            setReviews((prev) =>
+                (prev || []).map((r) => (r.id === updated.id ? updated : r))
+            );
+            setEditing(null);
+            toast.show("Review updated", "success");
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            const apiErr = err?.response?.data;
+            const detail =
+                (typeof apiErr === "string" && apiErr) ||
+                apiErr?.detail ||
+                apiErr?.message ||
+                "Failed to update review";
+            toast.show(detail, "error");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-500 shrink-0">
+                    <Star size={20} />
+                </div>
+                <div>
+                    <h2 className="text-base md:text-lg font-bold text-slate-900">My Reviews</h2>
+                    <p className="text-[11px] md:text-xs text-slate-400">All reviews you have written</p>
+                </div>
+            </div>
+
+            {loading && <div className="text-sm text-slate-500">Loading reviews…</div>}
+            {error && <div className="text-sm text-rose-600">{error}</div>}
+            {!loading && !error && (
+                <>
+                    {reviews && reviews.length ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {reviews.map((r) => (
+                                <div key={r.id} className="border border-slate-200 rounded-2xl p-4 bg-white">
+                                    <div className="mb-2">
+                                        <p className="text-[10px] font-bold uppercase text-slate-400">Product</p>
+                                        <p className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1 mb-2">
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <Star key={i} size={16} className={i < r.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
+                                        ))}
+                                    </div>
+                                    <p className="text-sm text-slate-700 mb-3">{r.comment}</p>
+                                    {r.images && r.images.length > 0 && (
+                                        <div className="flex gap-2 flex-wrap mb-3">
+                                            {r.images.slice(0, 6).map((u, idx) => {
+                                                const url = normalizeMedia(u);
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        onClick={() => setViewerUrl(url)}
+                                                        className="group relative"
+                                                        aria-label="Expand image"
+                                                    >
+                                                        <img src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
+                                                        <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-end">
+                                        <button
+                                            onClick={() => openEdit(r)}
+                                            className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-slate-500">You haven’t written any reviews yet.</p>
+                    )}
+                </>
+            )}
+
+            <AnimatePresence>
+                {editing && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
+                    >
+                        <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={() => setEditing(null)} />
+                        <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm z-10 border border-slate-200">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-bold text-slate-900">Edit Review</h3>
+                                <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-700">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-2 mb-3">
+                                {Array.from({ length: 5 }).map((_, i) => {
+                                    const idx = i + 1;
+                                    const active = idx <= editRating;
+                                    return (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => setEditRating(idx)}
+                                            className="p-1"
+                                        >
+                                            <Star size={20} className={active ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <textarea
+                                value={editComment}
+                                rows={3}
+                                onChange={(e) => setEditComment(e.target.value)}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-3 text-sm"
+                                placeholder="Update your comment"
+                            />
+                            <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-2">
+                                Add Photos (Optional)
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => setEditFiles(e.target.files ? Array.from(e.target.files) : [])}
+                                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 mb-3"
+                            />
+                            {editing.images && editing.images.length > 0 && (
+                                <div className="flex gap-2 flex-wrap mb-3">
+                                    {editing.images.slice(0, 6).map((u, i) => (
+                                        <img key={i} src={normalizeMedia(u)} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
+                                    ))}
+                                </div>
+                            )}
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={() => setEditing(null)}
+                                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-700"
+                                    disabled={saving}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={submitEdit}
+                                    className="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50"
+                                    disabled={saving}
+                                >
+                                    {saving ? "Saving…" : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {viewerUrl && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                    >
+                        <div className="absolute inset-0 bg-black/60" onClick={() => setViewerUrl(null)} />
+                        <div className="relative max-w-3xl w-full bg-white rounded-2xl p-2 shadow-2xl">
+                            <button
+                                onClick={() => setViewerUrl(null)}
+                                className="absolute top-3 right-3 bg-white/80 rounded-full p-2 text-slate-600 hover:text-slate-900"
+                                aria-label="Close"
+                            >
+                                <X size={18} />
+                            </button>
+                            <img src={viewerUrl} alt="review" className="w-full h-auto max-h-[80vh] object-contain rounded-xl" />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
+
+/* Inline lightbox viewer for ReviewsTab */
+// We render it alongside the tab using AnimatePresence above (viewerUrl controls visibility)
+
+/* ═══════════════════════════════════════════════
    Addresses Tab
    ═══════════════════════════════════════════════ */
 const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: string) => void }> = ({ onSuccess, onError }) => {
@@ -881,6 +1254,34 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
         flat_villa_number: "", street_address: "", area: "", city: "",
         emirate: "", country: "AE"
     });
+    const [addrCountryCode, setAddrCountryCode] = useState("+971");
+    const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
+    const addrDropdownRef = useRef<HTMLDivElement>(null);
+    const [addrErrors, setAddrErrors] = useState<Record<string, string>>({});
+    const addressCountries = [
+        { code: "+971", flag: "https://flagcdn.com/w40/ae.png", name: "UAE" },
+        { code: "+91", flag: "https://flagcdn.com/w40/in.png", name: "India" },
+        { code: "+86", flag: "https://flagcdn.com/w40/cn.png", name: "China" },
+    ];
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (addrDropdownRef.current && !addrDropdownRef.current.contains(e.target as Node)) {
+                setAddrDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const getAddrPhoneRequirements = (code: string) => {
+        switch (code) {
+            case "+971": return { length: 9, pattern: /^5/, name: "UAE" };
+            case "+91": return { length: 10, pattern: /^[6-9]/, name: "India" };
+            case "+86": return { length: 11, pattern: /^1/, name: "China" };
+            default: return { length: 10, pattern: null, name: "Phone" };
+        }
+    };
+    const allowedUaeCities = EMIRATES.map(e => e.label.toLowerCase());
 
     useEffect(() => {
         customersApi.listAddresses()
@@ -896,10 +1297,47 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
     });
 
     const handleSave = async () => {
-        if (!form.full_name || !form.street_address) { onError(t("profile.messages.nameAndStreetRequired")); return; }
+        const errors: Record<string, string> = {};
+        // Required fields
+        if (!form.full_name || form.full_name.trim().length < 3) {
+            errors.full_name = "Full name must be at least 3 characters";
+        }
+        if (!form.street_address || !form.street_address.trim()) {
+            errors.street_address = "Street address is required";
+        }
+        if (!form.area || !form.area.trim()) {
+            errors.area = "Area is required";
+        }
+        if (!form.city || !form.city.trim()) {
+            errors.city = "City is required";
+        }
+        if (!form.emirate || !form.emirate.trim()) {
+            errors.emirate = "Please select an emirate";
+        }
+        // Phone validation by country
+        const req = getAddrPhoneRequirements(addrCountryCode);
+        const digits = (form.phone_number || "").replace(/[^\d]/g, "");
+        if (digits.length !== req.length || (req.pattern && !req.pattern.test(digits))) {
+            errors.phone_number = `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`;
+        }
+        // City validation for UAE
+        if (addrCountryCode === "+971" && form.city) {
+            const c = form.city.trim().toLowerCase();
+            if (!allowedUaeCities.includes(c)) {
+                errors.city = "Select a valid UAE city/emirate";
+            }
+        }
+        setAddrErrors(errors);
+        if (Object.keys(errors).length > 0) {
+            onError("Please correct the highlighted fields");
+            return;
+        }
         setSaving(true);
         try {
-            const newAddr = await customersApi.createAddress(form);
+            const newAddr = await customersApi.createAddress({
+                ...form,
+                phone_number: `${addrCountryCode}${(form.phone_number || "").replace(/[^\d]/g, "").replace(/^0+/, "")}`
+            });
             setAddresses((prev) => [...prev, newAddr]);
             resetForm();
             setShowForm(false);
@@ -968,7 +1406,6 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
 
                                 {([
                                     ["full_name", "Full Name", "John Doe"],
-                                    ["phone_number", "Phone", "+971 50 123 4567"],
                                     ["building_name", "Building", "Al Reem Tower"],
                                     ["flat_villa_number", "Flat / Villa", "Apt 4B"],
                                     ["street_address", "Street", "123 Ocean Drive"],
@@ -979,12 +1416,63 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
                                         <input
                                             value={form[key as keyof typeof form] as string}
-                                            onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
+                                            onChange={(e) => {
+                                                setForm((p) => ({ ...p, [key]: e.target.value }));
+                                                if (addrErrors[key]) setAddrErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
+                                            }}
                                             placeholder={ph}
-                                            className="profile-field-input"
+                                            className={`profile-field-input ${addrErrors[key] ? "border-rose-400" : ""}`}
                                         />
+                                        {addrErrors[key] && <p className="text-[10px] text-rose-500 font-medium px-1">{addrErrors[key]}</p>}
                                     </div>
                                 ))}
+                                {/* Phone with country flag selector */}
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        {(t("profile.addresses.phone") === "profile.addresses.phone") ? "Phone" : t("profile.addresses.phone")}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <div className="relative" ref={addrDropdownRef}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setAddrDropdownOpen(!addrDropdownOpen)}
+                                                className="h-[42px] px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-2 text-sm hover:bg-slate-50"
+                                            >
+                                                <img src={(addressCountries.find(c => c.code === addrCountryCode) || addressCountries[0]).flag} alt="flag" className="w-5 h-[14px] object-cover rounded-sm" />
+                                                <span className="text-xs font-medium text-slate-700">{addrCountryCode}</span>
+                                                <ChevronDown size={12} className={`text-slate-400 transition-transform ${addrDropdownOpen ? "rotate-180" : ""}`} />
+                                            </button>
+                                            {addrDropdownOpen && (
+                                                <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                                                    {addressCountries.map((c) => (
+                                                        <button
+                                                            key={c.code}
+                                                            type="button"
+                                                            onClick={() => { setAddrCountryCode(c.code); setAddrDropdownOpen(false); }}
+                                                            className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-cyan-50 ${c.code === addrCountryCode ? "bg-cyan-50 text-cyan-600" : "text-slate-700"}`}
+                                                        >
+                                                            <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm" />
+                                                            <span className="font-medium">{c.name}</span>
+                                                            <span className="ms-auto text-slate-400">{c.code}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <input
+                                            value={form.phone_number}
+                                            onChange={(e) => {
+                                                setForm((p) => ({ ...p, phone_number: e.target.value.replace(/[^\d]/g, "") }));
+                                                if (addrErrors.phone_number) setAddrErrors(prev => { const n = { ...prev }; delete n.phone_number; return n; });
+                                            }}
+                                            placeholder={`${getAddrPhoneRequirements(addrCountryCode).length} digits`}
+                                            maxLength={getAddrPhoneRequirements(addrCountryCode).length}
+                                            className={`profile-field-input flex-1 ${addrErrors.phone_number ? "border-rose-400" : ""}`}
+                                            inputMode="tel"
+                                        />
+                                    </div>
+                                    {addrErrors.phone_number && <p className="text-[10px] text-rose-500 font-medium px-1">{addrErrors.phone_number}</p>}
+                                </div>
 
                                 {/* Emirate */}
                                 <div className="space-y-1">

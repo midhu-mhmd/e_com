@@ -27,6 +27,7 @@ interface ProductFormData {
     slug: string;
     description: string;
     category: string;
+    unit: string;
     price: string;
     discount_price: string;
     stock: number;
@@ -98,6 +99,7 @@ const AddProduct: React.FC = () => {
             is_available: true,
             stock: 0,
             slug: "",
+            unit: "",
             expected_delivery_time: "",
             discount_price: "",
             sku: "",
@@ -184,6 +186,7 @@ const AddProduct: React.FC = () => {
         if (data.slug) fd.append("slug", data.slug);
         fd.append("description", data.description);
         fd.append("category", String(data.category));
+        if (data.unit) fd.append("unit", data.unit);
         fd.append("price", data.price);
         if (data.discount_price) fd.append("discount_price", data.discount_price);
         fd.append("stock", String(data.stock));
@@ -388,11 +391,23 @@ const AddProduct: React.FC = () => {
                             </p>
                         </Field>
 
-                        <Field label="Unit / SKU">
+                        <Field label="Unit" error={errors.unit?.message}>
+                            <select
+                                {...register("unit", { required: "Unit is required" })}
+                                className={inputClass}
+                            >
+                                <option value="">— Select unit —</option>
+                                <option value="piece">Piece</option>
+                                <option value="kg">Kg</option>
+                                <option value="Gram">100g</option>
+                            </select>
+                        </Field>
+
+                        <Field label="SKU">
                             <input
                                 {...register("sku")}
                                 className={inputClass}
-                                placeholder="e.g. FISH-001"
+                                placeholder="e.g., FISH-001"
                             />
                         </Field>
                     </div>

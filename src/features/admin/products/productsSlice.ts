@@ -39,7 +39,6 @@ export interface Category {
     description: string;
     parent?: number | null;
     image?: string | null;
-    isActive: boolean;
     productCount: number;
 }
 

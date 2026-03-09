@@ -112,6 +112,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                 ...dto,
                 name: dto.name || "",
                 description: dto.description || "",
+                unit: dto.unit || "",
                 price: dto.price,
                 discount_price: dto.discount_price || "",
                 stock: dto.stock,
@@ -162,6 +163,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
             formData.append("discount_price", "");
         }
 
+        if (data.unit) formData.append("unit", String(data.unit));
         if (data.sku) formData.append("sku", data.sku);
         if (data.expected_delivery_time) formData.append("expected_delivery_time", data.expected_delivery_time);
 
@@ -320,7 +322,19 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                             {errors.category && <p className="text-rose-500 text-[10px] font-bold">{errors.category.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-[#A1A1AA]">Unit / SKU</label>
+                            <label className="text-xs font-bold uppercase text-[#A1A1AA]">Unit</label>
+                            <select
+                                {...register("unit")}
+                                className="w-full px-4 py-3 bg-[#FAFAFA] border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-black outline-none transition-all"
+                            >
+                                <option value="">— Select unit —</option>
+                                <option value="piece">Piece</option>
+                                <option value="kg">Kg</option>
+                                <option value="Gram">100g</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase text-[#A1A1AA]">SKU</label>
                             <input
                                 {...register("sku")}
                                 className="w-full px-4 py-3 bg-[#FAFAFA] border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-black outline-none transition-all"

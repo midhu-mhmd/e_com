@@ -11,6 +11,7 @@ import {
   CreditCard,
   Settings,
   Bell,
+  Headphones,
   ChevronLeft,
   ChevronRight,
   ShoppingCart,
@@ -60,11 +61,13 @@ const AdminLayout: React.FC = () => {
     { label: 'Orders', path: '/admin/orders', icon: <ShoppingBag size={18} strokeWidth={1.5} /> },
     { label: 'Carts', path: '/admin/cart', icon: <ShoppingCart size={18} strokeWidth={1.5} /> },
     { label: 'Products', path: '/admin/products', icon: <Package size={18} strokeWidth={1.5} /> },
+    { label: 'Categories', path: '/admin/categories', icon: <Package size={18} strokeWidth={1.5} /> },
     { label: 'Users', path: '/admin/users', icon: <Users size={18} strokeWidth={1.5} /> },
     { label: 'Reviews', path: '/admin/reviews', icon: <Star size={18} strokeWidth={1.5} /> },
     { label: 'Payments', path: '/admin/payments', icon: <CreditCard size={18} strokeWidth={1.5} /> },
     { label: 'Banners', path: '/admin/banners', icon: <BannersIcon size={18} strokeWidth={1.5} /> },
     { label: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} strokeWidth={1.5} /> },
+    { label: 'Support', path: '/admin/support', icon: <Headphones size={18} strokeWidth={1.5} /> },
     { label: 'Settings', path: '/admin/settings', icon: <Settings size={18} strokeWidth={1.5} /> },
   ];
 

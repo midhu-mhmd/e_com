@@ -33,11 +33,19 @@
     "viewImage": "查看 {{index}}",
     "ratingText": "{{rating}} ({{reviews}} 条评论)",
     "pricePer": "{{sku}} 价格",
+    "priceFor": "购买 {{count}} {{unit}} 的价格",
     "perUnitFallback": "件",
+    "total": "合计",
     "currencyAed": "AED {{value}}",
     "qtyIncrease": "增加数量",
     "qtyDecrease": "减少数量",
     "qtyLabel": "数量 {{value}}",
+    "reviews": {
+      "title": "用户评价",
+      "basedOn": "基于 {{count}} 条评价",
+      "empty": "暂无评价",
+      "anonymous": "用户"
+    },
     "meta": {
       "fastDelivery": {
         "title": "快速送达",

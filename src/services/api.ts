@@ -1,5 +1,6 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "../config/constants";
+import { navigateTo } from "../utils/navigate";
 
 /**
  * ✅ In-memory access token (NOT localStorage)
@@ -103,6 +104,29 @@ api.interceptors.response.use(
 
     const original = err.config as any;
     const status = err.response?.status;
+
+    // Global network error (no response from server, likely offline)
+    if (!err.response) {
+      try {
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/network-error")) {
+          navigateTo("/network-error", { replace: true });
+        }
+      } catch {}
+      return Promise.reject(err);
+    }
+
+    // Global 5xx -> maintenance page
+    if (status && status >= 500) {
+      const cfg: any = err.config || {};
+      if (!cfg?.suppressGlobal5xx) {
+        try {
+          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/500")) {
+            navigateTo("/500", { replace: true });
+          }
+        } catch {}
+      }
+      return Promise.reject(err);
+    }
 
     // 400 Bad Request — let individual callers handle it (no global popup)
     if (status === 400) {

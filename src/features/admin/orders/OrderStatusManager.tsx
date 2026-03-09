@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
-import { OrderDto, ordersApi } from "./ordersApi";
+import { ordersApi } from "./ordersApi";
+import type { OrderDto } from "./ordersApi";
 
 interface OrderStatusManagerProps {
   order: OrderDto;

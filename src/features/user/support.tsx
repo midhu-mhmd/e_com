@@ -14,6 +14,12 @@ import {
     FileText,
 } from "lucide-react";
 import { api } from "../../services/api";
+import { useTranslation } from "react-i18next";
+import { useUserProfile } from "../../hooks/queries";
+import { useAppSelector, useAppDispatch } from "../../hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { profileApi } from "./profileApi";
+import { setUser } from "../auth/authSlice";
 
 /* ─── Types ─── */
 interface ContactForm {
@@ -24,30 +30,6 @@ interface ContactForm {
 }
 
 type Status = "idle" | "sending" | "success" | "error";
-
-/* ─── FAQ Data ─── */
-const faqs = [
-    {
-        q: "How do I track my order?",
-        a: "Once your order has been shipped, you'll receive a tracking link via email and SMS. You can also check the status from your Orders page in your account.",
-    },
-    {
-        q: "What is your return & refund policy?",
-        a: "We accept returns within 7 days of delivery for most items. The product must be unused and in its original packaging. Refunds are processed within 3–5 business days.",
-    },
-    {
-        q: "How long does delivery take?",
-        a: "Standard delivery within the UAE takes 2–4 business days. Express delivery (same-day or next-day) is available in select areas.",
-    },
-    {
-        q: "Can I change or cancel my order?",
-        a: "You can modify or cancel your order within 1 hour of placing it. After that, the order enters processing and cannot be changed.",
-    },
-    {
-        q: "What payment methods do you accept?",
-        a: "We accept Visa, Mastercard, Apple Pay, Cash on Delivery (COD), and bank transfers.",
-    },
-];
 
 /* ─── FAQ Item ─── */
 const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
@@ -80,6 +62,11 @@ const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
 
 /* ─── Support Page ─── */
 const SupportPage: React.FC = () => {
+    const { t } = useTranslation("support");
+    const { data: me } = useUserProfile(true);
+    const { isAuthenticated: isAuthed, checkingAuth } = useAppSelector((s) => s.auth);
+    const queryClient = useQueryClient();
+    const dispatch = useAppDispatch();
     const [form, setForm] = useState<ContactForm>({
         name: "",
         email: "",
@@ -88,6 +75,12 @@ const SupportPage: React.FC = () => {
     });
     const [status, setStatus] = useState<Status>("idle");
     const [errorMsg, setErrorMsg] = useState("");
+    const [verifyOpen, setVerifyOpen] = useState(false);
+    const [verifyEmail, setVerifyEmail] = useState("");
+    const [otpCode, setOtpCode] = useState("");
+    const [sendingOtp, setSendingOtp] = useState(false);
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [verifyError, setVerifyError] = useState("");
 
     const onChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -96,9 +89,27 @@ const SupportPage: React.FC = () => {
         []
     );
 
+    const fullNamePlaceholder = [((me as any)?.first_name || ""), ((me as any)?.last_name || "")]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+    const emailPlaceholder = (me as any)?.email || "";
+
+    React.useEffect(() => {
+        if (isAuthed && me) {
+            const full = fullNamePlaceholder;
+            const email = emailPlaceholder;
+            setForm((prev) => ({
+                ...prev,
+                name: prev.name || full,
+                email: prev.email || email,
+            }));
+            setVerifyEmail(email);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthed, fullNamePlaceholder, emailPlaceholder]);
+
     const isFormValid =
-        form.name.trim().length > 1 &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) &&
         form.subject.trim().length > 2 &&
         form.message.trim().length > 10;
 
@@ -110,9 +121,7 @@ const SupportPage: React.FC = () => {
         setErrorMsg("");
 
         try {
-            await api.post("/support/contact/", {
-                name: form.name.trim(),
-                email: form.email.trim(),
+            await api.post("/notifications/contact/", {
                 subject: form.subject.trim(),
                 message: form.message.trim(),
             });
@@ -120,11 +129,14 @@ const SupportPage: React.FC = () => {
             setForm({ name: "", email: "", subject: "", message: "" });
         } catch (err: any) {
             setStatus("error");
-            setErrorMsg(
-                err?.response?.data?.message ||
-                err?.message ||
-                "Something went wrong. Please try again."
-            );
+            const statusCode = err?.response?.status;
+            if (statusCode === 401) {
+                setErrorMsg(t("form.errors.unauthenticated"));
+            } else if (statusCode === 403) {
+                setErrorMsg(err?.response?.data?.detail || t("form.errors.emailNotVerified"));
+            } else {
+                setErrorMsg(t("form.errors.generic"));
+            }
         }
     };
 
@@ -133,7 +145,6 @@ const SupportPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#F9F9F9] text-[#18181B] font-sans antialiased selection:bg-cyan-500 selection:text-white">
-            {/* ─── Hero Section ─── */}
             <section className="relative bg-gradient-to-br from-cyan-600 via-cyan-500 to-teal-400 overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
@@ -141,14 +152,13 @@ const SupportPage: React.FC = () => {
                 </div>
                 <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
                     <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-[10px] font-black uppercase tracking-[0.3em] text-white/90 mb-6">
-                        <Headphones size={14} /> Support Center
+                        <Headphones size={14} /> {t("hero.badge")}
                     </span>
                     <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-                        How can we help you?
+                        {t("hero.title")}
                     </h1>
                     <p className="mt-4 text-white/70 text-sm md:text-base max-w-xl mx-auto">
-                        Our team is here to assist you. Reach out via email or give us a
-                        call — we're happy to help.
+                        {t("hero.subtitle")}
                     </p>
                 </div>
             </section>
@@ -164,10 +174,10 @@ const SupportPage: React.FC = () => {
                             </div>
                             <div>
                                 <h2 className="text-lg font-semibold text-zinc-900">
-                                    Send us a message
+                                    {t("form.title")}
                                 </h2>
                                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                                    We'll get back to you within 24 hours
+                                    {t("form.subtitle")}
                                 </p>
                             </div>
                         </div>
@@ -178,27 +188,34 @@ const SupportPage: React.FC = () => {
                                     <CheckCircle2 size={32} className="text-emerald-500" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-zinc-900">
-                                    Message Sent!
+                                    {t("form.success.title")}
                                 </h3>
                                 <p className="text-sm text-zinc-500 max-w-xs">
-                                    Thank you for reaching out. We'll get back to you as soon as
-                                    possible.
+                                    {t("form.success.subtitle")}
                                 </p>
                                 <button
                                     type="button"
                                     onClick={() => setStatus("idle")}
                                     className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600 hover:text-cyan-700 transition-colors cursor-pointer"
                                 >
-                                    Send Another Message
+                                    {t("form.success.again")}
                                 </button>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                {!isAuthed && !checkingAuth && (
+                                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                        <AlertCircle size={16} className="text-amber-600 shrink-0" />
+                                        <p className="text-[11px] font-bold text-amber-700">
+                                            {t("form.loginBanner")}
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="grid sm:grid-cols-2 gap-6">
                                     {/* Name */}
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
-                                            Full Name
+                                            {t("form.fields.name")}
                                         </label>
                                         <div className="flex items-center gap-3">
                                             <User
@@ -210,8 +227,7 @@ const SupportPage: React.FC = () => {
                                                 name="name"
                                                 value={form.name}
                                                 onChange={onChange}
-                                                placeholder="Your name"
-                                                required
+                                                placeholder={fullNamePlaceholder || t("form.placeholders.name")}
                                                 className={inputBase}
                                             />
                                         </div>
@@ -220,7 +236,7 @@ const SupportPage: React.FC = () => {
                                     {/* Email */}
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
-                                            Email Address
+                                            {t("form.fields.email")}
                                         </label>
                                         <div className="flex items-center gap-3">
                                             <Mail
@@ -232,8 +248,7 @@ const SupportPage: React.FC = () => {
                                                 name="email"
                                                 value={form.email}
                                                 onChange={onChange}
-                                                placeholder="you@example.com"
-                                                required
+                                                placeholder={emailPlaceholder || t("form.placeholders.email")}
                                                 className={inputBase}
                                             />
                                         </div>
@@ -243,7 +258,7 @@ const SupportPage: React.FC = () => {
                                 {/* Subject */}
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
-                                        Subject
+                                        {t("form.fields.subject")}
                                     </label>
                                     <div className="flex items-center gap-3">
                                         <FileText
@@ -255,8 +270,9 @@ const SupportPage: React.FC = () => {
                                             name="subject"
                                             value={form.subject}
                                             onChange={onChange}
-                                            placeholder="What is this about?"
+                                            placeholder={t("form.placeholders.subject")}
                                             required
+                                            disabled={!isAuthed}
                                             className={inputBase}
                                         />
                                     </div>
@@ -265,14 +281,15 @@ const SupportPage: React.FC = () => {
                                 {/* Message */}
                                 <div>
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-2 block">
-                                        Message
+                                        {t("form.fields.message")}
                                     </label>
                                     <textarea
                                         name="message"
                                         value={form.message}
                                         onChange={onChange}
-                                        placeholder="Describe your issue or question in detail..."
+                                        placeholder={t("form.placeholders.message")}
                                         required
+                                        disabled={!isAuthed}
                                         rows={5}
                                         className={`${inputBase} resize-none`}
                                     />
@@ -288,15 +305,102 @@ const SupportPage: React.FC = () => {
                                     </div>
                                 )}
 
+                                {/* Verify Email */}
+                                {isAuthed && errorMsg && /email.*verified/i.test(errorMsg) && (
+                                    <div className="space-y-4 border border-amber-200 bg-amber-50 rounded-2xl p-4">
+                                        {!verifyOpen ? (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <p className="text-[11px] font-bold text-amber-700">
+                                                    {t("form.errors.emailNotVerified")}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setVerifyOpen(true)}
+                                                    className="px-3 py-2 rounded-lg bg-cyan-600 text-white text-[11px] font-bold hover:bg-cyan-700"
+                                                >
+                                                    {t("form.verify.openBtn")}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700 mb-1 block">
+                                                        {t("form.verify.email")}
+                                                    </label>
+                                                    <input
+                                                        type="email"
+                                                        value={verifyEmail}
+                                                        onChange={(e) => setVerifyEmail(e.target.value)}
+                                                        className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-sm"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            setVerifyError("");
+                                                            setSendingOtp(true);
+                                                            try {
+                                                                await profileApi.sendProfileOtp({ otp_type: "email", email: verifyEmail });
+                                                            } catch (e: any) {
+                                                                setVerifyError(e?.response?.data?.detail || t("form.verify.sendError"));
+                                                            } finally {
+                                                                setSendingOtp(false);
+                                                            }
+                                                        }}
+                                                        disabled={sendingOtp || !verifyEmail}
+                                                        className="px-3 py-2 rounded-lg bg-slate-900 text-white text-[11px] font-bold disabled:opacity-50"
+                                                    >
+                                                        {sendingOtp ? t("form.verify.sending") : t("form.verify.send")}
+                                                    </button>
+                                                    <input
+                                                        type="text"
+                                                        value={otpCode}
+                                                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                        placeholder={t("form.verify.codePlaceholder")}
+                                                        className="flex-1 bg-white border border-amber-200 rounded-xl px-3 py-2 text-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            setVerifyError("");
+                                                            setVerifyingOtp(true);
+                                                            try {
+                                                                await profileApi.verifyProfileOtp({ otp_type: "email", otp_code: otpCode, email: verifyEmail });
+                                                                const fresh = await profileApi.getMe();
+                                                                queryClient.setQueryData(["userProfile"], fresh);
+                                                                dispatch(setUser(fresh) as any);
+                                                                setVerifyOpen(false);
+                                                                setErrorMsg("");
+                                                            } catch (e: any) {
+                                                                setVerifyError(e?.response?.data?.detail || t("form.verify.verifyError"));
+                                                            } finally {
+                                                                setVerifyingOtp(false);
+                                                            }
+                                                        }}
+                                                        disabled={verifyingOtp || otpCode.length < 6}
+                                                        className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-bold disabled:opacity-50"
+                                                    >
+                                                        {verifyingOtp ? t("form.verify.verifying") : t("form.verify.verify")}
+                                                    </button>
+                                                </div>
+                                                {verifyError && (
+                                                    <p className="text-[11px] font-bold text-rose-600">{verifyError}</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Submit */}
                                 <button
                                     type="submit"
-                                    disabled={!isFormValid || status === "sending"}
+                                    disabled={!isAuthed || !isFormValid || status === "sending"}
                                     className="group relative w-full bg-cyan-600 text-white py-5 rounded-2xl overflow-hidden transition-all active:scale-[0.98] hover:shadow-xl hover:shadow-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-cyan-700 cursor-pointer"
                                 >
                                     <div className="relative flex items-center justify-center gap-2">
                                         <span className="text-[11px] font-black uppercase tracking-[0.4em]">
-                                            {status === "sending" ? "Sending..." : "Send Message"}
+                                            {status === "sending" ? t("form.sending") : t("form.submit")}
                                         </span>
                                         {status === "sending" ? (
                                             <Loader2 size={16} className="animate-spin" />
@@ -322,10 +426,10 @@ const SupportPage: React.FC = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-base font-semibold text-zinc-900">
-                                        Call Support
+                                        {t("sidebar.call.title")}
                                     </h3>
                                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                                        Speak to our team
+                                        {t("sidebar.call.subtitle")}
                                     </p>
                                 </div>
                             </div>
@@ -345,10 +449,10 @@ const SupportPage: React.FC = () => {
                                     <Clock size={14} className="text-zinc-300" />
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-                                            Working Hours
+                                            {t("sidebar.hours.title")}
                                         </p>
                                         <p className="text-xs font-medium text-zinc-600">
-                                            Sat – Thu: 9 AM – 9 PM
+                                            {t("sidebar.hours.value")}
                                         </p>
                                     </div>
                                 </div>
@@ -356,13 +460,13 @@ const SupportPage: React.FC = () => {
                                     <Mail size={14} className="text-zinc-300" />
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
-                                            Email Us
+                                            {t("sidebar.email.title")}
                                         </p>
                                         <a
                                             href="mailto:support@example.com"
                                             className="text-xs font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
                                         >
-                                            support@example.com
+                                            {t("sidebar.email.value")}
                                         </a>
                                     </div>
                                 </div>
@@ -372,39 +476,38 @@ const SupportPage: React.FC = () => {
                         {/* Quick Info Card */}
                         <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-[2rem] p-8 text-white">
                             <h3 className="text-base font-semibold mb-3">
-                                Need urgent help?
+                                {t("quick.title")}
                             </h3>
                             <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-                                For order-related issues, visit your{" "}
+                                {t("quick.textBefore")}{" "}
                                 <a
                                     href="/orders"
                                     className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors"
                                 >
-                                    Orders page
+                                    {t("quick.ordersLink")}
                                 </a>{" "}
-                                for quick actions like cancellation or return requests.
+                                {t("quick.textAfter")}
                             </p>
                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                                 <Headphones size={14} />
-                                Average response: under 2 hours
+                                {t("quick.response")}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* ─── FAQ Section ─── */}
                 <div className="mt-16">
                     <div className="text-center mb-10">
                         <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 mb-2">
-                            <FileText size={14} /> Frequently Asked
+                            <FileText size={14} /> {t("faq.badge")}
                         </span>
                         <h2 className="text-2xl font-semibold text-zinc-900">
-                            Common Questions
+                            {t("faq.title")}
                         </h2>
                     </div>
                     <div className="max-w-2xl mx-auto space-y-3">
-                        {faqs.map((faq, i) => (
-                            <FaqItem key={i} q={faq.q} a={faq.a} />
+                        {(t("faq.items", { returnObjects: true }) as any[]).map((item, i) => (
+                            <FaqItem key={i} q={item.q} a={item.a} />
                         ))}
                     </div>
                 </div>

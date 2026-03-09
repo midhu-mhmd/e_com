@@ -142,11 +142,11 @@ const WishlistPage: React.FC = () => {
                                         <div className="flex items-center justify-between pt-2">
                                             {product.discount_price ? (
                                                 <div className="flex flex-col leading-none">
-                                                    <span className="text-[10px] text-slate-400 line-through">AED {product.price}</span>
-                                                    <span className="text-lg font-black text-slate-900">AED {product.discount_price}</span>
+                                                    <span className="text-[10px] text-slate-400 line-through">AED {Number(product.price).toFixed(2)}</span>
+                                                    <span className="text-lg font-black text-slate-900">AED {Number(product.discount_price).toFixed(2)}</span>
                                                 </div>
                                             ) : (
-                                                <span className="text-lg font-black text-slate-900">AED {product.price}</span>
+                                                <span className="text-lg font-black text-slate-900">AED {Number(product.price).toFixed(2)}</span>
                                             )}
 
                                             <div

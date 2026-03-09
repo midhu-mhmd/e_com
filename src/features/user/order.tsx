@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     AlertCircle, ArrowLeft, Package,
     Clock, CheckCircle, XCircle, Truck,
-    ChevronRight, MapPin, CreditCard, FileText, Star, X, Loader2
+    ChevronRight, MapPin, CreditCard, FileText, Star, X, Loader2, Image as ImageIcon, Download
 } from "lucide-react";
 import { ordersApi, type OrderDto, type OrderItemDto } from "../admin/orders/ordersApi";
 import { reviewsApi } from "../admin/reviews/reviewsApi";
 import { useToast } from "../../components/ui/Toast";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
+import { useAppSelector } from "../../hooks";
+import { API_BASE_URL } from "../../config/constants";
 
 /* ══════════════════════════════════════════════════
    STATUS HELPERS
@@ -41,8 +44,10 @@ interface ReviewForm {
     product_name: string;
     product_image?: string | null;
     rating: number;
-    title: string;
     comment: string;
+    images?: File[];
+    review_id?: number;
+    existing_images?: string[];
 }
 
 const StarRating: React.FC<{ value: number; onChange: (v: number) => void }> = ({ value, onChange }) => {
@@ -91,6 +96,8 @@ const ReviewModal: React.FC<{
     onClose: () => void;
 }> = ({ items, onClose }) => {
     const toast = useToast();
+    const { isArabic } = useLanguageToggle();
+    const userId = useAppSelector((s) => (s as any).auth.user?.id);
 
     // Filter out items that do not have a valid product ID (e.g., deleted products)
     const validItems = items.filter((item) => {
@@ -106,14 +113,47 @@ const ReviewModal: React.FC<{
                 product_name: item.product_name,
                 product_image: item.product_image,
                 rating: 0, // Default to 0 to encourage active selection
-                title: "",
                 comment: "",
+                images: [],
             };
         })
     );
     const [submitting, setSubmitting] = useState(false);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [direction, setDirection] = useState(1);
+
+    useEffect(() => {
+        let mounted = true;
+        async function loadExisting() {
+            if (!userId) return;
+            const next = [...forms];
+            for (let i = 0; i < validItems.length; i++) {
+                const item = validItems[i];
+                const pid = (item as any).product?.id || item.product || (item as any).product_id;
+                try {
+                    const res = await reviewsApi.list({ product: pid, limit: 10 });
+                    const mine = (res?.results || []).find((r) => r.user === userId);
+                    if (mine) {
+                        const idx = next.findIndex((f) => f.product === pid);
+                        if (idx !== -1) {
+                            next[idx] = {
+                                ...next[idx],
+                                rating: mine.rating,
+                                comment: mine.comment || "",
+                                review_id: mine.id,
+                                existing_images: Array.isArray(mine.images) ? (mine.images as any) : [],
+                            };
+                        }
+                    }
+                } catch {
+                }
+            }
+            if (mounted) setForms(next);
+        }
+        loadExisting();
+        return () => { mounted = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId, items.length]);
 
     if (validItems.length === 0) {
         return (
@@ -136,6 +176,30 @@ const ReviewModal: React.FC<{
     const current = forms[currentIdx];
     const isLast = currentIdx === forms.length - 1;
 
+    const normalizeMedia = (input: any) => {
+        if (!input) return "";
+        // File/Blob preview
+        if (typeof File !== "undefined" && input instanceof File) {
+            try { return URL.createObjectURL(input); } catch { /* ignore */ }
+        }
+        // Object from API: try common keys
+        if (typeof input === "object") {
+            const candidate = input.url || input.image || input.path || input.src;
+            if (typeof candidate === "string") return normalizeMedia(candidate);
+            return "";
+        }
+        // Must be string at this point
+        const src: string = String(input);
+        if (!src) return "";
+        if (/^https?:\/\//i.test(src)) return src;
+        const apiBase: string | undefined = (import.meta as any).env?.VITE_API_BASE_URL || (API_BASE_URL as any);
+        const mediaBase =
+            (import.meta as any).env?.VITE_MEDIA_BASE_URL ||
+            (apiBase && /^https?:\/\//i.test(apiBase) ? new URL(apiBase).origin : window.location.origin);
+        if (src.startsWith("/")) return `${mediaBase}${src}`;
+        return `${mediaBase}/${src.replace(/^\.?\/*/, "")}`;
+    };
+
     const updateField = (field: keyof ReviewForm, value: any) => {
         setForms((prev) =>
             prev.map((f, i) => (i === currentIdx ? { ...f, [field]: value } : f))
@@ -153,23 +217,49 @@ const ReviewModal: React.FC<{
     };
 
     const handleSubmitAll = async () => {
+        // Validate: At least one review with rating and comment
+        const toSubmit = forms.filter((f) => f.rating > 0);
+        if (toSubmit.length === 0) {
+            toast.show("Please rate at least one item before submitting.", "error");
+            return;
+        }
+        if (toSubmit.some((f) => !f.comment || !f.comment.trim())) {
+            toast.show("Please add a comment for each rated item.", "error");
+            return;
+        }
+
         setSubmitting(true);
         try {
-            for (const f of forms) {
-                if (f.rating > 0) {
+            for (const f of toSubmit) {
+                if (f.review_id) {
+                    await reviewsApi.update(f.review_id, {
+                        rating: f.rating,
+                        comment: f.comment.trim(),
+                        uploaded_images: f.images && f.images.length ? f.images : undefined,
+                    });
+                } else {
                     await reviewsApi.create({
                         product: f.product,
-                        product_name: f.product_name,
                         rating: f.rating,
-                        title: f.title || `Review for ${f.product_name}`,
-                        comment: f.comment,
+                        comment: f.comment.trim(),
+                        uploaded_images: f.images && f.images.length ? f.images : undefined,
                     });
                 }
             }
             toast.show("Reviews submitted! Thank you 🎉", "success");
             onClose();
         } catch (err: any) {
-            toast.show(`Error: ${JSON.stringify(err.response?.data || err.message)} (Debug payload sent: ${JSON.stringify(forms[0])})`, "error");
+            const status = err?.response?.status;
+            const apiErr = err?.response?.data;
+            // Surface as much backend detail as possible for quick diagnosis
+            const detail =
+                (typeof apiErr === "string" && apiErr) ||
+                apiErr?.detail ||
+                apiErr?.message ||
+                JSON.stringify(apiErr);
+            const msg = status ? `Error ${status}: ${detail || "Failed to submit reviews."}` : (detail || "Failed to submit reviews.");
+            console.error("Review submission error:", { status, data: apiErr });
+            toast.show(msg, "error");
         } finally {
             setSubmitting(false);
         }
@@ -203,7 +293,7 @@ const ReviewModal: React.FC<{
                 {/* Absolute Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-20 p-2 text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"
+                    className={`absolute top-4 ${isArabic ? 'left-4' : 'right-4'} z-20 p-2 text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors`}
                 >
                     <X size={18} />
                 </button>
@@ -229,8 +319,8 @@ const ReviewModal: React.FC<{
                                         <Package size={24} className="text-slate-300" />
                                     )}
                                 </div>
-                                <div className="pr-6">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate your purchase</p>
+                                <div className={`${isArabic ? 'pl-6' : 'pr-6'}`}>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? "Edit your review" : "Rate your purchase"}</p>
                                     <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">{current.product_name}</h3>
                                 </div>
                             </div>
@@ -246,14 +336,6 @@ const ReviewModal: React.FC<{
                             {/* Minimal Inputs */}
                             <div className="space-y-4">
                                 <div>
-                                    <input
-                                        value={current.title}
-                                        onChange={(e) => updateField("title", e.target.value)}
-                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm font-medium placeholder:text-slate-400"
-                                        placeholder="Review Title (Optional)"
-                                    />
-                                </div>
-                                <div>
                                     <textarea
                                         rows={3}
                                         value={current.comment}
@@ -261,6 +343,48 @@ const ReviewModal: React.FC<{
                                         className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm font-medium placeholder:text-slate-400 resize-none"
                                         placeholder="Share details of your experience..."
                                     />
+                                </div>
+                                <div>
+                                    <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-2">
+                                        {current.review_id ? "Add More Photos (Optional)" : "Add Photos (Optional)"}
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={(e) => {
+                                            const files = e.target.files ? Array.from(e.target.files) : [];
+                                            updateField("images", files);
+                                        }}
+                                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800"
+                                    />
+                                    {current.images && current.images.length > 0 && (
+                                        <div className="mt-3 flex gap-2 flex-wrap">
+                                            {current.images.map((file, idx) => (
+                                                <img
+                                                    key={idx}
+                                                    src={URL.createObjectURL(file)}
+                                                    alt="preview"
+                                                    className="w-14 h-14 object-cover rounded-lg border border-slate-200"
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    {current.review_id && current.existing_images && current.existing_images.length > 0 && (
+                                        <div className="mt-3">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Existing Photos</p>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {current.existing_images.slice(0, 6).map((src, idx) => (
+                                                    <img
+                                                        key={idx}
+                                                        src={normalizeMedia(src as any)}
+                                                        alt="existing"
+                                                        className="w-14 h-14 object-cover rounded-lg border border-slate-200"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -272,7 +396,7 @@ const ReviewModal: React.FC<{
                     <div className="flex items-center justify-between gap-4">
                         {forms.length > 1 ? (
                             // Progress dots for multiple items
-                            <div className="flex gap-1.5 ml-2">
+                            <div className={`flex gap-1.5 ${isArabic ? 'mr-2' : 'ml-2'}`}>
                                 {forms.map((_, i) => (
                                     <div
                                         key={i}
@@ -548,6 +672,7 @@ const OrderList: React.FC = () => {
    ══════════════════════════════════════════════════ */
 const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const navigate = useNavigate();
+    const { isArabic } = useLanguageToggle();
     const [order, setOrder] = useState<OrderDto | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -605,6 +730,44 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const addr = order.shipping_address_details;
     const payment = order.payment;
     const subtotal = order.items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
+    const isPaymentSuccess = ["SUCCESS", "PAID", "COMPLETED"].includes((payment?.status || "").toUpperCase());
+    const tipAmount = Number(((order as any)?.tip_amount) || 0);
+
+    const canDownloadReceipt =
+        !!payment &&
+        !!payment.receipt &&
+        ["SUCCESS", "PAID", "COMPLETED"].includes((payment.status || "").toUpperCase());
+
+    const downloadBlob = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleDownloadReceiptImage = async () => {
+        try {
+            const b = await ordersApi.receiptImage(order.id);
+            const num = payment?.receipt?.receipt_number || order.id;
+            downloadBlob(b, `receipt_${num}.png`);
+        } catch {
+            // silently ignore; backend already guards by status
+        }
+    };
+
+    const handleDownloadReceiptPdf = async () => {
+        try {
+            const b = await ordersApi.receiptPdf(order.id);
+            const num = payment?.receipt?.receipt_number || order.id;
+            downloadBlob(b, `receipt_${num}.pdf`);
+        } catch {
+            // silently ignore
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#F0F2F5] font-sans pb-24 pt-8">
@@ -664,18 +827,29 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-2 space-y-6">
-                            {order.items.map((item) => (
+                            {order.items.map((item) => {
+                                const pid = (item as any).product?.id || item.product || (item as any).product_id;
+                                return (
                                 <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-4 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
                                     <div className="w-24 h-24 bg-white rounded-[1.2rem] flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
-                                        {/* ✅ Safely render the item image if available, else fallback to icon */}
                                         {item.product_image ? (
-                                            <img src={item.product_image} alt={item.product_name} className="w-full h-full object-cover" />
+                                            <img
+                                                src={item.product_image}
+                                                alt={item.product_name}
+                                                className="w-full h-full object-cover cursor-pointer"
+                                                onClick={() => pid ? navigate(`/products/${pid}`) : undefined}
+                                            />
                                         ) : (
                                             <Package size={32} className="text-slate-300" />
                                         )}
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
-                                        <h3 className="text-lg font-bold text-slate-900 mb-1 line-clamp-2">{item.product_name}</h3>
+                                        <h3
+                                            className="text-lg font-bold text-slate-900 mb-1 line-clamp-2 cursor-pointer hover:underline"
+                                            onClick={() => pid ? navigate(`/products/${pid}`) : undefined}
+                                        >
+                                            {item.product_name}
+                                        </h3>
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">Qty: {item.quantity}</span>
                                             <span className="text-sm font-semibold text-slate-500">AED {parseFloat(item.price).toFixed(2)}</span>
@@ -685,7 +859,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         <p className="text-xl font-black text-slate-900">AED {parseFloat(item.subtotal).toFixed(2)}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </section>
 
@@ -697,60 +871,55 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         </div>
 
                         {(() => {
-                            const currentStatus = order.status.toLowerCase();
+                            const currentStatus = (order.status || "").toLowerCase();
                             const isCancelled = currentStatus === "cancelled";
 
-                            const normalFlow = ["pending", "processing", "shipped", "delivered"];
+                            const LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
+                                pending: { label: "Pending", icon: <Clock size={16} /> },
+                                paid: { label: "Paid", icon: <CreditCard size={16} /> },
+                                processing: { label: "Processing", icon: <Package size={16} /> },
+                                shipped: { label: "Shipped", icon: <Truck size={16} /> },
+                                delivered: { label: "Delivered", icon: <CheckCircle size={16} /> },
+                                cancelled: { label: "Cancelled", icon: <XCircle size={16} /> },
+                            };
 
-                            const normalSteps: { key: string; label: string; icon: React.ReactNode }[] = [
-                                { key: "pending", label: "Pending", icon: <Clock size={16} /> },
-                                { key: "processing", label: "Processing", icon: <Package size={16} /> },
-                                { key: "shipped", label: "Shipped", icon: <Truck size={16} /> },
-                                { key: "delivered", label: "Delivered", icon: <CheckCircle size={16} /> },
-                            ];
+                            const allowed = new Set(Object.keys(LABELS));
 
-                            if (isCancelled) {
-                                normalSteps.push({ key: "cancelled", label: "Cancelled", icon: <XCircle size={16} /> });
+                            const history = (order.status_history || [])
+                                .filter((h) => allowed.has((h.status || "").toLowerCase()))
+                                .map((h) => ({
+                                    key: (h.status || "").toLowerCase(),
+                                    created_at: h.created_at,
+                                    notes: h.notes,
+                                }))
+                                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+                            // Keep first occurrence per status to avoid repeats
+                            const dedupMap = new Map<string, { key: string; created_at: string; notes?: string }>();
+                            for (const h of history) {
+                                if (!dedupMap.has(h.key)) dedupMap.set(h.key, h);
+                            }
+                            let steps = Array.from(dedupMap.values());
+
+                            // Ensure current status appears at the end if missing in history
+                            if (currentStatus && allowed.has(currentStatus) && !steps.find((s) => s.key === currentStatus)) {
+                                steps = steps.concat([{ key: currentStatus, created_at: order.updated_at || order.created_at, notes: undefined }]);
                             }
 
-                            // Find matching history entry for each step
-                            const getHistoryEntry = (stepKey: string) =>
-                                order.status_history?.find((h) => h.status.toLowerCase() === stepKey);
-
-                            // For cancelled orders, determine the last completed normal step
-                            // by checking which steps exist in status_history
-                            let cancelledAfterIdx = -1;
-                            if (isCancelled) {
-                                for (let i = normalFlow.length - 1; i >= 0; i--) {
-                                    if (getHistoryEntry(normalFlow[i])) {
-                                        cancelledAfterIdx = i;
-                                        break;
-                                    }
-                                }
+                            // If cancelled, append cancelled if not present, at its actual place (end)
+                            if (isCancelled && !steps.find((s) => s.key === "cancelled")) {
+                                steps = steps.concat([{ key: "cancelled", created_at: order.updated_at || order.created_at, notes: undefined }]);
                             }
 
-                            // For non-cancelled orders, use normal index
-                            const normalIdx = normalFlow.indexOf(currentStatus);
+                            const activeIdx = steps.findIndex((s) => s.key === (isCancelled ? "cancelled" : currentStatus));
 
                             return (
                                 <div className="space-y-0 relative">
-                                    {normalSteps.map((step, idx) => {
-                                        const stepFlowIdx = normalFlow.indexOf(step.key);
-
-                                        let isCompleted = false;
-                                        let isActive = false;
-
-                                        if (step.key === "cancelled") {
-                                            isActive = true;
-                                        } else if (isCancelled) {
-                                            // Only steps that actually happened (exist in history) before cancel are completed
-                                            isCompleted = stepFlowIdx <= cancelledAfterIdx;
-                                        } else {
-                                            isCompleted = stepFlowIdx < normalIdx;
-                                            isActive = stepFlowIdx === normalIdx;
-                                        }
-                                        const isLast = idx === normalSteps.length - 1;
-                                        const historyEntry = getHistoryEntry(step.key);
+                                    {steps.map((step, idx) => {
+                                        const isActive = idx === activeIdx;
+                                        const isCompleted = idx < activeIdx && step.key !== "cancelled";
+                                        const isLast = idx === steps.length - 1;
+                                        const historyEntry = { created_at: step.created_at, notes: step.notes };
 
                                         let dotClass = "";
                                         let labelClass = "";
@@ -796,10 +965,10 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                                 <div className={`flex-1 pb-8 ${isLast ? "pb-0" : ""}`}>
                                                     <div className="flex items-center gap-2">
                                                         <span className={`${labelClass} transition-colors`}>
-                                                            {step.icon}
+                                                            {LABELS[step.key]?.icon}
                                                         </span>
                                                         <span className={`font-bold text-base ${labelClass} transition-colors`}>
-                                                            {step.label}
+                                                            {LABELS[step.key]?.label ?? step.key}
                                                         </span>
                                                         {isActive && step.key !== "cancelled" && (
                                                             <span className="relative flex h-2.5 w-2.5 ml-1">
@@ -841,9 +1010,24 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     {[addr.area, addr.city, addr.emirate].filter(Boolean).join(", ")}
                                 </p>
                             </div>
-                            <div className="mt-6 pt-6 border-t border-slate-100 font-bold text-slate-900 flex justify-between items-center">
-                                <span className="text-sm text-slate-400">Phone</span>
-                                {addr.phone_number}
+                            <div className="mt-6 pt-6 border-t border-slate-100 font-bold text-slate-900">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-slate-400">Phone</span>
+                                    {addr.phone_number}
+                                </div>
+                                <div className="mt-3 flex justify-end">
+                                    <a
+                                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                                            [addr.flat_villa_number, addr.building_name, addr.street_address, addr.area, addr.city, addr.emirate]
+                                                .filter(Boolean).join(", ")
+                                        )}${addr.latitude && addr.longitude ? `&destination_place_id=&travelmode=driving` : ""}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
+                                    >
+                                        Directions
+                                    </a>
+                                </div>
                             </div>
                         </section>
                     ) : (
@@ -878,7 +1062,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                             <p className="font-mono font-bold text-sm text-slate-700">{payment.transaction_id}</p>
                                         </div>
                                     )}
-                                    {payment.created_at && (
+                                    {isPaymentSuccess && payment.created_at && (
                                         <div>
                                             <p className="text-sm font-bold text-slate-400 mb-1">Payment Date</p>
                                             <p className="font-bold text-sm text-slate-700">{formatDateTime(payment.created_at)}</p>
@@ -887,9 +1071,27 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 </div>
                             </div>
                             {payment.receipt && (
-                                <div className="mt-6 pt-6 border-t border-slate-100 flex justify-between items-center">
-                                    <span className="text-sm font-bold text-slate-400">Receipt Ref.</span>
-                                    <span className="font-mono font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700">{payment.receipt.receipt_number}</span>
+                                <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-bold text-slate-400">Receipt Ref.</span>
+                                        <span className="font-mono font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700">{payment.receipt.receipt_number}</span>
+                                    </div>
+                                    {canDownloadReceipt && (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleDownloadReceiptImage}
+                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
+                                            >
+                                                <ImageIcon size={16} /> Download Image
+                                            </button>
+                                            <button
+                                                onClick={handleDownloadReceiptPdf}
+                                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
+                                            >
+                                                <Download size={16} /> Download PDF
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </section>
@@ -904,7 +1106,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><FileText size={20} /></div>
                                 <h2 className="text-xl font-bold text-slate-900">Delivery Notes</h2>
                             </div>
-                            <p className="text-slate-600 font-medium leading-relaxed italic border-l-4 border-slate-200 pl-4">{order.delivery_notes}</p>
+                            <p className={`text-slate-600 font-medium leading-relaxed italic border-slate-200 ${isArabic ? 'border-r-4 pr-4' : 'border-l-4 pl-4'}`}>{order.delivery_notes}</p>
                         </section>
                     )}
 
@@ -917,6 +1119,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     <span>Subtotal</span>
                                     <span className="text-white text-base">AED {subtotal.toFixed(2)}</span>
                                 </div>
+                                {tipAmount > 0 && (
+                                    <div className="flex justify-between items-center">
+                                        <span>Tip Added</span>
+                                        <span className="text-white text-base">AED {tipAmount.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 {order.preferred_delivery_date && (
                                     <div className="flex justify-between items-center">
                                         <span>Delivery Date</span>

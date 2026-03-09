@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
@@ -21,10 +22,15 @@ import {
   MapPin,
   CreditCard,
   Hash,
-  MoreHorizontal,
   MessageSquare,
   Send,
+  TrendingUp,
+  PieChart,
+  LineChart,
+  BarChart3,
+  DollarSign,
 } from "lucide-react";
+import { FEATURE_ORDERS_ANALYTICS } from "../../../config/constants";
 
 import {
   ordersActions,
@@ -92,6 +98,7 @@ function useDebounce<T>(value: T, delay: number): T {
 /* --- MAIN COMPONENT --- */
 const OrderManagement: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const orders = useSelector(selectOrders);
   const totalCount = useSelector(selectOrdersTotal);
@@ -112,6 +119,11 @@ const OrderManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
   const debouncedSearch = useDebounce(searchTerm, 500);
+
+  // Analytics state
+  const [anaLoading, setAnaLoading] = useState(true);
+  const [anaError, setAnaError] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
 
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
@@ -154,6 +166,43 @@ const OrderManagement: React.FC = () => {
       })
     );
   }, [dispatch, debouncedSearch, statusFilter, paymentFilter, page, limit]);
+
+  // Fetch dashboard analytics for orders page
+  useEffect(() => {
+    if (!FEATURE_ORDERS_ANALYTICS) return;
+    const fetchAna = async () => {
+      setAnaLoading(true);
+      setAnaError(null);
+      try {
+        const data = await (await import("./ordersApi")).ordersApi.getDashboardAnalytics();
+        const normalized = (data as any).users || (data as any).orders
+          ? {
+              total_orders: (data as any).orders?.total ?? 0,
+              paid_last_30_days: (data as any).orders?.paid_last_30_days ?? 0,
+              average_order_value: String((data as any).orders?.avg_order_value ?? "0"),
+              total_revenue: String((data as any).revenue?.total ?? "0"),
+              revenue_per_day: (data as any).revenue?.per_day ?? [],
+              orders_by_status: (data as any).orders?.by_status ?? [],
+              top_products: (data as any).top_products ?? [],
+            }
+          : {
+              total_orders: (data as any).total_orders ?? 0,
+              paid_last_30_days: (data as any).paid_last_30_days ?? 0,
+              average_order_value: String((data as any).average_order_value ?? "0"),
+              total_revenue: String((data as any).total_revenue ?? "0"),
+              revenue_per_day: (data as any).revenue_per_day ?? [],
+              orders_by_status: (data as any).orders_by_status ?? [],
+              top_products: (data as any).top_products ?? [],
+            };
+        setAnalytics(normalized);
+      } catch (e) {
+        setAnaError("Failed to load analytics");
+      } finally {
+        setAnaLoading(false);
+      }
+    };
+    fetchAna();
+  }, []);
 
   const handleReset = () => {
     setSearchTerm("");
@@ -256,6 +305,85 @@ const OrderManagement: React.FC = () => {
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Orders</h1>
         <p className="text-[#71717A] text-sm mt-1">Track and manage all customer orders.</p>
       </div>
+
+      {/* --- ANALYTICS --- */}
+      {FEATURE_ORDERS_ANALYTICS && (
+      <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#EEEEEE] bg-[#FAFAFA] flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA]">Orders Analytics</h2>
+          <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]">
+            <TrendingUp size={14} /> Last 30 days
+          </div>
+        </div>
+        {anaLoading ? (
+          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse">
+            <div className="lg:col-span-3 h-28 bg-gray-50 rounded-xl" />
+            <div className="lg:col-span-5 h-44 bg-gray-50 rounded-xl" />
+            <div className="lg:col-span-4 h-44 bg-gray-50 rounded-xl" />
+          </div>
+        ) : anaError ? (
+          <div className="p-6 text-sm text-rose-600">{anaError}</div>
+        ) : analytics ? (
+          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* KPI Cards */}
+            <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4">
+              <KpiCard icon={<ShoppingBag size={16} />} label="Total Orders" value={String(analytics.total_orders)} />
+              <KpiCard icon={<DollarSign size={16} />} label="Revenue" value={`AED ${Number(analytics.total_revenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
+              <KpiCard icon={<CreditCard size={16} />} label="Paid (30d)" value={String(analytics.paid_last_30_days || 0)} />
+              <KpiCard icon={<LineChart size={16} />} label="Avg Order" value={`AED ${Number(analytics.average_order_value || 0).toFixed(2)}`} />
+            </div>
+
+            {/* Revenue Trend */}
+            <div className="lg:col-span-5 bg-[#FAFAFA] border border-[#EEEEEE] rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]"><LineChart size={14} /> Revenue (last 30d)</div>
+              </div>
+              <div className="h-40 relative">
+                <RevenueLine data={analytics.revenue_per_day || []} />
+              </div>
+            </div>
+
+            {/* Status Breakdown */}
+            <div className="lg:col-span-4 bg-white border border-[#EEEEEE] rounded-2xl p-5">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><PieChart size={14} /> Orders by Status</div>
+              <StatusBars items={(analytics.orders_by_status || []).map((s: any) => ({
+                label: (s.status || s.name || "").toString(),
+                count: Number(s.count || s.value || 0),
+              }))} />
+            </div>
+
+            {/* Top Products */}
+            {Array.isArray(analytics.top_products) && analytics.top_products.length > 0 && (
+              <div className="lg:col-span-12 bg-white border border-[#EEEEEE] rounded-2xl p-5">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><BarChart3 size={14} /> Top Products</div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE]">
+                      <tr>
+                        <th className="py-2 text-left px-2">Product</th>
+                        <th className="py-2 text-left px-2">Qty</th>
+                        <th className="py-2 text-left px-2">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F4F4F5]">
+                      {analytics.top_products.slice(0, 10).map((p: any, idx: number) => (
+                        <tr key={`${p.product_id || p.id}-${idx}`} className="hover:bg-[#FBFBFA]">
+                          <td className="px-2 py-2 font-bold text-[#18181B]">{p.name || p.product_name}</td>
+                          <td className="px-2 py-2">{p.total_quantity ?? p.sales ?? 0}</td>
+                          <td className="px-2 py-2 font-black text-cyan-600">
+                            AED {Number(p.total_revenue ?? p.revenue ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+      )}
 
       {/* --- STATS --- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -546,7 +674,8 @@ const OrderManagement: React.FC = () => {
                 : filteredOrders.map((order, index) => (
                   <tr
                     key={order.id}
-                    className="group hover:bg-[#FBFBFA] transition-colors"
+                    className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
+                    onClick={() => navigate(`/admin/orders/${order.id}`)}
                   >
                     {isVisible("index") && (
                       <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
@@ -649,23 +778,17 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("actions") && (
-                      <td className="px-5 py-4 text-right relative">
-                        {/* Action Menu Popover */}
-                        <div className="flex items-center justify-end group/actions">
-                          <button className="p-2 text-[#A1A1AA] hover:text-black hover:bg-gray-100 rounded-lg transition-colors">
-                            <MoreHorizontal size={16} />
-                          </button>
-                          {/* Hover Dropdown */}
-                          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden group-hover/actions:block w-32 bg-white border border-[#EEEEEE] shadow-xl rounded-lg z-20 py-1">
-                            <button
-                              onClick={() => setSelectedOrder(order)}
-                              className="w-full text-left px-3 py-2 text-[11px] font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <Eye size={12} /> View Details
-                            </button>
-                            {/* Quick Status Update if needed can go here */}
-                          </div>
-                        </div>
+                      <td className="px-5 py-4 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/orders/${order.id}`);
+                          }}
+                          className="p-2 text-[#A1A1AA] hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                          title="View"
+                        >
+                          <Eye size={16} />
+                        </button>
                       </td>
                     )}
                   </tr>
@@ -736,6 +859,85 @@ const OrderManagement: React.FC = () => {
           onClose={() => setSelectedOrder(null)}
         />
       )}
+    </div>
+  );
+};
+
+/* --- SMALL SUBCOMPONENTS (local) --- */
+const KpiCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+  <div className="bg-white border border-[#EEEEEE] rounded-2xl p-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA]">{label}</p>
+        <p className="text-lg font-black text-[#18181B] mt-1">{value}</p>
+      </div>
+      <div className="text-[#D4D4D8]">{icon}</div>
+    </div>
+  </div>
+);
+
+const RevenueLine: React.FC<{ data: Array<{ date: string; total_amount: string }> }> = ({ data }) => {
+  const points = (data || []).map((d) => ({
+    x: new Date(d.date).getTime(),
+    y: Number(d.total_amount || 0),
+  })).sort((a, b) => a.x - b.x);
+  const ys = points.map((p) => p.y);
+  const minY = Math.min(0, ...ys, 0);
+  const maxY = Math.max(...ys, 1);
+  const xs = points.map((p) => p.x);
+  const minX = xs[0] ?? Date.now();
+  const maxX = xs[xs.length - 1] ?? (minX + 1);
+  const W = 600; const H = 140; const P = 8;
+  const scaleX = (x: number) => P + ((x - minX) / (maxX - minX || 1)) * (W - P * 2);
+  const scaleY = (y: number) => H - P - ((y - minY) / (maxY - minY || 1)) * (H - P * 2);
+  const path = points.length
+    ? points.map((p, i) => `${i === 0 ? "M" : "L"} ${scaleX(p.x)} ${scaleY(p.y)}`).join(" ")
+    : `M ${P} ${H - P} L ${W - P} ${H - P}`;
+  const area = points.length
+    ? `M ${scaleX(points[0].x)} ${H - P} ` + points.map((p) => `L ${scaleX(p.x)} ${scaleY(p.y)}`).join(" ") + ` L ${scaleX(points[points.length - 1].x)} ${H - P} Z`
+    : `M ${P} ${H - P} L ${W - P} ${H - P} L ${W - P} ${H - P} Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full">
+      <defs>
+        <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#revGrad)" />
+      <path d={path} stroke="#06b6d4" strokeWidth="2.5" fill="none" />
+    </svg>
+  );
+};
+
+const StatusBars: React.FC<{ items: Array<{ label: string; count: number }> }> = ({ items }) => {
+  const total = items.reduce((s, i) => s + i.count, 0) || 1;
+  const palette: Record<string, string> = {
+    pending: "bg-amber-400",
+    paid: "bg-emerald-500",
+    processing: "bg-indigo-500",
+    shipped: "bg-cyan-500",
+    delivered: "bg-emerald-600",
+    cancelled: "bg-rose-500",
+  };
+  return (
+    <div className="space-y-3">
+      {items.map((it) => {
+        const pct = Math.round((it.count / total) * 100);
+        const key = it.label.toLowerCase();
+        const color = palette[key] || "bg-slate-400";
+        return (
+          <div key={it.label}>
+            <div className="flex justify-between text-[10px] font-bold text-[#71717A] mb-1">
+              <span className="capitalize">{it.label.toLowerCase()}</span>
+              <span>{pct}%</span>
+            </div>
+            <div className="h-2.5 bg-[#F4F4F5] rounded-full overflow-hidden">
+              <div className={`h-full ${color}`} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

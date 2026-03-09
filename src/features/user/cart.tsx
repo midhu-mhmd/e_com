@@ -193,7 +193,7 @@ const CartPage: React.FC = () => {
                             </div>
                             {shippingCost > 0 && (
                                 <p className="text-xs text-stone-400 italic">
-                                    {t('cart.addMoreForFreeShipping', { amount: 500 - cartTotal })}
+                                    {t('cart.addMoreForFreeShipping', { amount: (500 - cartTotal).toFixed(2) })}
                                 </p>
                             )}
                         </div>

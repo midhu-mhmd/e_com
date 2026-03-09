@@ -6,6 +6,7 @@ import { AppRoutes } from "./routes/AppRoutes";
 import ShrimpLoader from "./components/loader/preloader";
 import { useToast } from "./components/ui/Toast";
 import { useInitializeCart } from "./hooks/useInitializeCart";
+import { navigateTo } from "./utils/navigate";
 
 function App() {
   const dispatch = useDispatch();
@@ -22,6 +23,26 @@ function App() {
     const timer = setTimeout(() => setMinDelayDone(true), 2000);
     return () => clearTimeout(timer);
   }, [dispatch]);
+
+  // Global online/offline handling
+  useEffect(() => {
+    const handleOffline = () => {
+      if (window.location.pathname !== "/network-error") {
+        try { navigateTo("/network-error", { replace: true }); } catch {}
+      }
+    };
+    const handleOnline = () => {
+      if (window.location.pathname === "/network-error") {
+        try { window.history.back(); } catch {}
+      }
+    };
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
 
   // Show toast on login/register success (only on transition)
   useEffect(() => {

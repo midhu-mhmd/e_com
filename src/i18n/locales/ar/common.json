@@ -27,7 +27,34 @@
     "logout": "تسجيل الخروج"
   },
   "auth": {
-    "login": "تسجيل الدخول"
+    "login": "تسجيل الدخول",
+    "loginTitle": "مرحباً بعودتك",
+    "otpSignin": "تسجيل الدخول عبر رمز التحقق",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "عنوان البريد الإلكتروني",
+    "sendOtp": "إرسال رمز التحقق",
+    "sending": "جارٍ الإرسال...",
+    "verify": "تحقق",
+    "verifying": "جارٍ التحقق...",
+    "otpSentTo": "تم إرسال الرمز إلى",
+    "expired": "منتهي",
+    "change": "تغيير",
+    "otpPlaceholder": "أدخل رمز تحقق مكوّن من 6 أرقام",
+    "resendOtp": "إعادة إرسال الرمز",
+    "resendIn": "أعد الإرسال خلال {{s}} ث",
+    "createAccount": "إنشاء حساب",
+    "registerUsingOtp": "سجّل باستخدام رمز التحقق. لا حاجة لكلمة مرور.",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "firstNamePlaceholder": "الاسم الأول",
+    "lastNamePlaceholder": "اسم العائلة",
+    "phoneNumber": "رقم الهاتف",
+    "phoneDigits": "{{n}} أرقام",
+    "otpSixDigits": "رمز التحقق (6 أرقام)",
+    "otpExpiredText": "انتهت صلاحية هذا الرمز. يرجى طلب رمز جديد.",
+    "verifyContinue": "تحقق واستمر",
+    "termsSentence": "أوافق على الشروط وسياسة الخصوصية."
   },
   "mobile": {
     "menu": "القائمة",
@@ -141,5 +168,23 @@
       "upi": "UPI",
       "cod": "الدفع عند الاستلام"
     }
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "all": "الكل",
+    "unread": "غير المقروء",
+    "read": "المقروء",
+    "showAll": "عرض كل الإشعارات",
+    "showUnread": "عرض غير المقروء",
+    "showRead": "عرض المقروء",
+    "loading": "جارٍ تحميل الإشعارات…",
+    "emptyAll": "لا توجد إشعارات بعد",
+    "emptyUnread": "لا توجد إشعارات غير مقروءة",
+    "emptyRead": "لا توجد إشعارات مقروءة",
+    "emptyHintAll": "سنخطرك عند حدوث شيء مهم.",
+    "emptyHintOther": "جرّب تغيير الفلاتر أو عد لاحقًا.",
+    "markRead": "تحديد كمقروء",
+    "delete": "حذف"
   }
 }

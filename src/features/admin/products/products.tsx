@@ -554,7 +554,15 @@ const ProductManagement: React.FC = () => {
                                 ))
                             ) : (
                                 filteredProducts.map((p: Product, index: number) => (
-                                    <tr key={p.id} className="group hover:bg-[#FBFBFA] transition-colors">
+                                    <tr
+                                        key={p.id}
+                                        className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
+                                        onClick={(e) => {
+                                            const target = e.target as HTMLElement;
+                                            if (target.closest("button, a, input, [role='button']")) return;
+                                            navigate(`/admin/products/${p.id}`);
+                                        }}
+                                    >
                                         {isVisible("index") && (
                                             <td className="px-6 py-4 text-xs font-mono text-[#A1A1AA] text-center">
                                                 {(page - 1) * limit + index + 1}
@@ -686,7 +694,7 @@ const ProductManagement: React.FC = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => dispatch(productsActions.setSelectedProductId(p.id))}
+                                                        onClick={() => navigate(`/admin/products/${p.id}`)}
                                                         className="p-2 text-[#A1A1AA] hover:text-white hover:bg-black rounded-lg transition-all"
                                                         title="View Details"
                                                     >

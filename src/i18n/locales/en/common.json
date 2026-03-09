@@ -27,7 +27,34 @@
     "logout": "Logout"
   },
   "auth": {
-    "login": "Login"
+    "login": "Login",
+    "loginTitle": "Welcome Back",
+    "otpSignin": "OTP Sign-in",
+    "phone": "Phone",
+    "email": "Email",
+    "emailPlaceholder": "Email Address",
+    "sendOtp": "Send OTP",
+    "sending": "Sending...",
+    "verify": "Verify",
+    "verifying": "Verifying...",
+    "otpSentTo": "OTP sent to",
+    "expired": "Expired",
+    "change": "Change",
+    "otpPlaceholder": "Enter 6-digit OTP",
+    "resendOtp": "Resend OTP",
+    "resendIn": "Resend in {{s}}s",
+    "createAccount": "Create account",
+    "registerUsingOtp": "Register using OTP. No password needed.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "firstNamePlaceholder": "First name",
+    "lastNamePlaceholder": "Last name",
+    "phoneNumber": "Phone number",
+    "phoneDigits": "{{n}} digits",
+    "otpSixDigits": "OTP (6 digits)",
+    "otpExpiredText": "This OTP has expired. Please request a new one.",
+    "verifyContinue": "Verify & Continue",
+    "termsSentence": "I agree to the Terms and Privacy Policy."
   },
   "mobile": {
     "menu": "Menu",
@@ -141,5 +168,23 @@
       "upi": "UPI",
       "cod": "COD"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "showAll": "Show all notifications",
+    "showUnread": "Show unread",
+    "showRead": "Show read",
+    "loading": "Loading notifications…",
+    "emptyAll": "No notifications yet",
+    "emptyUnread": "No unread notifications",
+    "emptyRead": "No read notifications",
+    "emptyHintAll": "We'll let you know when something important happens.",
+    "emptyHintOther": "Try switching filters or check back later.",
+    "markRead": "Mark as Read",
+    "delete": "Delete"
   }
 }

@@ -114,7 +114,7 @@ export const customersApi = {
 
   /** POST /users/:id/set-role/ */
   setRole: async (id: string, role: string) => {
-    const res = await api.post(`/users/${id}/set-role/`, { role });
+    const res = await api.post(`/users/${id}/set_role/`, { role });
     return res.data;
   },
 
@@ -144,7 +144,7 @@ export const customersApi = {
 
   /** POST /addresses/:id/set-default/ */
   setDefaultAddress: async (id: number) => {
-    const res = await api.post(`/addresses/${id}/set-default/`);
+    const res = await api.patch(`/addresses/${id}/`, { is_default: true });
     return res.data;
   },
 };

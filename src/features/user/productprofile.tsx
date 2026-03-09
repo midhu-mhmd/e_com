@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown } from "lucide-react";
+import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown, X } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
 import { addToCart } from "../admin/cart/cartSlice";
 import { useTranslation } from "react-i18next";
-import { useProductDetails } from "../../hooks/queries";
+import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 
 /** Unified media item for the gallery */
@@ -71,11 +71,13 @@ const ProductProfile: React.FC = () => {
   const productId = id ? parseInt(id) : undefined;
   const { data: product = null, isLoading: loading, isError } = useProductDetails(productId);
   const error = isError ? t("details.errorLoad") : null;
+  const { data: reviewsData } = useProductReviews(productId);
 
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showBulkOrder, setShowBulkOrder] = useState(false);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
   // Build media list and set initial selection
   const mediaList = product ? buildMediaList(product) : [];
@@ -90,6 +92,9 @@ const ProductProfile: React.FC = () => {
     checkWishlist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
+
+  // Ensure hook order is stable across all renders
+  const toast = useToast();
 
   const checkWishlist = () => {
     if (!product) return;
@@ -156,15 +161,19 @@ const ProductProfile: React.FC = () => {
     ? Math.round(((parseFloat(product.price) - parseFloat(product.discount_price)) / parseFloat(product.price)) * 100)
     : 0;
 
-  const skuLabel = product.sku || t("details.perUnitFallback");
+  const unitLabel = product.unit === "kg"
+    ? "Kg"
+    : product.unit === "piece"
+      ? "Piece"
+      : product.unit === "Gram"
+        ? "100g"
+        : t("details.perUnitFallback");
 
   // ✅ Calculate total dynamic price based on quantity
   const basePriceTotal = (parseFloat(product.price) * quantity).toFixed(2);
   const discountPriceTotal = product.discount_price 
     ? (parseFloat(product.discount_price) * quantity).toFixed(2) 
     : null;
-
-  const toast = useToast();
 
   const addItemToCart = (goTo: "cart" | "checkout") => {
     requireAuth(() => {
@@ -315,8 +324,9 @@ const ProductProfile: React.FC = () => {
           <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
               <p className="text-sm text-stone-400 font-bold mb-1">
-                {/* Dynamically adjust label if quantity > 1 */}
-                {quantity > 1 ? t("summary.total") : t("details.pricePer", { sku: skuLabel })}
+                {quantity > 1
+                  ? t("details.priceFor", { count: quantity, unit: unitLabel })
+                  : t("details.pricePer", { sku: unitLabel })}
               </p>
 
               <div className="flex items-baseline gap-3">
@@ -470,8 +480,104 @@ const ProductProfile: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-3xl border border-stone-100 p-6">
+            <div className="flex items-end justify-between mb-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
+                  {t("details.reviews.title", { defaultValue: "Reviews" })}
+                </p>
+                <p className="text-stone-500 text-sm font-bold">
+                  {t("details.reviews.basedOn", {
+                    count: product.total_reviews,
+                    defaultValue: `Based on ${product.total_reviews} reviews`,
+                  })}
+                </p>
+              </div>
+            </div>
+            {reviewsData?.results && reviewsData.results.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {reviewsData.results.map((r) => (
+                  <div key={r.id} className="p-5 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white transition-colors shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
+                          {(r.user_name || 'U').slice(0,1).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-stone-900">
+                            {r.user_name || t("details.reviews.anonymous", { defaultValue: "Anonymous" })}
+                          </p>
+                          <p className="text-xs text-stone-400 font-bold">{new Date(r.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} size={16} className={i < r.rating ? "text-yellow-500" : "text-stone-300"} fill={i < r.rating ? "currentColor" : "none"} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-stone-600 text-sm leading-relaxed">{r.comment}</p>
+                    {/* Images */}
+                    {Array.isArray((r as any).images) && (r as any).images.length > 0 && (
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        {(r as any).images.slice(0, 6).map((src: string, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setViewerUrl(src)}
+                            className="group relative"
+                            aria-label="Expand image"
+                          >
+                            <img src={src} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
+                            <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {/* Admin Response */}
+                    {(r as any).admin_response && (
+                      <div className="mt-3 bg-stone-50 border border-stone-200 rounded-lg p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
+                        <p className="text-xs text-stone-700">{(r as any).admin_response}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-5 rounded-2xl border border-dashed border-stone-200">
+                <p className="text-stone-500 text-sm font-bold">
+                  {t("details.reviews.empty", { defaultValue: "No reviews yet" })}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
+      {/* Lightbox viewer */}
+      <AnimatePresence>
+        {viewerUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setViewerUrl(null)} />
+            <div className="relative max-w-4xl w-full bg-white rounded-2xl p-2 shadow-2xl">
+              <button
+                onClick={() => setViewerUrl(null)}
+                className="absolute top-3 right-3 bg-white/80 rounded-full p-2 text-slate-600 hover:text-slate-900"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+              <img src={viewerUrl} alt="review" className="w-full h-auto max-h-[85vh] object-contain rounded-xl" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

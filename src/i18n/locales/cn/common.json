@@ -27,7 +27,34 @@
     "logout": "退出登录"
   },
   "auth": {
-    "login": "登录"
+    "login": "登录",
+    "loginTitle": "欢迎回来",
+    "otpSignin": "验证码登录",
+    "phone": "手机号",
+    "email": "邮箱",
+    "emailPlaceholder": "邮箱地址",
+    "sendOtp": "发送验证码",
+    "sending": "发送中…",
+    "verify": "验证",
+    "verifying": "验证中…",
+    "otpSentTo": "验证码已发送至",
+    "expired": "已过期",
+    "change": "更改",
+    "otpPlaceholder": "输入 6 位验证码",
+    "resendOtp": "重新发送",
+    "resendIn": "{{s}} 秒后重发",
+    "createAccount": "创建账户",
+    "registerUsingOtp": "使用验证码注册，无需密码。",
+    "firstName": "名",
+    "lastName": "姓",
+    "firstNamePlaceholder": "名字",
+    "lastNamePlaceholder": "姓氏",
+    "phoneNumber": "手机号",
+    "phoneDigits": "{{n}} 位数字",
+    "otpSixDigits": "验证码（6 位）",
+    "otpExpiredText": "该验证码已过期，请重新获取。",
+    "verifyContinue": "验证并继续",
+    "termsSentence": "我同意相关条款与隐私政策。"
   },
   "mobile": {
     "menu": "菜单",
@@ -141,5 +168,23 @@
       "upi": "UPI",
       "cod": "货到付款"
     }
+  },
+  "notifications": {
+    "title": "通知",
+    "markAllRead": "全部标为已读",
+    "all": "全部",
+    "unread": "未读",
+    "read": "已读",
+    "showAll": "显示全部通知",
+    "showUnread": "显示未读",
+    "showRead": "显示已读",
+    "loading": "正在加载通知…",
+    "emptyAll": "暂无通知",
+    "emptyUnread": "暂无未读通知",
+    "emptyRead": "暂无已读通知",
+    "emptyHintAll": "有重要事项我们会通知您。",
+    "emptyHintOther": "试着切换筛选或稍后再来。",
+    "markRead": "标为已读",
+    "delete": "删除"
   }
 }

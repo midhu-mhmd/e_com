@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 import type { AuthMethod } from "../../types/types";
 import { requestOtp, verifyOtp, setMethod, setStep, authError } from "../auth/authSlice";
@@ -93,6 +95,8 @@ const useOtpTimer = () => {
 const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation("common");
+  const { isArabic } = useLanguageToggle();
 
   const { otp_type, step, isLoading, error, value, isAuthenticated, user } = useSelector(
     (s: any) => s.auth
@@ -254,11 +258,9 @@ const Login: React.FC = () => {
         <div className="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-10 md:p-12 space-y-8">
           <header className="space-y-4">
             <div className="space-y-1">
-              <h1 className="text-2xl font-medium tracking-tight text-zinc-900">
-                Welcome Back
-              </h1>
+              <h1 className="text-2xl font-medium tracking-tight text-zinc-900">{t("auth.loginTitle", "Welcome Back")}</h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-400 font-bold">
-                OTP Sign-in
+                {t("auth.otpSignin", "OTP Sign-in")}
               </p>
             </div>
           </header>
@@ -273,7 +275,7 @@ const Login: React.FC = () => {
                 }`}
             >
               <span className="inline-flex items-center gap-2 justify-center">
-                <Phone size={14} /> Phone
+                <Phone size={14} /> {t("auth.phone", "Phone")}
               </span>
             </button>
             <button
@@ -285,7 +287,7 @@ const Login: React.FC = () => {
                 }`}
             >
               <span className="inline-flex items-center gap-2 justify-center">
-                <Mail size={14} /> Email
+                <Mail size={14} /> {t("auth.email", "Email")}
               </span>
             </button>
           </div>
@@ -315,7 +317,7 @@ const Login: React.FC = () => {
                           </button>
 
                           {dropdownOpen && (
-                            <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-zinc-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                            <div className={`absolute top-full ${isArabic ? 'right-0' : 'left-0'} mt-1 w-40 bg-white border border-zinc-200 rounded-lg shadow-lg z-50 overflow-hidden`}>
                               {countries.map((c) => (
                                 <button
                                   key={c.code}
@@ -328,7 +330,7 @@ const Login: React.FC = () => {
                                 >
                                   <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm shadow-sm" />
                                   <span className="font-medium">{c.name}</span>
-                                  <span className="ml-auto text-zinc-400 text-[10px]">{c.code}</span>
+                                  <span className={`${isArabic ? 'mr-auto' : 'ml-auto'} text-zinc-400 text-[10px]`}>{c.code}</span>
                                 </button>
                               ))}
                             </div>
@@ -351,7 +353,7 @@ const Login: React.FC = () => {
                       <input
                         type="email"
                         required
-                        placeholder="Email Address"
+                          placeholder={t("auth.emailPlaceholder", "Email Address")}
                         value={localValue}
                         onFocus={() => setFocused("id")}
                         onBlur={() => setFocused(null)}
@@ -400,9 +402,7 @@ const Login: React.FC = () => {
                 className="group relative w-full bg-cyan-600 text-white py-5 rounded-2xl overflow-hidden transition-all active:scale-[0.98] hover:shadow-xl hover:shadow-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-cyan-700"
               >
                 <div className="relative flex items-center justify-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-[0.4em]">
-                    {isLoading ? "Sending..." : "Send OTP"}
-                  </span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.4em]">{isLoading ? t("auth.sending", "Sending...") : t("auth.sendOtp", "Send OTP")}</span>
                   {!isLoading && <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />}
                   {isLoading && <Loader2 size={16} className="animate-spin" />}
                 </div>
@@ -414,12 +414,10 @@ const Login: React.FC = () => {
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                    OTP sent to
-                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{t("auth.otpSentTo", "OTP sent to")}</p>
                   <div className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ${isExpired ? "text-rose-500" : "text-cyan-600"}`}>
                     <Timer size={12} />
-                    {isExpired ? "Expired" : formattedExpiration}
+                    {isExpired ? t("auth.expired", "Expired") : formattedExpiration}
                   </div>
                 </div>
 
@@ -430,7 +428,7 @@ const Login: React.FC = () => {
                   onClick={onChangeIdentity}
                   className="mt-3 inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-300 hover:text-cyan-600 transition-colors"
                 >
-                  <RefreshCcw size={14} /> Change
+                  <RefreshCcw size={14} /> {t("auth.change", "Change")}
                 </button>
               </div>
 
@@ -445,7 +443,7 @@ const Login: React.FC = () => {
                     onFocus={() => setFocused("otp")}
                     onBlur={() => setFocused(null)}
                     disabled={isExpired}
-                    placeholder="Enter 6-digit OTP"
+                    placeholder={t("auth.otpPlaceholder", "Enter 6-digit OTP")}
                     className="w-full bg-transparent outline-none text-sm font-medium tracking-[0.35em] text-center placeholder:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -468,9 +466,7 @@ const Login: React.FC = () => {
                 className="group relative w-full bg-cyan-600 text-white py-5 rounded-2xl overflow-hidden transition-all active:scale-[0.98] hover:shadow-xl hover:shadow-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-cyan-700"
               >
                 <div className="relative flex items-center justify-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-[0.4em]">
-                    {isLoading ? "Verifying..." : "Verify"}
-                  </span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.4em]">{isLoading ? t("auth.verifying", "Verifying...") : t("auth.verify", "Verify")}</span>
                   {!isLoading && <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />}
                   {isLoading && <Loader2 size={16} className="animate-spin" />}
                 </div>
@@ -485,7 +481,7 @@ const Login: React.FC = () => {
                   : "border-zinc-50 text-zinc-300 cursor-not-allowed"
                   }`}
               >
-                {canResend ? "Resend OTP" : `Resend in ${resendCooldown}s`}
+                {canResend ? t("auth.resendOtp", "Resend OTP") : t("auth.resendIn", "Resend in {{s}}s").replace("{{s}}", String(resendCooldown))}
               </button>
             </form>
           )}

@@ -33,11 +33,19 @@
     "viewImage": "View {{index}}",
     "ratingText": "{{rating}} ({{reviews}} reviews)",
     "pricePer": "Price per {{sku}}",
+    "priceFor": "Price for {{count}} {{unit}}",
     "perUnitFallback": "unit",
+    "total": "Total",
     "currencyAed": "AED {{value}}",
     "qtyIncrease": "Increase quantity",
     "qtyDecrease": "Decrease quantity",
     "qtyLabel": "Quantity {{value}}",
+    "reviews": {
+      "title": "Reviews",
+      "basedOn": "Based on {{count}} reviews",
+      "empty": "No reviews yet",
+      "anonymous": "Anonymous"
+    },
     "bulkOrder": {
       "title": "Bulk Order",
       "subtitle": "Save more with bulk pricing",
