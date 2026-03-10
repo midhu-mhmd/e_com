@@ -1,13 +1,15 @@
 // src/pages/errors/NotFound404.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
 
 export const NotFound404: React.FC = () => {
+    const { t } = useTranslation("common");
     return (
         <ErrorPageLayout
             errorCode="404"
-            title="Page Not Found"
-            description="Oops! The page you are looking for doesn't exist, has been removed, or is temporarily unavailable."
+            title={t("errors.notFound.title")}
+            description={t("errors.notFound.description")}
         />
     );
 };

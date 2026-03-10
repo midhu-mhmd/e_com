@@ -6,6 +6,7 @@ import {
     Clock, CheckCircle, XCircle, Truck,
     ChevronRight, MapPin, CreditCard, FileText, Star, X, Loader2, Image as ImageIcon, Download
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi, type OrderDto, type OrderItemDto } from "../admin/orders/ordersApi";
 import { reviewsApi } from "../admin/reviews/reviewsApi";
 import { useToast } from "../../components/ui/Toast";
@@ -16,15 +17,15 @@ import { API_BASE_URL } from "../../config/constants";
 /* ══════════════════════════════════════════════════
    STATUS HELPERS
    ══════════════════════════════════════════════════ */
-const STATUS_MAP: Record<string, { color: string; bg: string; icon: React.ReactNode; label: string }> = {
-    pending: { color: "text-amber-700", bg: "bg-amber-100", icon: <Clock size={16} />, label: "Pending" },
-    confirmed: { color: "text-blue-700", bg: "bg-blue-100", icon: <CheckCircle size={16} />, label: "Confirmed" },
-    processing: { color: "text-indigo-700", bg: "bg-indigo-100", icon: <Package size={16} />, label: "Processing" },
-    shipped: { color: "text-cyan-700", bg: "bg-cyan-100", icon: <Truck size={16} />, label: "Shipped" },
-    delivered: { color: "text-emerald-700", bg: "bg-emerald-100", icon: <CheckCircle size={16} />, label: "Delivered" },
-    completed: { color: "text-emerald-700", bg: "bg-emerald-100", icon: <CheckCircle size={16} />, label: "Completed" },
-    cancelled: { color: "text-rose-700", bg: "bg-rose-100", icon: <XCircle size={16} />, label: "Cancelled" },
-    returned: { color: "text-slate-700", bg: "bg-slate-200", icon: <XCircle size={16} />, label: "Returned" },
+const STATUS_MAP: Record<string, { color: string; bg: string; icon: React.ReactNode; key: string }> = {
+    pending: { color: "text-amber-700", bg: "bg-amber-100", icon: <Clock size={16} />, key: "pending" },
+    confirmed: { color: "text-blue-700", bg: "bg-blue-100", icon: <CheckCircle size={16} />, key: "confirmed" },
+    processing: { color: "text-indigo-700", bg: "bg-indigo-100", icon: <Package size={16} />, key: "processing" },
+    shipped: { color: "text-cyan-700", bg: "bg-cyan-100", icon: <Truck size={16} />, key: "shipped" },
+    delivered: { color: "text-emerald-700", bg: "bg-emerald-100", icon: <CheckCircle size={16} />, key: "delivered" },
+    completed: { color: "text-emerald-700", bg: "bg-emerald-100", icon: <CheckCircle size={16} />, key: "completed" },
+    cancelled: { color: "text-rose-700", bg: "bg-rose-100", icon: <XCircle size={16} />, key: "cancelled" },
+    returned: { color: "text-slate-700", bg: "bg-slate-200", icon: <XCircle size={16} />, key: "returned" },
 };
 
 const getStatus = (status: string) =>
@@ -80,14 +81,14 @@ const StarRating: React.FC<{ value: number; onChange: (v: number) => void }> = (
     );
 };
 
-const getRatingText = (rating: number) => {
+const getRatingText = (rating: number, t: (key: string) => string) => {
     switch (rating) {
-        case 1: return "Poor";
-        case 2: return "Fair";
-        case 3: return "Good";
-        case 4: return "Very Good";
-        case 5: return "Excellent";
-        default: return "Tap to rate";
+        case 1: return t("review.rating.poor");
+        case 2: return t("review.rating.fair");
+        case 3: return t("review.rating.good");
+        case 4: return t("review.rating.veryGood");
+        case 5: return t("review.rating.excellent");
+        default: return t("review.rating.tapToRate");
     }
 };
 
@@ -95,6 +96,7 @@ const ReviewModal: React.FC<{
     items: OrderItemDto[];
     onClose: () => void;
 }> = ({ items, onClose }) => {
+    const { t } = useTranslation("orders");
     const toast = useToast();
     const { isArabic } = useLanguageToggle();
     const userId = useAppSelector((s) => (s as any).auth.user?.id);
@@ -163,10 +165,10 @@ const ReviewModal: React.FC<{
                     <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle size={32} />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Unavailable</h3>
-                    <p className="text-slate-500 mb-6">These products are no longer in the catalog and cannot be reviewed.</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{t("review.unavailableTitle")}</h3>
+                    <p className="text-slate-500 mb-6">{t("review.unavailableDesc")}</p>
                     <button onClick={onClose} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">
-                        Close
+                        {t("review.close")}
                     </button>
                 </div>
             </div>
@@ -220,11 +222,11 @@ const ReviewModal: React.FC<{
         // Validate: At least one review with rating and comment
         const toSubmit = forms.filter((f) => f.rating > 0);
         if (toSubmit.length === 0) {
-            toast.show("Please rate at least one item before submitting.", "error");
+            toast.show(t("review.validateRate"), "error");
             return;
         }
         if (toSubmit.some((f) => !f.comment || !f.comment.trim())) {
-            toast.show("Please add a comment for each rated item.", "error");
+            toast.show(t("review.validateComment"), "error");
             return;
         }
 
@@ -246,7 +248,7 @@ const ReviewModal: React.FC<{
                     });
                 }
             }
-            toast.show("Reviews submitted! Thank you 🎉", "success");
+            toast.show(t("review.successMessage"), "success");
             onClose();
         } catch (err: any) {
             const status = err?.response?.status;
@@ -257,7 +259,7 @@ const ReviewModal: React.FC<{
                 apiErr?.detail ||
                 apiErr?.message ||
                 JSON.stringify(apiErr);
-            const msg = status ? `Error ${status}: ${detail || "Failed to submit reviews."}` : (detail || "Failed to submit reviews.");
+            const msg = status ? `Error ${status}: ${detail || t("review.errorMessage")}` : (detail || t("review.errorMessage"));
             console.error("Review submission error:", { status, data: apiErr });
             toast.show(msg, "error");
         } finally {
@@ -320,7 +322,7 @@ const ReviewModal: React.FC<{
                                     )}
                                 </div>
                                 <div className={`${isArabic ? 'pl-6' : 'pr-6'}`}>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? "Edit your review" : "Rate your purchase"}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? t("review.editReview") : t("review.rateYourPurchase")}</p>
                                     <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">{current.product_name}</h3>
                                 </div>
                             </div>
@@ -329,7 +331,7 @@ const ReviewModal: React.FC<{
                             <div className="flex flex-col items-center justify-center space-y-3 py-2">
                                 <StarRating value={current.rating} onChange={(v) => updateField("rating", v)} />
                                 <span className={`text-[11px] font-bold uppercase tracking-widest h-4 transition-colors ${current.rating > 0 ? 'text-slate-900' : 'text-slate-300'}`}>
-                                    {getRatingText(current.rating)}
+                                    {getRatingText(current.rating, t)}
                                 </span>
                             </div>
 
@@ -341,12 +343,12 @@ const ReviewModal: React.FC<{
                                         value={current.comment}
                                         onChange={(e) => updateField("comment", e.target.value)}
                                         className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm font-medium placeholder:text-slate-400 resize-none"
-                                        placeholder="Share details of your experience..."
+                                        placeholder={t("review.placeholder")}
                                     />
                                 </div>
                                 <div>
                                     <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-2">
-                                        {current.review_id ? "Add More Photos (Optional)" : "Add Photos (Optional)"}
+                                        {current.review_id ? t("review.addMorePhotos") : t("review.addPhotos")}
                                     </label>
                                     <input
                                         type="file"
@@ -372,7 +374,7 @@ const ReviewModal: React.FC<{
                                     )}
                                     {current.review_id && current.existing_images && current.existing_images.length > 0 && (
                                         <div className="mt-3">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Existing Photos</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{t("review.existingPhotos")}</p>
                                             <div className="flex gap-2 flex-wrap">
                                                 {current.existing_images.slice(0, 6).map((src, idx) => (
                                                     <img
@@ -412,7 +414,7 @@ const ReviewModal: React.FC<{
                                     onClick={handleBack}
                                     className="px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
                                 >
-                                    Back
+                                    {t("review.back")}
                                 </button>
                             )}
 
@@ -421,7 +423,7 @@ const ReviewModal: React.FC<{
                                     onClick={handleNext}
                                     className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2"
                                 >
-                                    Next <ChevronRight size={16} />
+                                    {t("review.next")} <ChevronRight size={16} />
                                 </button>
                             ) : (
                                 <button
@@ -430,7 +432,7 @@ const ReviewModal: React.FC<{
                                     className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {submitting ? <Loader2 size={16} className="animate-spin" /> : null}
-                                    {submitting ? "Submitting..." : "Submit Review"}
+                                    {submitting ? t("review.submitting") : t("review.submitReview")}
                                 </button>
                             )}
                         </div>
@@ -455,6 +457,7 @@ const OrderPage: React.FC = () => {
    ORDER LIST VIEW
    ══════════════════════════════════════════════════ */
 const OrderList: React.FC = () => {
+    const { t } = useTranslation("orders");
     const [orders, setOrders] = useState<OrderDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -469,7 +472,7 @@ const OrderList: React.FC = () => {
             const data = await ordersApi.list();
             setOrders(data.results || []);
         } catch {
-            setError("Failed to load your orders.");
+            setError(t("list.errorFetch"));
         } finally {
             setLoading(false);
         }
@@ -491,20 +494,20 @@ const OrderList: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Your Orders</h1>
-                        <p className="text-slate-500 mt-2 text-lg">Manage and track your recent purchases.</p>
+                        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t("list.title")}</h1>
+                        <p className="text-slate-500 mt-2 text-lg">{t("list.subtitle")}</p>
                     </div>
 
                     {/* Floating Filter Pills */}
                     {!loading && orders.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {[
-                                { key: "all", label: "All", count: orders.length },
-                                { key: "pending", label: "Pending", count: statusCounts.pending || 0 },
-                                { key: "processing", label: "Processing", count: statusCounts.processing || 0 },
-                                { key: "shipped", label: "Shipped", count: statusCounts.shipped || 0 },
-                                { key: "delivered", label: "Delivered", count: statusCounts.delivered || 0 },
-                                { key: "cancelled", label: "Cancelled", count: statusCounts.cancelled || 0 },
+                                { key: "all", label: t("list.filterAll"), count: orders.length },
+                                { key: "pending", label: t("status.pending"), count: statusCounts.pending || 0 },
+                                { key: "processing", label: t("status.processing"), count: statusCounts.processing || 0 },
+                                { key: "shipped", label: t("status.shipped"), count: statusCounts.shipped || 0 },
+                                { key: "delivered", label: t("status.delivered"), count: statusCounts.delivered || 0 },
+                                { key: "cancelled", label: t("status.cancelled"), count: statusCounts.cancelled || 0 },
                             ].filter((f) => f.key === "all" || f.count > 0).map((f) => (
                                 <button
                                     key={f.key}
@@ -542,10 +545,10 @@ const OrderList: React.FC = () => {
                 ) : error ? (
                     <div className="bg-white rounded-[2rem] p-12 text-center max-w-2xl mx-auto shadow-sm">
                         <AlertCircle className="mx-auto text-red-400 mb-6" size={48} />
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">We ran into an issue</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("list.errorTitle")}</h3>
                         <p className="text-slate-500 mb-8">{error}</p>
                         <button onClick={fetchOrders} className="px-8 py-3 bg-slate-900 text-white rounded-full font-semibold hover:bg-slate-800 transition-colors">
-                            Refresh Page
+                            {t("list.refresh")}
                         </button>
                     </div>
                 ) : filtered.length === 0 ? (
@@ -554,23 +557,23 @@ const OrderList: React.FC = () => {
                             <Package className="text-slate-400" size={40} />
                         </div>
                         <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                            {filter === "all" ? "No orders yet" : "No results found"}
+                            {filter === "all" ? t("list.emptyTitle") : t("list.noResults")}
                         </h3>
                         <p className="text-slate-500 mb-10 max-w-sm mx-auto">
                             {filter === "all"
-                                ? "You haven't purchased anything yet. Time to fill up your cart!"
-                                : "We couldn't find any orders matching this filter."}
+                                ? t("list.emptyDescription")
+                                : t("list.noResultsDescription")}
                         </p>
                         {filter === "all" ? (
                             <Link
                                 to="/products"
                                 className="inline-flex items-center justify-center px-8 py-4 bg-cyan-600 text-white rounded-full font-bold text-base hover:bg-cyan-700 hover:scale-105 transition-all shadow-lg shadow-cyan-600/30"
                             >
-                                Start Shopping
+                                {t("list.startShopping")}
                             </Link>
                         ) : (
                             <button onClick={() => setFilter("all")} className="text-slate-900 font-bold hover:underline underline-offset-4">
-                                Show all orders
+                                {t("list.showAll")}
                             </button>
                         )}
                     </div>
@@ -610,7 +613,7 @@ const OrderList: React.FC = () => {
                                                     )}
                                                 </div>
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs ${st.bg} ${st.color}`}>
-                                                    {st.icon} {st.label}
+                                                    {st.icon} {t(`status.${st.key}`)}
                                                 </span>
                                             </div>
 
@@ -619,7 +622,7 @@ const OrderList: React.FC = () => {
                                                     #{order.id}
                                                 </h3>
                                                 <p className="text-sm font-medium text-slate-400 mt-2">
-                                                    Ordered on {formatDate(order.created_at)}
+                                                    {t("list.orderedOn", { date: formatDate(order.created_at) })}
                                                 </p>
                                             </div>
 
@@ -633,7 +636,7 @@ const OrderList: React.FC = () => {
                                                     className="mt-6 w-full py-3 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center gap-2 font-bold text-slate-700 transition-all duration-200"
                                                 >
                                                     <Star size={16} className="text-slate-400" />
-                                                    Write Review
+                                                    {t("list.writeReview")}
                                                 </button>
                                             )}
 
@@ -671,6 +674,7 @@ const OrderList: React.FC = () => {
    ORDER DETAIL VIEW (BENTO BOX GRID)
    ══════════════════════════════════════════════════ */
 const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
+    const { t } = useTranslation("orders");
     const navigate = useNavigate();
     const { isArabic } = useLanguageToggle();
     const [order, setOrder] = useState<OrderDto | null>(null);
@@ -685,7 +689,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                 const data = await ordersApi.details(orderId);
                 setOrder(data);
             } catch {
-                setError("Failed to load order.");
+                setError(t("detail.errorLoad"));
             } finally {
                 setLoading(false);
             }
@@ -716,10 +720,10 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
             <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-6 text-center">
                 <div className="bg-white p-12 rounded-[2rem] max-w-lg w-full shadow-sm">
                     <AlertCircle className="mx-auto text-red-500 mb-6" size={48} />
-                    <h3 className="text-2xl font-bold text-slate-900 mb-4">Error</h3>
-                    <p className="text-slate-500 mb-8">{error || "Order not found"}</p>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-4">{t("detail.error")}</h3>
+                    <p className="text-slate-500 mb-8">{error || t("detail.orderNotFound")}</p>
                     <button onClick={() => navigate("/orders")} className="px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-slate-800 transition-colors w-full">
-                        Return to Orders
+                        {t("detail.returnToOrders")}
                     </button>
                 </div>
             </div>
@@ -774,7 +778,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
                 <button onClick={() => navigate("/orders")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-full text-slate-900 font-bold hover:shadow-md hover:-translate-y-0.5 transition-all">
-                    <ArrowLeft size={18} /> Back
+                    <ArrowLeft size={18} /> {t("detail.back")}
                 </button>
             </div>
 
@@ -787,14 +791,14 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     <div className="md:col-span-12 bg-white rounded-[2rem] p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
                         <div className="relative z-10">
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 ${st.bg} ${st.color}`}>
-                                {st.icon} {st.label}
+                                {st.icon} {t(`status.${st.key}`)}
                             </span>
-                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">Order #{order.id}</h1>
-                            <p className="text-lg text-slate-500 font-medium">Placed {formatDateTime(order.created_at)}</p>
+                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">{t("detail.orderTitle", { id: order.id })}</h1>
+                            <p className="text-lg text-slate-500 font-medium">{t("detail.placed", { date: formatDateTime(order.created_at) })}</p>
                         </div>
                         <div className="hidden sm:flex self-stretch items-center">
                             <div className="text-right">
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Order Total</p>
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{t("detail.orderTotal")}</p>
                                 <p className="text-4xl font-black text-slate-900">AED {parseFloat(order.total_amount).toFixed(2)}</p>
                             </div>
                         </div>
@@ -806,7 +810,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 className="relative z-10 mt-4 sm:mt-0 inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold transition-all duration-200 hover:shadow-lg active:scale-95"
                             >
                                 <Star size={18} className="text-yellow-400 fill-current" />
-                                Write Review
+                                {t("list.writeReview")}
                             </button>
                         )}
 
@@ -821,9 +825,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><Package size={20} /></div>
-                                Ordered Items
+                                {t("detail.orderedItems")}
                             </h2>
-                            <span className="font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">{order.items.length} items</span>
+                            <span className="font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-lg">{t("detail.itemsCount", { count: order.items.length })}</span>
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-2 space-y-6">
@@ -851,7 +855,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                             {item.product_name}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-2">
-                                            <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">Qty: {item.quantity}</span>
+                                            <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">{t("detail.qty", { count: item.quantity })}</span>
                                             <span className="text-sm font-semibold text-slate-500">AED {parseFloat(item.price).toFixed(2)}</span>
                                         </div>
                                     </div>
@@ -867,7 +871,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     <section className="md:col-span-4 bg-white rounded-[2rem] p-8">
                         <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
                             <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><Clock size={20} /></div>
-                            <h2 className="text-xl font-bold text-slate-900">Timeline</h2>
+                            <h2 className="text-xl font-bold text-slate-900">{t("detail.timeline")}</h2>
                         </div>
 
                         {(() => {
@@ -875,12 +879,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             const isCancelled = currentStatus === "cancelled";
 
                             const LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
-                                pending: { label: "Pending", icon: <Clock size={16} /> },
-                                paid: { label: "Paid", icon: <CreditCard size={16} /> },
-                                processing: { label: "Processing", icon: <Package size={16} /> },
-                                shipped: { label: "Shipped", icon: <Truck size={16} /> },
-                                delivered: { label: "Delivered", icon: <CheckCircle size={16} /> },
-                                cancelled: { label: "Cancelled", icon: <XCircle size={16} /> },
+                                pending: { label: t("status.pending"), icon: <Clock size={16} /> },
+                                paid: { label: t("status.paid"), icon: <CreditCard size={16} /> },
+                                processing: { label: t("status.processing"), icon: <Package size={16} /> },
+                                shipped: { label: t("status.shipped"), icon: <Truck size={16} /> },
+                                delivered: { label: t("status.delivered"), icon: <CheckCircle size={16} /> },
+                                cancelled: { label: t("status.cancelled"), icon: <XCircle size={16} /> },
                             };
 
                             const allowed = new Set(Object.keys(LABELS));
@@ -1002,7 +1006,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><MapPin size={20} /></div>
-                                    <h2 className="text-xl font-bold text-slate-900">Delivery Address</h2>
+                                    <h2 className="text-xl font-bold text-slate-900">{t("detail.deliveryAddress")}</h2>
                                 </div>
                                 <h3 className="font-black text-slate-900 text-lg mb-2">{addr.full_name}</h3>
                                 <p className="text-slate-500 font-medium leading-relaxed">
@@ -1012,7 +1016,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             </div>
                             <div className="mt-6 pt-6 border-t border-slate-100 font-bold text-slate-900">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-slate-400">Phone</span>
+                                    <span className="text-sm text-slate-400">{t("detail.phone")}</span>
                                     {addr.phone_number}
                                 </div>
                                 <div className="mt-3 flex justify-end">
@@ -1025,7 +1029,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
                                     >
-                                        Directions
+                                        {t("detail.directions")}
                                     </a>
                                 </div>
                             </div>
@@ -1040,11 +1044,11 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><CreditCard size={20} /></div>
-                                    <h2 className="text-xl font-bold text-slate-900">Payment</h2>
+                                    <h2 className="text-xl font-bold text-slate-900">{t("detail.payment")}</h2>
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <p className="text-sm font-bold text-slate-400 mb-1">Status</p>
+                                        <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.status")}</p>
                                         <p className={`capitalize font-black text-lg ${payment.status.toLowerCase() === "completed" || payment.status.toLowerCase() === "paid"
                                             ? "text-emerald-500"
                                             : payment.status.toLowerCase() === "failed"
@@ -1053,18 +1057,18 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                             }`}>{payment.status}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-400 mb-1">Method</p>
+                                        <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.method")}</p>
                                         <p className="font-black text-lg text-slate-900 uppercase">{payment.payment_method}</p>
                                     </div>
                                     {payment.transaction_id && (
                                         <div>
-                                            <p className="text-sm font-bold text-slate-400 mb-1">Transaction ID</p>
+                                            <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.transactionId")}</p>
                                             <p className="font-mono font-bold text-sm text-slate-700">{payment.transaction_id}</p>
                                         </div>
                                     )}
                                     {isPaymentSuccess && payment.created_at && (
                                         <div>
-                                            <p className="text-sm font-bold text-slate-400 mb-1">Payment Date</p>
+                                            <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.paymentDate")}</p>
                                             <p className="font-bold text-sm text-slate-700">{formatDateTime(payment.created_at)}</p>
                                         </div>
                                     )}
@@ -1073,7 +1077,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             {payment.receipt && (
                                 <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm font-bold text-slate-400">Receipt Ref.</span>
+                                        <span className="text-sm font-bold text-slate-400">{t("detail.receiptRef")}</span>
                                         <span className="font-mono font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-lg text-slate-700">{payment.receipt.receipt_number}</span>
                                     </div>
                                     {canDownloadReceipt && (
@@ -1082,13 +1086,13 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                                 onClick={handleDownloadReceiptImage}
                                                 className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
                                             >
-                                                <ImageIcon size={16} /> Download Image
+                                                <ImageIcon size={16} /> {t("detail.downloadImage")}
                                             </button>
                                             <button
                                                 onClick={handleDownloadReceiptPdf}
                                                 className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
                                             >
-                                                <Download size={16} /> Download PDF
+                                                <Download size={16} /> {t("detail.downloadPdf")}
                                             </button>
                                         </div>
                                     )}
@@ -1104,7 +1108,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><FileText size={20} /></div>
-                                <h2 className="text-xl font-bold text-slate-900">Delivery Notes</h2>
+                                <h2 className="text-xl font-bold text-slate-900">{t("detail.deliveryNotes")}</h2>
                             </div>
                             <p className={`text-slate-600 font-medium leading-relaxed italic border-slate-200 ${isArabic ? 'border-r-4 pr-4' : 'border-l-4 pl-4'}`}>{order.delivery_notes}</p>
                         </section>
@@ -1113,34 +1117,34 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     {/* Total Summary Bento */}
                     <section className="md:col-span-4 bg-slate-900 text-white rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden">
                         <div className="relative z-10">
-                            <h2 className="text-xl font-bold text-white mb-6">Summary</h2>
+                            <h2 className="text-xl font-bold text-white mb-6">{t("detail.summary")}</h2>
                             <div className="space-y-4 text-sm font-bold text-slate-400">
                                 <div className="flex justify-between items-center">
-                                    <span>Subtotal</span>
+                                    <span>{t("detail.subtotal")}</span>
                                     <span className="text-white text-base">AED {subtotal.toFixed(2)}</span>
                                 </div>
                                 {tipAmount > 0 && (
                                     <div className="flex justify-between items-center">
-                                        <span>Tip Added</span>
+                                        <span>{t("detail.tipAdded")}</span>
                                         <span className="text-white text-base">AED {tipAmount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 {order.preferred_delivery_date && (
                                     <div className="flex justify-between items-center">
-                                        <span>Delivery Date</span>
+                                        <span>{t("detail.deliveryDate")}</span>
                                         <span className="text-white text-base">{order.preferred_delivery_date}</span>
                                     </div>
                                 )}
                                 {order.preferred_delivery_slot && (
                                     <div className="flex justify-between items-center">
-                                        <span>Time Slot</span>
+                                        <span>{t("detail.timeSlot")}</span>
                                         <span className="text-white text-base capitalize">{order.preferred_delivery_slot}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col items-end relative z-10">
-                            <span className="font-bold text-slate-400 mb-1">Total Amount</span>
+                            <span className="font-bold text-slate-400 mb-1">{t("detail.totalAmount")}</span>
                             <span className="text-4xl font-black text-cyan-400">AED {parseFloat(order.total_amount).toFixed(2)}</span>
                         </div>
 

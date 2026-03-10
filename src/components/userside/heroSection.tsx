@@ -120,7 +120,7 @@ const Hero: React.FC = () => {
                 transition={{ duration: 10, ease: 'linear' }}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent sm:via-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent sm:via-black/40 rtl:bg-gradient-to-l" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
             </motion.div>
           </AnimatePresence>
@@ -199,7 +199,7 @@ const Hero: React.FC = () => {
           </div>
 
           {/* Navigation Controls */}
-          <div className="absolute bottom-8 right-8 z-20 hidden md:flex gap-3">
+          <div className="absolute bottom-8 end-8 z-20 hidden md:flex gap-3">
             <button
               onClick={prev}
               className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white transition-all hover:scale-110 active:scale-95 group"
@@ -217,19 +217,19 @@ const Hero: React.FC = () => {
           {/* Mobile Navigation */}
           <button
             onClick={prev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
+            className="absolute start-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
           >
             <ChevronLeft size={24} className="rtl-flip" />
           </button>
           <button
             onClick={next}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
+            className="absolute end-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
           >
             <ChevronRight size={24} className="rtl-flip" />
           </button>
 
           {/* ✅ Progress Indicators: right-6 on mobile, resetting to left-12 on sm+ */}
-          <div className="absolute bottom-6 right-6 sm:right-auto sm:left-12 md:left-20 lg:left-24 z-20 flex gap-2">
+          <div className="absolute bottom-6 end-6 sm:end-auto sm:start-12 md:start-20 lg:start-24 z-20 flex gap-2">
             {banners.map((_, i) => (
               <button
                 key={i}

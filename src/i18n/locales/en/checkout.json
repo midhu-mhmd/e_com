@@ -108,5 +108,19 @@
   },
   "currency": {
     "aed": "AED {{value}}"
+  },
+  "addressTypes": {
+    "home": "Home",
+    "work": "Work",
+    "other": "Other"
+  },
+  "emirates": {
+    "abu_dhabi": "Abu Dhabi",
+    "dubai": "Dubai",
+    "sharjah": "Sharjah",
+    "ajman": "Ajman",
+    "umm_al_quwain": "Umm Al Quwain",
+    "ras_al_khaimah": "Ras Al Khaimah",
+    "fujairah": "Fujairah"
   }
 }

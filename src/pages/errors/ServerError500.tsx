@@ -1,13 +1,15 @@
 // src/pages/errors/ServerError500.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
 
 export const ServerError500: React.FC = () => {
+    const { t } = useTranslation("common");
     return (
         <ErrorPageLayout
             errorCode="500"
-            title="Internal Server Error"
-            description="We're sorry, but something went wrong on our end. Our team has been notified and we are working to fix the issue."
+            title={t("errors.serverError.title")}
+            description={t("errors.serverError.description")}
         />
     );
 };

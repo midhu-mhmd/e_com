@@ -1,30 +1,13 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 /**
  * SIMAK FRESH branded preloader.
+ * Shown during internal page loading states with a blurred background overlay.
  */
-const ShrimpLoader = ({ label: _label }: { label?: string }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (containerRef.current) {
-                containerRef.current.style.opacity = "0";
-                containerRef.current.style.transition = "opacity 0.4s ease-in";
-                setTimeout(() => {
-                    if (containerRef.current) containerRef.current.style.display = "none";
-                }, 400);
-            }
-        }, 2000);
-
-        return () => clearTimeout(timer);
-    }, []);
-
+const ShrimpLoader = () => {
     return (
         <div
-            ref={containerRef}
-            className="fixed inset-0 z-9999 flex items-center justify-center bg-white"
+            className="fixed inset-0 z-9999 flex items-center justify-center bg-white/60 backdrop-blur-sm"
         >
             <div className="flex flex-col items-center gap-5">
                 {/* Brand logo icon — matches navbar */}

@@ -1,13 +1,15 @@
 // src/pages/errors/BadRequest400.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
 
 export const BadRequest400: React.FC = () => {
+    const { t } = useTranslation("common");
     return (
         <ErrorPageLayout
             errorCode="400"
-            title="Bad Request"
-            description="The server could not understand your request due to invalid syntax. Please check the information provided and try again."
+            title={t("errors.badRequest.title")}
+            description={t("errors.badRequest.description")}
         />
     );
 };

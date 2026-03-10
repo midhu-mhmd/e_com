@@ -186,5 +186,67 @@
     "emptyHintOther": "试着切换筛选或稍后再来。",
     "markRead": "标为已读",
     "delete": "删除"
+  },
+  "wishlist": {
+    "title": "我的收藏",
+    "subtitle": "保存您喜欢的商品以便稍后查看。",
+    "clearAll": "清空全部",
+    "emptyTitle": "收藏夹为空",
+    "emptyDescription": "您还没有保存任何商品。浏览我们的新鲜系列，找到您喜欢的！",
+    "explore": "浏览商品",
+    "outOfStock": "缺货",
+    "removeTitle": "从收藏夹移除"
+  },
+  "errors": {
+    "returnToStore": "返回商店",
+    "goBack": "返回",
+    "errorCode": "错误 {{code}}",
+    "notFound": {
+      "title": "迷失在海上",
+      "description": "您要查找的页面不存在或已被移动。"
+    },
+    "serverError": {
+      "title": "出了点问题",
+      "description": "我们的服务器出现了问题。请稍后重试。"
+    },
+    "network": {
+      "title": "无连接",
+      "description": "请检查您的网络连接并重试。",
+      "tryAgain": "重试"
+    },
+    "badRequest": {
+      "title": "错误请求",
+      "description": "服务器无法理解该请求。请重试。"
+    },
+    "forbidden": {
+      "title": "访问被拒绝",
+      "description": "您没有权限访问此页面。"
+    },
+    "unauthorized": {
+      "title": "会话已过期",
+      "description": "请重新登录以继续。",
+      "goToLogin": "去登录"
+    },
+    "modal": {
+      "requestError": "请求错误",
+      "badRequest": "400 — 错误请求",
+      "serverError": "500 — 服务器错误",
+      "dismiss": "关闭"
+    }
+  },
+  "profileModal": {
+    "title": "完善您的个人资料",
+    "subtitle": "请告诉我们您的姓名和偶好语言。",
+    "chooseLang": "选择您的偶好语言。",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "电子邮件",
+    "phone": "电话号码",
+    "preferredLang": "偶好语言",
+    "save": "保存并继续",
+    "saving": "保存中...",
+    "skip": "暂时跳过",
+    "firstNameRequired": "名字是必填的。",
+    "saveFailed": "保存失败，请重试。"
   }
 }

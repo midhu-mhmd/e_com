@@ -186,5 +186,67 @@
     "emptyHintOther": "Try switching filters or check back later.",
     "markRead": "Mark as Read",
     "delete": "Delete"
+  },
+  "wishlist": {
+    "title": "My Wishlist",
+    "subtitle": "Save your favorite catch for later.",
+    "clearAll": "Clear All",
+    "emptyTitle": "Your wishlist is empty",
+    "emptyDescription": "You haven't saved any items yet. Browse our fresh collection and find something you love!",
+    "explore": "Explore Products",
+    "outOfStock": "Out of Stock",
+    "removeTitle": "Remove from wishlist"
+  },
+  "errors": {
+    "returnToStore": "RETURN TO STORE",
+    "goBack": "Go Back",
+    "errorCode": "Error {{code}}",
+    "notFound": {
+      "title": "Lost at sea",
+      "description": "The page you're looking for doesn't exist or has been moved."
+    },
+    "serverError": {
+      "title": "Something went wrong",
+      "description": "Our servers are experiencing issues. Please try again later."
+    },
+    "network": {
+      "title": "No Connection",
+      "description": "Please check your internet connection and try again.",
+      "tryAgain": "Try Again"
+    },
+    "badRequest": {
+      "title": "Bad Request",
+      "description": "The server couldn't understand the request. Please try again."
+    },
+    "forbidden": {
+      "title": "Access Denied",
+      "description": "You don't have permission to access this page."
+    },
+    "unauthorized": {
+      "title": "Session Expired",
+      "description": "Please log in again to continue.",
+      "goToLogin": "Go to Login"
+    },
+    "modal": {
+      "requestError": "Request Error",
+      "badRequest": "400 — Bad Request",
+      "serverError": "500 — Server Error",
+      "dismiss": "Dismiss"
+    }
+  },
+  "profileModal": {
+    "title": "Complete Your Profile",
+    "subtitle": "Please let us know your name and preferred language.",
+    "chooseLang": "Choose your preferred language.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "preferredLang": "Preferred Language",
+    "save": "Save & Continue",
+    "saving": "Saving...",
+    "skip": "Skip for now",
+    "firstNameRequired": "First Name is required.",
+    "saveFailed": "Failed to save details. Please try again."
   }
 }

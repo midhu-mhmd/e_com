@@ -237,14 +237,6 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
 
             {/* Images hidden on Home as requested */}
 
-            {/* Admin Response */}
-            {review.admin_response && (
-                <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-3 mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
-                    <p className="text-xs text-zinc-700">{review.admin_response}</p>
-                </div>
-            )}
-
             {/* Product tag */}
             {review.product_name && (
                 <div className="inline-flex px-2.5 py-1 bg-zinc-50 border border-zinc-100 rounded-lg mb-4">

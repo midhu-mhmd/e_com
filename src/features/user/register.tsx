@@ -32,8 +32,8 @@ const useOtpTimer = () => {
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     if (expirationRef.current) clearInterval(expirationRef.current);
 
-    setResendCooldown(isInitial ? 60 : 30);
-    setOtpExpiration(300); // 5 minutes
+    setResendCooldown(40);
+    setOtpExpiration(120);
     setResendCount((c) => c + 1);
 
     cooldownRef.current = setInterval(() => {

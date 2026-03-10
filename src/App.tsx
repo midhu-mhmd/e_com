@@ -1,9 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "./features/auth/authSlice";
 import { AppRoutes } from "./routes/AppRoutes";
-import ShrimpLoader from "./components/loader/preloader";
 import { useToast } from "./components/ui/Toast";
 import { useInitializeCart } from "./hooks/useInitializeCart";
 import { navigateTo } from "./utils/navigate";
@@ -11,7 +10,6 @@ import { navigateTo } from "./utils/navigate";
 function App() {
   const dispatch = useDispatch();
   const { checkingAuth, isAuthenticated, user } = useSelector((state: any) => state.auth);
-  const [minDelayDone, setMinDelayDone] = useState(false);
   const toast = useToast();
   const wasAuthenticated = useRef(false);
 
@@ -20,8 +18,6 @@ function App() {
 
   useEffect(() => {
     dispatch(checkAuth() as any);
-    const timer = setTimeout(() => setMinDelayDone(true), 2000);
-    return () => clearTimeout(timer);
   }, [dispatch]);
 
   // Global online/offline handling
@@ -52,10 +48,6 @@ function App() {
     }
     wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated, checkingAuth]);
-
-  if (checkingAuth || !minDelayDone) {
-    return <ShrimpLoader label="Checking account..." />;
-  }
 
   return (
     <BrowserRouter>

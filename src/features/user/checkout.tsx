@@ -20,28 +20,28 @@ import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 /* ─── Delivery Slot Options ─── */
 const DELIVERY_SLOTS = [
-  { value: "morning", label: "Morning (8 AM – 12 PM)" },
-  { value: "afternoon", label: "Afternoon (12 PM – 5 PM)" },
-  { value: "evening", label: "Evening (5 PM – 9 PM)" },
+  { value: "morning", key: "delivery.slots.morning" },
+  { value: "afternoon", key: "delivery.slots.afternoon" },
+  { value: "evening", key: "delivery.slots.evening" },
 ];
 
 // ✅ Updated Tip Presets
 const TIP_PRESETS = [0, 1, 3, 5];
 
 const ADDRESS_TYPES = [
-  { value: "home", label: "Home" },
-  { value: "work", label: "Work" },
-  { value: "other", label: "Other" },
+  { value: "home", key: "addressTypes.home" },
+  { value: "work", key: "addressTypes.work" },
+  { value: "other", key: "addressTypes.other" },
 ];
 
 const EMIRATES = [
-  { value: "abu_dhabi", label: "Abu Dhabi" },
-  { value: "dubai", label: "Dubai" },
-  { value: "sharjah", label: "Sharjah" },
-  { value: "ajman", label: "Ajman" },
-  { value: "umm_al_quwain", label: "Umm Al Quwain" },
-  { value: "ras_al_khaimah", label: "Ras Al Khaimah" },
-  { value: "fujairah", label: "Fujairah" },
+  { value: "abu_dhabi", key: "emirates.abu_dhabi" },
+  { value: "dubai", key: "emirates.dubai" },
+  { value: "sharjah", key: "emirates.sharjah" },
+  { value: "ajman", key: "emirates.ajman" },
+  { value: "umm_al_quwain", key: "emirates.umm_al_quwain" },
+  { value: "ras_al_khaimah", key: "emirates.ras_al_khaimah" },
+  { value: "fujairah", key: "emirates.fujairah" },
 ];
 
 const CheckoutPage: React.FC = () => {
@@ -119,7 +119,7 @@ const CheckoutPage: React.FC = () => {
     if (digits.length !== verifyReq.length) return false;
     return verifyReq.pattern ? verifyReq.pattern.test(digits) : true;
   })();
-  const allowedUaeCities = EMIRATES.map(e => e.label.toLowerCase());
+  const allowedUaeCities = EMIRATES.map(e => t(e.key).toLowerCase());
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (addrDropdownRef.current && !addrDropdownRef.current.contains(e.target as Node)) {
@@ -428,8 +428,8 @@ const CheckoutPage: React.FC = () => {
                             onChange={(e) => setAddressForm((prev) => ({ ...prev, address_type: e.target.value, label: e.target.value }))}
                             className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
                           >
-                            {ADDRESS_TYPES.map((t) => (
-                              <option key={t.value} value={t.value}>{t.label}</option>
+                            {ADDRESS_TYPES.map((at) => (
+                              <option key={at.value} value={at.value}>{t(at.key)}</option>
                             ))}
                           </select>
                           <ChevronDown size={14} className={`absolute ${isArabic ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
@@ -438,12 +438,12 @@ const CheckoutPage: React.FC = () => {
 
                       {/* Text fields */}
                       {([
-                        ["full_name", "Full Name", "John Doe"],
-                        ["building_name", "Building", "Al Reem Tower"],
-                        ["flat_villa_number", "Flat / Villa", "Apt 4B"],
-                        ["street_address", "Street Address", "123 Ocean Drive"],
-                        ["area", "Area", "Al Nahda"],
-                        ["city", "City", "Dubai"],
+                        ["full_name", t("address.fields.fullName.label"), t("address.fields.fullName.placeholder")],
+                        ["building_name", t("address.fields.building.label"), t("address.fields.building.placeholder")],
+                        ["flat_villa_number", t("address.fields.flat.label"), t("address.fields.flat.placeholder")],
+                        ["street_address", t("address.fields.street.label"), t("address.fields.street.placeholder")],
+                        ["area", t("address.fields.area.label"), t("address.fields.area.placeholder")],
+                        ["city", t("address.fields.city.label"), t("address.fields.city.placeholder")],
                       ] as [string, string, string][]).map(([key, label, placeholder]) => (
                         <div key={key} className="space-y-1">
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
@@ -540,9 +540,9 @@ const CheckoutPage: React.FC = () => {
                             }}
                             className={`w-full px-3.5 py-2.5 bg-white border ${addressErrors.emirate ? "border-rose-400 focus:ring-rose-500/30" : "border-slate-200 focus:ring-cyan-500/30"} rounded-xl text-sm appearance-none focus:ring-2 focus:border-cyan-400 outline-none transition-all`}
                           >
-                            <option value="">Select Emirate</option>
+                            <option value="">{t("address.fields.emirate.placeholder")}</option>
                             {EMIRATES.map((em) => (
-                              <option key={em.value} value={em.value}>{em.label}</option>
+                              <option key={em.value} value={em.value}>{t(em.key)}</option>
                             ))}
                           </select>
                           <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -655,9 +655,9 @@ const CheckoutPage: React.FC = () => {
                     onChange={(e) => setDeliverySlot(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
                   >
-                    <option value="">Select slot</option>
+                    <option value="">{t("delivery.slot")}</option>
                     {DELIVERY_SLOTS.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
+                      <option key={s.value} value={s.value}>{t(s.key)}</option>
                     ))}
                   </select>
                   <ChevronDown size={16} className={`absolute ${isArabic ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />

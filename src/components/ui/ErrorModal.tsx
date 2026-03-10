@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /* ── Types ── */
 interface ErrorModalState {
@@ -47,6 +48,7 @@ function extractErrorMessage(data: any): string {
 
 /* ── Provider ── */
 export const ErrorModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { t } = useTranslation("common");
     const [modal, setModal] = useState<ErrorModalState>({ isOpen: false, message: "" });
 
     const showError = useCallback((message: string) => {
@@ -114,10 +116,10 @@ export const ErrorModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
                                 {/* Title */}
                                 <h3 className="text-lg font-bold text-slate-900 mb-1.5">
-                                    Request Error
+                                    {t("errors.modal.requestError")}
                                 </h3>
                                 <p className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest mb-4">
-                                    400 — Bad Request
+                                    {t("errors.modal.badRequest")}
                                 </p>
 
                                 {/* Error Message */}
@@ -132,7 +134,7 @@ export const ErrorModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                                     onClick={close}
                                     className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-slate-900/10 active:scale-[0.98]"
                                 >
-                                    Dismiss
+                                    {t("errors.modal.dismiss")}
                                 </button>
                             </div>
                         </motion.div>

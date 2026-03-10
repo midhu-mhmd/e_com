@@ -30,6 +30,10 @@ import enSupport from "./locales/en/support.json";
 import arSupport from "./locales/ar/support.json";
 import cnSupport from "./locales/cn/support.json";
 
+import enOrders from "./locales/en/orders.json";
+import arOrders from "./locales/ar/orders.json";
+import cnOrders from "./locales/cn/orders.json";
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -38,12 +42,12 @@ i18n
     supportedLngs: ["en", "ar", "cn"],
 
     resources: {
-      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout, profile: enProfile, support: enSupport },
-      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout, profile: arProfile, support: arSupport },
-      cn: { common: cnCommon, home: cnHome, product: cnProduct, cart: cnCart, checkout: cnCheckout, profile: cnProfile, support: cnSupport },
+      en: { common: enCommon, home: enHome, product: enProduct, cart: enCart, checkout: enCheckout, profile: enProfile, support: enSupport, orders: enOrders },
+      ar: { common: arCommon, home: arHome, product: arProduct, cart: arCart, checkout: arCheckout, profile: arProfile, support: arSupport, orders: arOrders },
+      cn: { common: cnCommon, home: cnHome, product: cnProduct, cart: cnCart, checkout: cnCheckout, profile: cnProfile, support: cnSupport, orders: cnOrders },
     },
 
-    ns: ["common", "home", "product", "cart", "checkout", "profile", "support"],
+    ns: ["common", "home", "product", "cart", "checkout", "profile", "support", "orders"],
     defaultNS: "common",
     interpolation: { escapeValue: false },
 

@@ -16,7 +16,7 @@ interface ProfileCompletionModalProps {
 const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen, onClose, user }) => {
     const dispatch = useDispatch();
     const { setLanguage } = useLanguageToggle();
-    useTranslation("common");
+    const { t } = useTranslation("common");
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -47,7 +47,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!hasName && !firstName.trim()) {
-            setError("First Name is required.");
+            setError(t("profileModal.firstNameRequired", "First Name is required."));
             return;
         }
 
@@ -84,7 +84,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
             setLoading(false);
             onClose();
         } catch (err: any) {
-            setError("Failed to save details. Please try again.");
+            setError(t("profileModal.saveFailed", "Failed to save details. Please try again."));
             setLoading(false);
         }
     };
@@ -128,11 +128,11 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
                         <div className="text-center space-y-1.5 -mt-2">
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Complete Your Profile</h2>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t("profileModal.title")}</h2>
                             <p className="text-xs text-slate-500 font-medium">
                                 {hasName
-                                    ? "Choose your preferred language."
-                                    : "Please let us know your name and preferred language."}
+                                    ? t("profileModal.chooseLang", "Choose your preferred language.")
+                                    : t("profileModal.subtitle")}
                             </p>
                         </div>
 
@@ -147,22 +147,22 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
                             {!hasName ? (
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name <span className="text-cyan-500">*</span></label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t("profileModal.firstName")} <span className="text-cyan-500">*</span></label>
                                         <input
                                             type="text"
                                             value={firstName}
                                             onChange={(e) => setFirstName(e.target.value)}
-                                            placeholder="First name"
+                                            placeholder={t("profileModal.firstName")}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t("profileModal.lastName")}</label>
                                         <input
                                             type="text"
                                             value={lastName}
                                             onChange={(e) => setLastName(e.target.value)}
-                                            placeholder="Last name"
+                                            placeholder={t("profileModal.lastName")}
                                             className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-semibold outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                                         />
                                     </div>
@@ -178,7 +178,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
                             {/* Language Selection */}
                             <div className="space-y-1.5 pt-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1">
-                                    <Globe size={12} /> Preferred Language
+                                    <Globe size={12} /> {t("profileModal.preferredLang", "Preferred Language")}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
                                     <LanguageBtn lang="en" label="English" selected={selectedLang} onSelect={setSelectedLang} />
@@ -194,7 +194,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
                             className="w-full py-4 mt-4 bg-cyan-600 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-cyan-700 transition-all shadow-lg shadow-cyan-200/50 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            {loading ? "Saving..." : "Save & Continue"}
+                            {loading ? t("profileModal.saving") : t("profileModal.save")}
                         </button>
                     </form>
                 </motion.div>

@@ -58,7 +58,7 @@ const Footer: React.FC = () => {
                             />
                             <button className="w-full sm:w-auto px-5 py-3 bg-yellow-500 text-cyan-900 rounded-xl text-sm font-bold hover:bg-yellow-400 transition-all shadow-lg hover:shadow-yellow-500/25 active:scale-[0.98] flex items-center justify-center gap-1.5">
                                 {t("footer.newsletter.subscribe")}
-                                <ArrowRight size={14} />
+                                <ArrowRight size={14} className="rtl-flip" />
                             </button>
                         </div>
                     </div>
@@ -174,14 +174,14 @@ const Footer: React.FC = () => {
                             <div className="space-y-2 mb-6">
                                 <button className="flex items-center gap-2 w-full px-3 py-2.5 bg-cyan-900 border border-cyan-800 rounded-xl hover:bg-cyan-800 transition-all">
                                     <Smartphone size={16} className="text-cyan-300" />
-                                    <div className="text-left">
+                                    <div className="text-start">
                                         <p className="text-[9px] text-cyan-200/60 leading-none">{t("footer.getItOn")}</p>
                                         <p className="text-xs font-bold text-white leading-tight">Google Play</p>
                                     </div>
                                 </button>
                                 <button className="flex items-center gap-2 w-full px-3 py-2.5 bg-cyan-900 border border-cyan-800 rounded-xl hover:bg-cyan-800 transition-all">
                                     <Smartphone size={16} className="text-cyan-300" />
-                                    <div className="text-left">
+                                    <div className="text-start">
                                         <p className="text-[9px] text-cyan-200/60 leading-none">{t("footer.downloadOn")}</p>
                                         <p className="text-xs font-bold text-white leading-tight">App Store</p>
                                     </div>

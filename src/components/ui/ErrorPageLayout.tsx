@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MoveLeft, MoveRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface ErrorPageLayoutProps {
     errorCode: string | number;
@@ -16,10 +17,11 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
     errorCode,
     title,
     description,
-    primaryActionLabel = "RETURN TO STORE",
+    primaryActionLabel,
     onPrimaryAction,
     showBackButton = true
 }) => {
+    const { t } = useTranslation("common");
     const navigate = useNavigate();
 
     const handlePrimaryAction = () => {
@@ -48,7 +50,7 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
                         className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-gray-400 hover:text-cyan-600 transition-colors uppercase group"
                     >
                         <MoveLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
-                        Go Back
+                        {t("errors.goBack")}
                     </button>
                 )}
             </div>
@@ -77,7 +79,7 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
                     {/* Small Error Label */}
                     <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 border border-gray-200 rounded-full bg-white/50 backdrop-blur-md text-[10px] font-bold tracking-widest text-cyan-700 uppercase shadow-sm">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
-                        Error {errorCode}
+                        {t("errors.errorCode", { code: errorCode })}
                     </div>
 
                     {/* Highly legible, clean text */}
@@ -94,7 +96,7 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
                         onClick={handlePrimaryAction}
                         className="group flex items-center gap-4 px-8 py-4 bg-white border border-gray-200 rounded-full text-[12px] font-bold tracking-[0.15em] text-gray-900 transition-all duration-300 hover:border-cyan-300 hover:bg-cyan-50/30 hover:shadow-[0_8px_30px_rgba(8,145,178,0.12)] hover:-translate-y-0.5"
                     >
-                        <span>{primaryActionLabel}</span>
+                        <span>{primaryActionLabel || t("errors.returnToStore")}</span>
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 group-hover:bg-cyan-100 group-hover:text-cyan-700 transition-colors">
                             <MoveRight size={14} className="group-hover:translate-x-0.5 transition-transform duration-300" />
                         </div>

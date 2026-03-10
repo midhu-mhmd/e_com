@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
     const [isScrolled, setIsScrolled] = useState(false);
 
     const { t } = useTranslation();
-    const { setLanguage, currentLanguage } = useLanguageToggle();
+    const { setLanguage, currentLanguage, isArabic } = useLanguageToggle();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -50,7 +50,7 @@ const Navbar: React.FC = () => {
 
     return (
         <div
-            className="w-full font-sans text-slate-800 select-none"
+            className="w-full font-sans text-slate-800 select-none sticky top-0 z-50"
         >
             {/* ═══ 1  TOP UTILITY BAR ════════════════════════════ */}
             <div className="bg-cyan-950 text-cyan-50 text-[11px]">
@@ -113,7 +113,7 @@ const Navbar: React.FC = () => {
 
             {/* ═══ 2  MAIN NAV ════════════════════════════════ */}
             <nav
-                className={`bg-white border-b border-slate-100 sticky top-0 z-50 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : ''
+                className={`bg-white border-b border-slate-100 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : ''
                     }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
@@ -136,7 +136,7 @@ const Navbar: React.FC = () => {
                         <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center group-hover:bg-cyan-100 transition-colors">
                             <MapPin size={16} className="text-cyan-600" />
                         </div>
-                        <div className="text-left">
+                        <div className="text-start">
                             <p className="text-[10px] text-slate-400 font-medium leading-none">{t('location.deliverTo')}</p>
                             <p className="text-sm font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">
                                 {t('location.select')} ▾
@@ -173,7 +173,7 @@ const Navbar: React.FC = () => {
                                     <ShoppingCart size={18} className="text-stone-400 group-hover:text-cyan-600 transition-colors" />
                                     {/* Badge */}
                                     {cartItems.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-cyan-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-white min-w-[16px] min-h-[16px]">
+                                        <span className="absolute -top-1 -end-1 bg-cyan-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-white min-w-[16px] min-h-[16px]">
                                             {cartItems.length}
                                         </span>
                                     )}
@@ -194,7 +194,7 @@ const Navbar: React.FC = () => {
                                     </span>
                                 </button>
 
-                                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right w-48">
+                                <div className="absolute end-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform ltr:origin-top-right rtl:origin-top-left w-48">
                                     <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-2">
                                         <Link
                                             to="/profile"
@@ -259,11 +259,11 @@ const Navbar: React.FC = () => {
 
                         {/* Drawer */}
                         <motion.div
-                            initial={{ x: '100%' }}
+                            initial={{ x: isArabic ? '-100%' : '100%' }}
                             animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
+                            exit={{ x: isArabic ? '-100%' : '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed top-0 right-0 h-full w-[280px] bg-white z-[70] shadow-2xl flex flex-col md:hidden"
+                            className={`fixed top-0 ${isArabic ? 'left-0' : 'right-0'} h-full w-[280px] bg-white z-[70] shadow-2xl flex flex-col md:hidden`}
                         >
                             {/* Header */}
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-cyan-50/50">

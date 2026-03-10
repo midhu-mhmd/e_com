@@ -1,16 +1,18 @@
 // src/pages/errors/NetworkError.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
 
 export const NetworkError: React.FC = () => {
+    const { t } = useTranslation("common");
     return (
         <ErrorPageLayout
-            errorCode="503" // Standard response for Service Unavailable
-            title="Network Error"
-            description="We couldn't connect to the server. Please check your internet connection and try again."
-            primaryActionLabel="Try Again"
+            errorCode="503"
+            title={t("errors.network.title")}
+            description={t("errors.network.description")}
+            primaryActionLabel={t("errors.network.tryAgain")}
             onPrimaryAction={() => window.location.reload()}
-            showBackButton={false} // Might not be able to go back if offline
+            showBackButton={false}
         />
     );
 };

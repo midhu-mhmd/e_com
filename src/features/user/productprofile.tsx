@@ -535,13 +535,6 @@ const ProductProfile: React.FC = () => {
                         ))}
                       </div>
                     )}
-                    {/* Admin Response */}
-                    {(r as any).admin_response && (
-                      <div className="mt-3 bg-stone-50 border border-stone-200 rounded-lg p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
-                        <p className="text-xs text-stone-700">{(r as any).admin_response}</p>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
