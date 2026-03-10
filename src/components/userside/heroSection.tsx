@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useBanners } from '../../hooks/queries';
 
 const Hero: React.FC = () => {
-  const { t } = useTranslation('home');
   const navigate = useNavigate();
-
   const [current, setCurrent] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [direction, setDirection] = useState(1);
@@ -19,11 +16,8 @@ const Hero: React.FC = () => {
   const banners = useMemo(() => {
     if (!allBanners) return [];
     return allBanners.filter(b => {
-      // Show banner if it's active and either:
-      // 1. Has position for hero section
-      // 2. Or no specific position is set and it's marked as active
-      const isHeroPosition = !b.position || b.position === 'home_hero' || b.position === 'hero' || b.position === 'home_banner';
-      return b.is_active && isHeroPosition;
+      const isHomeBanner = b.position === 'home_banner';
+      return b.is_active && isHomeBanner;
     });
   }, [allBanners]);
 
@@ -75,7 +69,7 @@ const Hero: React.FC = () => {
   const tag = media.tag;
   const subtitle = media.subtitle;
   const highlight = media.highlight;
-  const cta = media.cta_text || t('hero.shopNow', 'Shop Now');
+  const cta = media.cta_text || null;
 
   /* 1. Background Animation (Slide) */
   const slideVariants = {
@@ -165,34 +159,20 @@ const Hero: React.FC = () => {
                     </p>
                   )}
 
-                  {/* Price & CTA */}
-                  <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                    {(media.price_text || media.old_price_text) && (
-                      <div className="flex flex-col">
-                        <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
-                          {t('hero.startingAt', 'Starting at')}
+                  {/* CTA Only */}
+                  {cta && (
+                    <div className="flex items-center gap-4 sm:gap-6">
+                      <button
+                        onClick={() => navigate('/products')}
+                        className="group relative px-6 py-3 bg-cyan-600 text-white rounded-full font-bold text-sm sm:text-base shadow-lg shadow-cyan-600/30 overflow-hidden"
+                      >
+                        <span className="relative z-10 flex items-center gap-2">
+                          {cta} <ChevronRight size={16} className="rtl-flip" />
                         </span>
-                        <div className="flex items-baseline gap-2">
-                          {media.price_text && (
-                            <span className="text-3xl sm:text-4xl font-bold text-white">{media.price_text}</span>
-                          )}
-                          {media.old_price_text && (
-                            <span className="text-lg text-slate-500 line-through decoration-2">{media.old_price_text}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() => navigate('/products')}
-                      className="group relative px-6 py-3 bg-cyan-600 text-white rounded-full font-bold text-sm sm:text-base shadow-lg shadow-cyan-600/30 overflow-hidden transition-transform hover:scale-105 active:scale-95"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        {cta} <ChevronRight size={16} className="rtl-flip" />
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-cyan-500 group-hover:from-cyan-500 group-hover:to-cyan-400 transition-colors" />
-                    </button>
-                  </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-cyan-500" />
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               </AnimatePresence>
             </div>

@@ -71,6 +71,20 @@ const reviewsSlice = createSlice({
         setSelectedReviewId: (state, action: PayloadAction<number | null>) => {
             state.selectedId = action.payload;
         },
+        updateReviewResponse: (
+            state,
+            action: PayloadAction<{ id: number; adminResponse: string | null; updatedAt?: string }>
+        ) => {
+            state.items = state.items.map((it) =>
+                it.id === action.payload.id
+                    ? {
+                          ...it,
+                          adminResponse: action.payload.adminResponse,
+                          updatedAt: action.payload.updatedAt || it.updatedAt,
+                      }
+                    : it
+            );
+        },
     },
 });
 

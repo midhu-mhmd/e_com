@@ -14,7 +14,8 @@ import {
     Loader2,
     CheckCircle2,
     AlertCircle,
-    GripVertical
+    GripVertical,
+    Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,18 +32,19 @@ const BannersManagement: React.FC = () => {
         subtitle: "",
         tag: "",
         highlight: "",
-        cta_text: "",
-        cta_link: "",
-        price_text: "",
-        old_price_text: "",
+        cta: "",
         is_active: true,
         position: "home_hero",
+        sort_order: 0,
+        start_at: "",
+        end_at: "",
     });
 
     const [desktopImage, setDesktopImage] = useState<File | null>(null);
     const [mobileImage, setMobileImage] = useState<File | null>(null);
     const [desktopPreview, setDesktopPreview] = useState<string | null>(null);
     const [mobilePreview, setMobilePreview] = useState<string | null>(null);
+    const [previewBanner, setPreviewBanner] = useState<BannerDto | null>(null);
 
     useEffect(() => {
         dispatch(fetchBanners());
@@ -55,12 +57,12 @@ const BannersManagement: React.FC = () => {
             subtitle: "",
             tag: "",
             highlight: "",
-            cta_text: "",
-            cta_link: "",
-            price_text: "",
-            old_price_text: "",
+            cta: "",
             is_active: true,
             position: "home_hero",
+            sort_order: 0,
+            start_at: "",
+            end_at: "",
         });
         setEditingBanner(null);
         setDesktopImage(null);
@@ -78,12 +80,12 @@ const BannersManagement: React.FC = () => {
                 subtitle: banner.subtitle || "",
                 tag: banner.tag || "",
                 highlight: banner.highlight || "",
-                cta_text: banner.cta_text || "",
-                cta_link: banner.cta_link || "",
-                price_text: banner.price_text || "",
-                old_price_text: banner.old_price_text || "",
+                cta: banner.cta_text || "",
                 is_active: banner.is_active,
                 position: banner.position || "home_hero",
+                sort_order: banner.order || 0,
+                start_at: banner.start_at || "",
+                end_at: banner.end_at || "",
             });
             setDesktopPreview(banner.desktop_image);
             setMobilePreview(banner.mobile_image);
@@ -114,9 +116,17 @@ const BannersManagement: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const data = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-            data.append(key, value.toString());
-        });
+        data.append("key", String(formData.key || ""));
+        data.append("title", String(formData.title || ""));
+        if (formData.subtitle) data.append("subtitle", String(formData.subtitle));
+        if (formData.tag) data.append("tag", String(formData.tag));
+        if (formData.highlight) data.append("highlight", String(formData.highlight));
+        if (formData.cta) data.append("cta", String(formData.cta));
+        data.append("is_active", String(!!formData.is_active));
+        if (formData.position) data.append("position", String(formData.position));
+        if (formData.sort_order !== undefined && formData.sort_order !== null) data.append("sort_order", String(formData.sort_order));
+        if (formData.start_at) data.append("start_at", String(formData.start_at));
+        if (formData.end_at) data.append("end_at", String(formData.end_at));
 
         if (desktopImage) data.append("desktop_image", desktopImage);
         if (mobileImage) data.append("mobile_image", mobileImage);
@@ -226,7 +236,7 @@ const BannersManagement: React.FC = () => {
 
                                     {/* Text Overlay */}
                                     <div className="absolute bottom-6 left-6 right-6">
-                                        <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-1">{banner.tag || "Promotion"}</p>
+                                        {banner.tag && <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-1">{banner.tag}</p>}
                                         <h3 className="text-xl font-black text-white line-clamp-1">{banner.title}</h3>
                                     </div>
                                 </div>
@@ -239,6 +249,12 @@ const BannersManagement: React.FC = () => {
                                             <span className="text-xs font-bold uppercase tracking-widest">Order: #{banner.order}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setPreviewBanner(banner)}
+                                                className="p-2.5 bg-slate-50 text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all active:scale-90"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
                                             <button
                                                 onClick={() => handleOpenModal(banner)}
                                                 className="p-2.5 bg-slate-50 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90"
@@ -352,21 +368,12 @@ const BannersManagement: React.FC = () => {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">CTA Text</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">CTA</label>
                                                 <input
-                                                    value={formData.cta_text}
-                                                    onChange={(e) => setFormData({ ...formData, cta_text: e.target.value })}
+                                                    value={formData.cta}
+                                                    onChange={(e) => setFormData({ ...formData, cta: e.target.value })}
                                                     className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
                                                     placeholder="e.g. Shop Now"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">CTA Link</label>
-                                                <input
-                                                    value={formData.cta_link}
-                                                    onChange={(e) => setFormData({ ...formData, cta_link: e.target.value })}
-                                                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
-                                                    placeholder="e.g. /products"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -385,35 +392,52 @@ const BannersManagement: React.FC = () => {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Price Label</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Sort Order</label>
                                                 <input
-                                                    value={formData.price_text}
-                                                    onChange={(e) => setFormData({ ...formData, price_text: e.target.value })}
+                                                    type="number"
+                                                    value={formData.sort_order}
+                                                    onChange={(e) => setFormData({ ...formData, sort_order: Number(e.target.value) })}
                                                     className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
-                                                    placeholder="e.g. AED 12.50"
+                                                    placeholder="e.g. 2"
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Old Price</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Active</label>
+                                                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="is_active"
+                                                        checked={formData.is_active}
+                                                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                                                        className="w-5 h-5 accent-black rounded cursor-pointer"
+                                                    />
+                                                    <label htmlFor="is_active" className="text-sm font-bold text-slate-900 cursor-pointer">Visible on Home Page</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Start At</label>
                                                 <input
-                                                    value={formData.old_price_text}
-                                                    onChange={(e) => setFormData({ ...formData, old_price_text: e.target.value })}
+                                                    type="datetime-local"
+                                                    value={formData.start_at}
+                                                    onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
                                                     className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
-                                                    placeholder="e.g. AED 18.00"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">End At</label>
+                                                <input
+                                                    type="datetime-local"
+                                                    value={formData.end_at}
+                                                    onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
+                                                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold placeholder:text-slate-300"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                            <input
-                                                type="checkbox"
-                                                id="is_active"
-                                                checked={formData.is_active}
-                                                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                                                className="w-5 h-5 accent-black rounded cursor-pointer"
-                                            />
-                                            <label htmlFor="is_active" className="text-sm font-bold text-slate-900 cursor-pointer">Set as Active (Visible on Home Page)</label>
-                                        </div>
+                                        {/* Active checkbox moved above */}
                                     </div>
 
                                     {/* Right Column: Images */}
@@ -499,6 +523,92 @@ const BannersManagement: React.FC = () => {
                                     </button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {previewBanner && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60"
+                            onClick={() => setPreviewBanner(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.98, y: 12 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.98, y: 12 }}
+                            className="relative w-full max-w-5xl bg-white rounded-[2rem] overflow-hidden shadow-2xl"
+                        >
+                            <div className="relative h-[420px] w-full">
+                                <img src={previewBanner.desktop_image} alt={previewBanner.title} className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent sm:via-black/40" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                                <div className="absolute inset-0 z-10 flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-24">
+                                    <div className="max-w-2xl space-y-3">
+                                        <div className="inline-flex items-center gap-2 mb-4">
+                                            {previewBanner.highlight && (
+                                                <span className="px-3 py-1 bg-yellow-500 text-black text-xs font-bold uppercase tracking-wider rounded-full">
+                                                    {previewBanner.highlight}
+                                                </span>
+                                            )}
+                                            {previewBanner.tag && (
+                                                <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-medium px-3 py-1 rounded-full">
+                                                    {previewBanner.tag}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white leading-[1.1] mb-3 tracking-tight">
+                                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">
+                                                {previewBanner.title}
+                                            </span>
+                                        </h1>
+                                        {previewBanner.subtitle && (
+                                            <p className="text-sm sm:text-base text-slate-200 mb-4 max-w-lg leading-relaxed font-medium">
+                                                {previewBanner.subtitle}
+                                            </p>
+                                        )}
+                                        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                                            {(previewBanner.price_text || previewBanner.old_price_text) && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] sm:text-xs text-slate-400 font-medium uppercase tracking-wider">
+                                                        Starting at
+                                                    </span>
+                                                    <div className="flex items-baseline gap-2">
+                                                        {previewBanner.price_text && (
+                                                            <span className="text-3xl sm:text-4xl font-bold text-white">{previewBanner.price_text}</span>
+                                                        )}
+                                                        {previewBanner.old_price_text && (
+                                                            <span className="text-lg text-slate-500 line-through decoration-2">{previewBanner.old_price_text}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {previewBanner.cta_text && (
+                                                <button
+                                                    onClick={() => {}}
+                                                    className="group relative px-6 py-3 bg-cyan-600 text-white rounded-full font-bold text-sm sm:text-base shadow-lg shadow-cyan-600/30 overflow-hidden"
+                                                >
+                                                    <span className="relative z-10 flex items-center gap-2">
+                                                        {previewBanner.cta_text}
+                                                    </span>
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-cyan-500" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setPreviewBanner(null)}
+                                    className="absolute top-4 right-4 bg-white/80 rounded-full p-2 text-slate-600 hover:text-slate-900 z-20"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}

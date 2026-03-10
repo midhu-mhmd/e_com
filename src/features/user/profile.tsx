@@ -995,6 +995,7 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
     const [editFiles, setEditFiles] = useState<File[]>([]);
     const [saving, setSaving] = useState(false);
     const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const toast = useToast();
 
     const normalizeMedia = (input: any) => {
@@ -1087,47 +1088,67 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                 <>
                     {reviews && reviews.length ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {reviews.map((r) => (
-                                <div key={r.id} className="border border-slate-200 rounded-2xl p-4 bg-white">
-                                    <div className="mb-2">
-                                        <p className="text-[10px] font-bold uppercase text-slate-400">Product</p>
-                                        <p className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</p>
-                                    </div>
-                                    <div className="flex items-center gap-1 mb-2">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                            <Star key={i} size={16} className={i < r.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
-                                        ))}
-                                    </div>
-                                    <p className="text-sm text-slate-700 mb-3">{r.comment}</p>
-                                    {r.images && r.images.length > 0 && (
-                                        <div className="flex gap-2 flex-wrap mb-3">
-                                            {r.images.slice(0, 6).map((u, idx) => {
-                                                const url = normalizeMedia(u);
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        type="button"
-                                                        onClick={() => setViewerUrl(url)}
-                                                        className="group relative"
-                                                        aria-label="Expand image"
-                                                    >
-                                                        <img src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
-                                                        <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                                    </button>
-                                                );
-                                            })}
+                            {reviews.map((r) => {
+                                const isOpen = expandedId === r.id;
+                                return (
+                                <div key={r.id} className="border border-slate-200 rounded-2xl bg-white">
+                                    <button
+                                        onClick={() => setExpandedId(isOpen ? null : r.id)}
+                                        className="w-full flex items-center justify-between p-4"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Review</span>
+                                            <span className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</span>
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-500">{isOpen ? "Hide" : "View"}</span>
+                                    </button>
+                                    {isOpen && (
+                                        <div className="px-4 pb-4">
+                                            <div className="flex items-center gap-1 mb-2">
+                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                    <Star key={i} size={16} className={i < r.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
+                                                ))}
+                                            </div>
+                                            <p className="text-sm text-slate-700 mb-3">{r.comment}</p>
+                                            {Array.isArray(r.images) && r.images.length > 0 && (
+                                                <div className="flex gap-2 flex-wrap mb-3">
+                                                    {r.images.slice(0, 6).map((entry: any, idx: number) => {
+                                                        const raw = typeof entry === "string" ? entry : entry?.image;
+                                                        const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
+                                                        const url = normalizeMedia(cleaned);
+                                                        return (
+                                                        <button
+                                                            key={idx}
+                                                            type="button"
+                                                            onClick={() => setViewerUrl(url)}
+                                                            className="group relative"
+                                                            aria-label="Expand image"
+                                                        >
+                                                            <img src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
+                                                            <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                                        </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                            {r.admin_response && (
+                                                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
+                                                    <p className="text-xs text-slate-700">{r.admin_response}</p>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center justify-end">
+                                                <button
+                                                    onClick={() => openEdit(r)}
+                                                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
-                                    <div className="flex items-center justify-end">
-                                        <button
-                                            onClick={() => openEdit(r)}
-                                            className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     ) : (
                         <p className="text-sm text-slate-500">You haven’t written any reviews yet.</p>
@@ -1186,9 +1207,12 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                             />
                             {editing.images && editing.images.length > 0 && (
                                 <div className="flex gap-2 flex-wrap mb-3">
-                                    {editing.images.slice(0, 6).map((u, i) => (
-                                        <img key={i} src={normalizeMedia(u)} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
-                                    ))}
+                                    {editing.images.slice(0, 6).map((entry: any, i) => {
+                                        const raw = typeof entry === "string" ? entry : entry?.image;
+                                        const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
+                                        const url = normalizeMedia(cleaned);
+                                        return <img key={i} src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />;
+                                    })}
                                 </div>
                             )}
                             <div className="flex justify-end gap-2">

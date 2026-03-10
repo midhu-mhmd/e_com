@@ -23,15 +23,13 @@ export interface BannerDto {
     updated_at?: string;
 }
 
-// ✅ Helper to convert relative image paths to absolute URLs
+// ✅ Helper to convert relative image paths to absolute URLs + sanitize quotes/backticks
 const getAbsoluteImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) return '';
-  
-  // If already absolute (starts with http), return as-is
-  if (imagePath.startsWith('http')) return imagePath;
-  
-  // If relative path, prepend the API base URL
-  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  const cleanedRaw = String(imagePath).trim().replace(/^['"`]+|['"`]+$/g, "");
+  if (!cleanedRaw) return '';
+  if (cleanedRaw.startsWith('http')) return cleanedRaw;
+  const cleanPath = cleanedRaw.startsWith('/') ? cleanedRaw : `/${cleanedRaw}`;
   const baseUrl = API_BASE_URL || '/api';
   const apiDomain = import.meta.env.VITE_API_DOMAIN || window.location.origin;
   
@@ -50,8 +48,8 @@ export const bannerApi = {
             title: item.title,
             subtitle: item.description || item.subtitle || null,
             tag: item.tag || null,
-            highlight: item.highlight || null,
-            cta_text: item.cta_text || null,
+            highlight: typeof item.highlight === "string" ? item.highlight : (item.highlight ? String(item.highlight) : null),
+            cta_text: item.cta || item.cta_text || null,
             cta_link: item.link || item.cta_link || null,
             desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
             mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
@@ -75,8 +73,8 @@ export const bannerApi = {
             title: item.title,
             subtitle: item.description || item.subtitle || null,
             tag: item.tag || null,
-            highlight: item.highlight || null,
-            cta_text: item.cta_text || null,
+            highlight: typeof item.highlight === "string" ? item.highlight : (item.highlight ? String(item.highlight) : null),
+            cta_text: item.cta || item.cta_text || null,
             cta_link: item.link || item.cta_link || null,
             desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
             mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),

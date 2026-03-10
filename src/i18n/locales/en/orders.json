@@ -13,6 +13,7 @@
     "showAll": "Show all orders",
     "orderedOn": "Ordered on {{date}}",
     "writeReview": "Write Review",
+    "editReview": "Edit Review",
     "filterAll": "All"
   },
   "detail": {

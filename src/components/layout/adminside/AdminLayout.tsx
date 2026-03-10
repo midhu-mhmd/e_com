@@ -14,7 +14,6 @@ import {
   Headphones,
   ChevronLeft,
   ChevronRight,
-  ShoppingCart,
   Menu,
   X,
   LogOut,
@@ -59,7 +58,6 @@ const AdminLayout: React.FC = () => {
   const navigation: NavItem[] = [
     { label: 'Overview', path: '/admin/dashboard', icon: <LayoutDashboard size={18} strokeWidth={1.5} /> },
     { label: 'Orders', path: '/admin/orders', icon: <ShoppingBag size={18} strokeWidth={1.5} /> },
-    { label: 'Carts', path: '/admin/cart', icon: <ShoppingCart size={18} strokeWidth={1.5} /> },
     { label: 'Products', path: '/admin/products', icon: <Package size={18} strokeWidth={1.5} /> },
     { label: 'Categories', path: '/admin/categories', icon: <Package size={18} strokeWidth={1.5} /> },
     { label: 'Users', path: '/admin/users', icon: <Users size={18} strokeWidth={1.5} /> },

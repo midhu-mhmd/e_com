@@ -28,7 +28,6 @@ import Dashboard from '../features/admin/dashboard/dashboard';
 import AdminLayout from '../components/layout/adminside/AdminLayout';
 import OrderManagement from '../features/admin/orders/orders';
 import OrderDetailsPage from '../features/admin/orders/OrderDetailsPage';
-import CartManagement from '../features/admin/cart/cart';
 import CustomerManagement from '../features/admin/customers/customers';
 import CustomerDetailsPage from '../features/admin/customers/CustomerDetailsPage';
 import ReviewsManagement from '../features/admin/reviews/reviews';
@@ -136,7 +135,6 @@ export const AppRoutes: React.FC = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:id" element={<OrderDetailsPage />} />
-          <Route path="cart" element={<CartManagement />} />
           <Route path="users" element={<CustomerManagement />} />
           <Route path="users/:id" element={<CustomerDetailsPage />} />
           <Route path="products" element={<ProductManagement />} />

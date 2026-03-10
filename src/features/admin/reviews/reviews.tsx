@@ -664,7 +664,9 @@ const ReviewDetailPanel = ({
   const handleSaveResponse = async () => {
     try {
       setSaving(true);
-      await reviewsApi.setAdminResponse(review.id, response);
+      const updated = await reviewsApi.setAdminResponse(review.id, response);
+      const updatedAt = updated?.updated_at || new Date().toISOString();
+      dispatch(reviewsActions.updateReviewResponse({ id: review.id, adminResponse: response || null, updatedAt }));
       toast.show("Response saved", "success");
     } catch (e: any) {
       toast.show(e?.response?.data?.detail || "Failed to save response", "error");

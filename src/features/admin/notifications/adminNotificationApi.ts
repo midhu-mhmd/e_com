@@ -8,6 +8,19 @@ export interface AdminNotificationDto {
     message: string;
     is_read: boolean;
     created_at: string;
+    action_url?: string | null;
+}
+
+export interface AdminNotificationListOptions {
+    limit?: number;
+    offset?: number;
+    is_read?: boolean | null;
+}
+
+export interface AdminNotificationListResult {
+    results: AdminNotificationDto[];
+    next?: string | null;
+    count?: number;
 }
 
 /* ── Template Types ── */
@@ -61,6 +74,19 @@ export const adminNotificationApi = {
     list: async (): Promise<AdminNotificationDto[]> => {
         const response = await api.get<{ results: AdminNotificationDto[] }>("/notifications/");
         return Array.isArray(response.data) ? response.data : (response.data.results || []);
+    },
+
+    listPaged: async (opts?: AdminNotificationListOptions): Promise<AdminNotificationListResult> => {
+        const params: Record<string, any> = {};
+        if (opts?.limit != null) params.limit = opts.limit;
+        if (opts?.offset != null) params.offset = opts.offset;
+        if (typeof opts?.is_read === 'boolean') params.is_read = opts.is_read;
+        const res = await api.get("/notifications/", { params });
+        const data = res.data;
+        const results = Array.isArray(data) ? data : (data.results || []);
+        const next = Array.isArray(data) ? null : (data.next || null);
+        const count = Array.isArray(data) ? results.length : (data.count ?? results.length);
+        return { results, next, count };
     },
 
     markAsRead: async (id: number): Promise<void> => {

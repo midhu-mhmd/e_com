@@ -2,27 +2,46 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { adminNotificationApi, type AdminNotificationDto } from './adminNotificationApi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const AdminNotificationsDropdown: React.FC = () => {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState<AdminNotificationDto[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+    const [limit] = useState<number>(20);
+    const [offset, setOffset] = useState<number>(0);
+    const [hasMore, setHasMore] = useState<boolean>(true);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+    const sentinelRef = useRef<HTMLDivElement>(null);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (reset: boolean = false) => {
         try {
-            const data = await adminNotificationApi.list();
-            setNotifications(data);
+            const is_read = filter === 'unread' ? false : filter === 'read' ? true : null;
+            const pageOffset = reset ? 0 : offset;
+            const { results, next } = await adminNotificationApi.listPaged({ limit, offset: pageOffset, is_read });
+            if (reset) {
+                setNotifications(results);
+                setOffset(results.length);
+            } else {
+                setNotifications(prev => [...prev, ...results]);
+                setOffset(prev => prev + results.length);
+            }
+            setHasMore(Boolean(next) || results.length === limit);
         } catch (error) {
             console.error("Failed to fetch admin notifications", error);
         }
     };
 
     useEffect(() => {
-        fetchNotifications();
-        // Optional: Polling every few minutes
-        const interval = setInterval(fetchNotifications, 60000 * 5); // 5 minutes
-        return () => clearInterval(interval);
-    }, []);
+        if (isOpen) {
+            setNotifications([]);
+            setOffset(0);
+            setHasMore(true);
+            fetchNotifications(true);
+        }
+    }, [isOpen, filter]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -53,6 +72,36 @@ const AdminNotificationsDropdown: React.FC = () => {
             console.error("Failed to mark all as read", error);
         }
     };
+
+    const openAction = (url?: string | null) => {
+        if (!url) return;
+        try {
+            const cleaned = String(url).trim();
+            if (!cleaned) return;
+            if (/^https?:\/\//i.test(cleaned)) {
+                window.location.href = cleaned;
+            } else if (cleaned.startsWith('/')) {
+                navigate(cleaned);
+            }
+        } catch {
+            // ignore
+        }
+    };
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const el = sentinelRef.current;
+        if (!el) return;
+        const io = new IntersectionObserver((entries) => {
+            const [entry] = entries;
+            if (entry.isIntersecting && hasMore && !isLoadingMore) {
+                setIsLoadingMore(true);
+                fetchNotifications(false).finally(() => setIsLoadingMore(false));
+            }
+        }, { root: null, rootMargin: '200px', threshold: 0 });
+        io.observe(el);
+        return () => io.disconnect();
+    }, [isOpen, hasMore, isLoadingMore, fetchNotifications]);
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -91,6 +140,28 @@ const AdminNotificationsDropdown: React.FC = () => {
                                 </button>
                             )}
                         </div>
+                        <div className="px-5 py-2 border-b border-gray-50 bg-gray-50/30">
+                            <div className="inline-flex bg-slate-100/60 p-1 rounded-xl border border-slate-200">
+                                <button
+                                    onClick={() => setFilter('all')}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${filter === 'all' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                                >
+                                    All
+                                </button>
+                                <button
+                                    onClick={() => setFilter('unread')}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${filter === 'unread' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                                >
+                                    Unread
+                                </button>
+                                <button
+                                    onClick={() => setFilter('read')}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${filter === 'read' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:text-slate-900'}`}
+                                >
+                                    Read
+                                </button>
+                            </div>
+                        </div>
 
                         <div className="overflow-y-auto flex-1 h-[400px]">
                             {notifications.length === 0 ? (
@@ -125,6 +196,15 @@ const AdminNotificationsDropdown: React.FC = () => {
                                                         })}
                                                     </span>
                                                 </div>
+                                                <div className="flex items-center gap-2">
+                                                {notification.action_url && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); openAction(notification.action_url); }}
+                                                        className="px-2.5 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
+                                                    >
+                                                        Open
+                                                    </button>
+                                                )}
                                                 {!notification.is_read && (
                                                     <button
                                                         onClick={(e) => {
@@ -137,18 +217,19 @@ const AdminNotificationsDropdown: React.FC = () => {
                                                         <Check size={14} />
                                                     </button>
                                                 )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
+                                    <div ref={sentinelRef} className="h-6" />
+                                    {isLoadingMore && (
+                                        <div className="p-3 text-center text-xs text-slate-400">Loading…</div>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        {notifications.length > 5 && (
-                            <div className="p-3 border-t border-gray-50 bg-gray-50/50 text-center">
-                                <span className="text-xs font-semibold text-gray-500">End of notifications</span>
-                            </div>
-                        )}
+                        
                     </motion.div>
                 )}
             </AnimatePresence>

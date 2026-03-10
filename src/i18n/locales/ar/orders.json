@@ -13,6 +13,7 @@
     "showAll": "عرض جميع الطلبات",
     "orderedOn": "تم الطلب في {{date}}",
     "writeReview": "كتابة تقييم",
+    "editReview": "تعديل التقييم",
     "filterAll": "الكل"
   },
   "detail": {

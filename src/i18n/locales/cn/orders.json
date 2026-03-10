@@ -13,6 +13,7 @@
     "showAll": "显示所有订单",
     "orderedOn": "下单时间 {{date}}",
     "writeReview": "写评价",
+    "editReview": "编辑评价",
     "filterAll": "全部"
   },
   "detail": {
