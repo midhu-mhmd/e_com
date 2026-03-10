@@ -447,8 +447,10 @@ const ReviewModal: React.FC<{
    MAIN COMPONENT
    ══════════════════════════════════════════════════ */
 const OrderPage: React.FC = () => {
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }, []);
     const { id } = useParams<{ id: string }>();
-
     if (id) return <OrderDetail orderId={parseInt(id)} />;
     return <OrderList />;
 };
@@ -637,7 +639,7 @@ const OrderList: React.FC = () => {
 
                                             <div className="flex-1">
                                                 <h3 className="text-3xl font-black text-slate-900 tracking-tight group-hover:text-cyan-600 transition-colors">
-                                                    #{order.id}
+                                                    {order.items && order.items.length > 0 ? (order.items[0].product_name || t("list.product")) : t("list.product")}
                                                 </h3>
                                                 <p className="text-sm font-medium text-slate-400 mt-2">
                                                     {t("list.orderedOn", { date: formatDate(order.created_at) })}
@@ -814,7 +816,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 ${st.bg} ${st.color}`}>
                                 {st.icon} {t(`status.${st.key}`)}
                             </span>
-                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">{t("detail.orderTitle", { id: order.id })}</h1>
+                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">{order.items && order.items.length > 0 ? (order.items[0].product_name || t("detail.product")) : t("detail.product")}</h1>
                             <p className="text-lg text-slate-500 font-medium">{t("detail.placed", { date: formatDateTime(order.created_at) })}</p>
                         </div>
                         <div className="hidden sm:flex self-stretch items-center">

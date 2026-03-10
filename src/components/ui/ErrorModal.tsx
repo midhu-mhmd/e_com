@@ -77,7 +77,7 @@ export const ErrorModalProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             {/* ── Modal Overlay ── */}
             <AnimatePresence>
                 {modal.isOpen && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-9 lxitems-center justify-center p-4">
                         {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}

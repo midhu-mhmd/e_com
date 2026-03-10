@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { logout, setUser } from "../auth/authSlice";
 import { profileApi, type ProfileUpdatePayload } from "./profileApi";
 import { customersApi, type AddressDto, type UserDto } from "../admin/customers/customersApi";
+import { AddressDeleteIcon } from "../admin/customers/addressDeleteIcon";
 import { ordersApi, type OrderDto } from "../admin/orders/ordersApi";
 import { reviewsApi, type ReviewDto } from "../admin/reviews/reviewsApi";
 import { useUserProfile } from "../../hooks/queries";
@@ -467,9 +468,20 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
 
             setOtpModalState(prev => ({ ...prev, step: "otp", sending: false, error: null }));
             toast.show(t("profile.messages.otpSent", { type: type === "email" ? t("profile.personalInfo.email") : t("profile.personalInfo.phone") }), "success");
-        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            const msg = err?.response?.data?.detail || t("profile.messages.otpError");
-            setOtpModalState(prev => ({ ...prev, sending: false, error: msg }));
+        } catch (err: any) {
+            // Always show exact API error message
+            let msg = err?.response?.data?.detail;
+            // If error is an object (e.g. { email: [...] }), show first value
+            if (!msg && err?.response?.data) {
+                const errorObj = err.response.data;
+                const firstKey = Object.keys(errorObj)[0];
+                if (Array.isArray(errorObj[firstKey])) {
+                    msg = errorObj[firstKey][0];
+                } else {
+                    msg = errorObj[firstKey];
+                }
+            }
+            setOtpModalState(prev => ({ ...prev, sending: false, error: msg || "An error occurred." }));
         }
     };
 
@@ -950,7 +962,7 @@ const OrdersTab: React.FC = () => {
                                         <Hash size={16} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{t("profile.orders.orderNumber")}{order.id}</p>
+                                        <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{order.items && order.items.length > 0 ? (order.items[0].product_name || t("profile.orders.product")) : t("profile.orders.product")}</p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">
                                             {new Date(order.created_at).toLocaleDateString("en-AE", { month: "short", day: "numeric", year: "numeric" })}
                                             {" · "}
@@ -1267,7 +1279,29 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
 /* ═══════════════════════════════════════════════
    Addresses Tab
    ═══════════════════════════════════════════════ */
+import ConfirmModal from "../../components/ui/ConfirmModal";
+
 const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: string) => void }> = ({ onSuccess, onError }) => {
+    // State for ConfirmModal
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [deleting, setDeleting] = useState(false);
+    const handleDeleteAddress = (id: number) => {
+        setDeleteId(id);
+    };
+    const confirmDeleteAddress = async () => {
+        if (deleteId == null) return;
+        setDeleting(true);
+        try {
+            await customersApi.deleteAddress(deleteId);
+            setAddresses((prev) => prev.filter((a) => a.id !== deleteId));
+            onSuccess("Address deleted!");
+        } catch {
+            onError("Failed to delete address.");
+        } finally {
+            setDeleting(false);
+            setDeleteId(null);
+        }
+    };
     const { t } = useTranslation("profile");
     const [addresses, setAddresses] = useState<AddressDto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1552,6 +1586,10 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
                     {addresses.map((addr) => (
                         <div key={addr.id} className="relative p-4 rounded-2xl border border-slate-100 hover:border-slate-200 transition-all bg-white group flex flex-col h-full text-start">
+                            {/* Delete Icon */}
+                            {!addr.is_default && (
+                                <AddressDeleteIcon onClick={() => handleDeleteAddress(addr.id)} />
+                            )}
                             <div className="flex items-center gap-2 mb-3">
                                 {addr.label?.toLowerCase() === "home" ? <Home size={14} className="text-cyan-600" /> : <Briefcase size={14} className="text-cyan-600" />}
                                 <span className="text-xs font-bold uppercase tracking-wider text-cyan-600">{addr.label?.toLowerCase() === "home" ? t("profile.addresses.home") : addr.label?.toLowerCase() === "work" ? t("profile.addresses.work") : addr.label ? t("profile.addresses.other") : ""}</span>
@@ -1584,6 +1622,17 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                     ))}
                 </div>
             )}
+            {/* ConfirmModal for address deletion */}
+            <ConfirmModal
+                open={deleteId !== null}
+                title="Delete Address"
+                message="Are you sure you want to delete this address? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDeleteAddress}
+                onCancel={() => { if (!deleting) setDeleteId(null); }}
+                loading={deleting}
+            />
         </motion.div>
     );
 };

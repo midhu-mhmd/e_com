@@ -147,4 +147,10 @@ export const customersApi = {
     const res = await api.patch(`/addresses/${id}/`, { is_default: true });
     return res.data;
   },
+
+  /** DELETE /addresses/:id/ */
+  deleteAddress: async (id: number) => {
+    const res = await api.delete(`/addresses/${id}/`);
+    return res.data;
+  },
 };

@@ -118,7 +118,7 @@ const Navbar: React.FC = () => {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
                     {/* Logo */}
-                    <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
+                    <Link to="/" className="shrink-0 flex items-center gap-3 group">
                         <div className="relative">
                             <div className="w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
                                 <span className="text-white font-black text-lg leading-none">S</span>
@@ -167,13 +167,13 @@ const Navbar: React.FC = () => {
                         {isAuthenticated ? (
                             <Link
                                 to="/cart"
-                                className="relative hidden md:flex flex-col items-center gap-0.5 min-w-[3.5rem] py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
+                                className="relative hidden md:flex flex-col items-center gap-0.5 min-w-14 py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
                             >
                                 <div className="relative flex justify-center w-full">
                                     <ShoppingCart size={18} className="text-stone-400 group-hover:text-cyan-600 transition-colors" />
                                     {/* Badge */}
                                     {cartItems.length > 0 && (
-                                        <span className="absolute -top-1 -end-1 bg-cyan-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-white min-w-[16px] min-h-[16px]">
+                                        <span className="absolute -top-1 -inset-e-1 bg-cyan-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center ring-2 ring-white min-w-4 min-h-4">
                                             {cartItems.length}
                                         </span>
                                     )}
@@ -187,14 +187,14 @@ const Navbar: React.FC = () => {
                         {/* Desktop Account Dropdown / Login Button */}
                         {isAuthenticated ? (
                             <div className="relative group z-50 hidden md:block">
-                                <button className="flex flex-col items-center gap-0.5 min-w-[3.5rem] py-1.5 rounded-xl hover:bg-slate-50 transition-colors">
+                                <button className="flex flex-col items-center gap-0.5 min-w-14 py-1.5 rounded-xl hover:bg-slate-50 transition-colors">
                                     <User size={18} className="text-slate-400 group-hover:text-cyan-600 transition-colors" />
                                     <span className="text-[9px] font-semibold text-slate-400 group-hover:text-cyan-600 transition-colors">
                                         {t('nav.account')}
                                     </span>
                                 </button>
 
-                                <div className="absolute end-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform ltr:origin-top-right rtl:origin-top-left w-48">
+                                <div className="absolute inset-e-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform ltr:origin-top-right rtl:origin-top-left w-48">
                                     <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-2">
                                         <Link
                                             to="/profile"
@@ -254,7 +254,7 @@ const Navbar: React.FC = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm md:hidden"
+                            className="fixed inset-0 bg-black/60 z-60 backdrop-blur-sm md:hidden"
                         />
 
                         {/* Drawer */}
@@ -263,7 +263,7 @@ const Navbar: React.FC = () => {
                             animate={{ x: 0 }}
                             exit={{ x: isArabic ? '-100%' : '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className={`fixed top-0 ${isArabic ? 'left-0' : 'right-0'} h-full w-[280px] bg-white z-[70] shadow-2xl flex flex-col md:hidden`}
+                            className={`fixed top-0 ${isArabic ? 'left-0' : 'right-0'} h-full w-70 bg-white z-70 shadow-2xl flex flex-col md:hidden`}
                         >
                             {/* Header */}
                             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-cyan-50/50">
@@ -354,11 +354,9 @@ const Navbar: React.FC = () => {
                                     <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                                         {t('mobile.shop')}
                                     </p>
-
                                     {[
                                         { key: 'home', label: t('nav.home'), href: '/', icon: <div className="w-4 h-4 rounded-full bg-slate-200" /> },
-                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : []),
-                                        { key: 'offers', label: t('top.offers'), href: '/offers', icon: <div className="w-4 h-4 rounded-full bg-yellow-400/50" /> },
+                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
                                     ].map((link) => (
                                         <Link
                                             key={link.key}

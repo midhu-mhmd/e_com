@@ -8,6 +8,7 @@ import {
     Waves,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { navigateTo } from '../../utils/navigate';
 
 /* ── Component ── */
 const HowItWorksSection: React.FC = () => {
@@ -96,7 +97,10 @@ const HowItWorksSection: React.FC = () => {
 
                 {/* CTA */}
                 <div className="text-center mt-10">
-                    <button className="group inline-flex items-center gap-2 px-8 py-3.5 bg-cyan-600 text-white rounded-2xl text-sm font-bold shadow-xl hover:shadow-2xl hover:bg-cyan-700 transition-all duration-300 active:scale-[0.98]">
+                    <button
+                        className="group inline-flex items-center gap-2 px-8 py-3.5 bg-cyan-600 text-white rounded-2xl text-sm font-bold shadow-xl hover:shadow-2xl hover:bg-cyan-700 transition-all duration-300 active:scale-[0.98]"
+                        onClick={() => navigateTo('/products')}
+                    >
                         {t("howItWorks.cta")}
                         <ChevronRight
                             size={16}

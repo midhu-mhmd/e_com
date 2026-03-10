@@ -1,3 +1,4 @@
+import ShrimpLoader from "./components/loader/preloader";
 import { useEffect, useRef } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -50,9 +51,13 @@ function App() {
   }, [isAuthenticated, checkingAuth]);
 
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    checkingAuth ? (
+      <ShrimpLoader />
+    ) : (
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    )
   );
 }
 

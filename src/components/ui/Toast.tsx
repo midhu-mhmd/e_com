@@ -71,7 +71,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             {children}
 
             {/* Toast container — top center, tightly spaced */}
-            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none items-center">
+            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-9999 flex flex-col gap-2 pointer-events-none items-center">
                 <AnimatePresence mode="popLayout">
                     {toasts.map((toast) => (
                         <motion.div

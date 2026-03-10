@@ -361,7 +361,7 @@ const UserProductsPage: React.FC = () => {
                         {/* All loaded */}
                         {!hasNextPage && products.length > 0 && totalCount > LIMIT && (
                             <div className="mt-14 flex flex-col items-center gap-2">
-                                <div className="w-full max-w-xs h-1 bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full" />
+                                <div className="w-full max-w-xs h-1 bg-linear-to-r from-cyan-400 to-cyan-600 rounded-full" />
                                 <p className="text-[11px] text-slate-400 font-medium mt-1">
                                     ✨ {t("list.allLoaded", "That's everything!")}
                                 </p>
