@@ -67,7 +67,7 @@ const ShrimpLoader = () => {
                     <motion.div
                         className="h-full w-5 rounded-full bg-cyan-500"
                         animate={{ x: ["-20%", "200%"] }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                 </div>
             </div>

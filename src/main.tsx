@@ -7,6 +7,7 @@ import { ErrorModalProvider } from './components/ui/ErrorModal.tsx';
 import './index.css';
 import "./i18n";
 import App from './App.tsx';
+import InitialLoader from './components/loader/spinnerLoader';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +20,14 @@ export const queryClient = new QueryClient({
   },
 });
 
+
+// Show initial loader immediately
+const loaderDiv = document.createElement('div');
+loaderDiv.id = 'initial-loader-root';
+document.body.appendChild(loaderDiv);
+createRoot(loaderDiv).render(<InitialLoader />);
+
+// Mount the main app
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
@@ -30,3 +39,12 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </Provider>
 );
+
+// Remove/hide the loader after React is ready
+setTimeout(() => {
+  const loader = document.getElementById('initial-loader-root');
+  if (loader) loader.style.opacity = '0';
+  setTimeout(() => {
+    if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+  }, 400);
+}, 2000);

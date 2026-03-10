@@ -962,7 +962,7 @@ const OrdersTab: React.FC = () => {
                                         <Hash size={16} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{order.items && order.items.length > 0 ? (order.items[0].product_name || t("profile.orders.product")) : t("profile.orders.product")}</p>
+                                        <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">Order ID: {order.id}</p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">
                                             {new Date(order.created_at).toLocaleDateString("en-AE", { month: "short", day: "numeric", year: "numeric" })}
                                             {" · "}

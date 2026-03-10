@@ -323,7 +323,7 @@ const ReviewModal: React.FC<{
                                 </div>
                                 <div className={`${isArabic ? 'pl-6' : 'pr-6'}`}>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? t("review.editReview") : t("review.rateYourPurchase")}</p>
-                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">{current.product_name}</h3>
+                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">Order ID: {current.order_id || current.id}</h3>
                                 </div>
                             </div>
 
@@ -639,7 +639,7 @@ const OrderList: React.FC = () => {
 
                                             <div className="flex-1">
                                                 <h3 className="text-3xl font-black text-slate-900 tracking-tight group-hover:text-cyan-600 transition-colors">
-                                                    {order.items && order.items.length > 0 ? (order.items[0].product_name || t("list.product")) : t("list.product")}
+                                                    Order ID: {order.id}
                                                 </h3>
                                                 <p className="text-sm font-medium text-slate-400 mt-2">
                                                     {t("list.orderedOn", { date: formatDate(order.created_at) })}
@@ -816,7 +816,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 ${st.bg} ${st.color}`}>
                                 {st.icon} {t(`status.${st.key}`)}
                             </span>
-                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">{order.items && order.items.length > 0 ? (order.items[0].product_name || t("detail.product")) : t("detail.product")}</h1>
+                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">Order ID: {order.id}</h1>
                             <p className="text-lg text-slate-500 font-medium">{t("detail.placed", { date: formatDateTime(order.created_at) })}</p>
                         </div>
                         <div className="hidden sm:flex self-stretch items-center">
@@ -872,10 +872,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
                                         <h3
-                                            className="text-lg font-bold text-slate-900 mb-1 line-clamp-2 cursor-pointer hover:underline"
-                                            onClick={() => pid ? navigate(`/products/${pid}`) : undefined}
+                                            className="text-lg font-bold text-slate-900 mb-1 line-clamp-2"
                                         >
-                                            {item.product_name}
+                                            Order ID: {order.id}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">{t("detail.qty", { count: item.quantity })}</span>

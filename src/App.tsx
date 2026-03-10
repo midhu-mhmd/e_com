@@ -51,13 +51,15 @@ function App() {
   }, [isAuthenticated, checkingAuth]);
 
   return (
-    checkingAuth ? (
-      <ShrimpLoader />
-    ) : (
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    )
+    <>
+      {/* Only show ShrimpLoader for internal loading, not on initial site load */}
+      {checkingAuth && <ShrimpLoader />}
+      <div style={{ display: checkingAuth ? 'none' : 'block' }}>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </div>
+    </>
   );
 }
 
