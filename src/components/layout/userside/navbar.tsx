@@ -56,10 +56,13 @@ const Navbar: React.FC = () => {
             <div className="bg-cyan-950 text-cyan-50 text-[11px]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-5">
-                        <span className="flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
-                            <MapPin size={12} className="text-yellow-400" />
-                            <span className="hidden sm:inline">{t('top.delivering')}</span>
-                        </span>
+                        <Link
+                            to="/orders"
+                            className="flex items-center gap-1.5 hover:text-white transition-colors"
+                        >
+                            <Package size={12} className="text-yellow-400" />
+                            {t('top.trackOrder')}
+                        </Link>
                         <span className="hidden md:flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
                             <Phone size={12} className="text-yellow-400" />
                             +91 90470 11110
@@ -68,19 +71,6 @@ const Navbar: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                         {/* Right links */}
-                        <div className="flex items-center gap-1">
-                            {[
-                                ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), to: '/orders' }] : []),
-                            ].map((link) => (
-                                <Link
-                                    key={link.key}
-                                    to={link.to}
-                                    className="px-3 py-1 rounded-md hover:bg-white/5 hover:text-white transition-all"
-                                >
-                                    {link.label}
-                                </Link>
-                            ))}
-                        </div>
 
                         {/* ✅ Language Switch */}
                         <div className="flex items-center gap-1.5 ml-1">
@@ -129,19 +119,6 @@ const Navbar: React.FC = () => {
                             </p>
                         </div>
                     </Link>
-
-                    {/* Location */}
-                    <button className="hidden lg:flex items-center gap-2.5 border border-slate-200 rounded-xl px-4 py-2.5 hover:border-cyan-300 hover:bg-cyan-50/40 transition-all group">
-                        <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center group-hover:bg-cyan-100 transition-colors">
-                            <MapPin size={16} className="text-cyan-600" />
-                        </div>
-                        <div className="text-start">
-                            <p className="text-[10px] text-slate-400 font-medium leading-none">{t('location.deliverTo')}</p>
-                            <p className="text-sm font-bold text-slate-800 group-hover:text-cyan-700 transition-colors">
-                                {t('location.select')} ▾
-                            </p>
-                        </div>
-                    </button>
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
