@@ -28,7 +28,7 @@ const useOtpTimer = () => {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const expirationRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const startTimers = useCallback((isInitial: boolean) => {
+  const startTimers = useCallback(() => {
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     if (expirationRef.current) clearInterval(expirationRef.current);
 
@@ -212,7 +212,7 @@ const RegisterWithOtp: React.FC = () => {
         email: otp_type === "email" ? localValue.trim() : undefined,
       })
     );
-    startTimers(true);
+    startTimers();
   };
 
   const onVerifyOtp = (e: React.FormEvent) => {
@@ -245,7 +245,7 @@ const RegisterWithOtp: React.FC = () => {
         email: otp_type === "email" ? (value || localValue.trim()) : undefined,
       })
     );
-    startTimers(false);
+    startTimers();
   };
 
   const displayError = useMemo(() => {

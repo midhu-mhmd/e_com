@@ -71,7 +71,6 @@ const Navbar: React.FC = () => {
                         <div className="flex items-center gap-1">
                             {[
                                 ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), to: '/orders' }] : []),
-                                { key: 'support', label: t('top.support'), to: '/support' },
                             ].map((link) => (
                                 <Link
                                     key={link.key}
@@ -83,8 +82,8 @@ const Navbar: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* ✅ Language Switch (Desktop) */}
-                        <div className="hidden sm:flex items-center gap-1.5 ml-1">
+                        {/* ✅ Language Switch */}
+                        <div className="flex items-center gap-1.5 ml-1">
                             <button
                                 onClick={() => setLanguage('en')}
                                 className={`px-2 py-1 rounded-md transition-all ${currentLanguage === 'en' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'
@@ -278,41 +277,6 @@ const Navbar: React.FC = () => {
 
                             {/* Content */}
                             <div className="flex-1 overflow-y-auto py-4">
-                                {/* ✅ Language Switch (Mobile) */}
-                                <div className="px-4 mb-4">
-                                    <p className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                        {t('mobile.language')}
-                                    </p>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setLanguage('en')}
-                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${currentLanguage === 'en'
-                                                ? 'bg-cyan-600 text-white border-cyan-600'
-                                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            EN
-                                        </button>
-                                        <button
-                                            onClick={() => setLanguage('cn')}
-                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${currentLanguage === 'cn'
-                                                ? 'bg-cyan-600 text-white border-cyan-600'
-                                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            中文
-                                        </button>
-                                        <button
-                                            onClick={() => setLanguage('ar')}
-                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${currentLanguage === 'ar'
-                                                ? 'bg-cyan-600 text-white border-cyan-600'
-                                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            العربية
-                                        </button>
-                                    </div>
-                                </div>
 
                                 {/* User Section */}
                                 <div className="px-4 mb-6">

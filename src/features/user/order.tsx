@@ -323,7 +323,7 @@ const ReviewModal: React.FC<{
                                 </div>
                                 <div className={`${isArabic ? 'pl-6' : 'pr-6'}`}>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? t("review.editReview") : t("review.rateYourPurchase")}</p>
-                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">Order ID: {current.order_id || current.id}</h3>
+                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">Order ID: {current.review_id}</h3>
                                 </div>
                             </div>
 

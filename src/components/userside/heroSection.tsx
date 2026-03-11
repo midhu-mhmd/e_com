@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBanners } from '../../hooks/queries';
@@ -7,7 +7,6 @@ import { useBanners } from '../../hooks/queries';
 const Hero: React.FC = () => {
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
   const [direction, setDirection] = useState(1);
 
   // ✅ TanStack Query — cached banners
@@ -27,11 +26,6 @@ const Hero: React.FC = () => {
     setCurrent((p) => (p + 1) % banners.length);
   }, [banners.length]);
 
-  const prev = useCallback(() => {
-    if (banners.length === 0) return;
-    setDirection(-1);
-    setCurrent((p) => (p - 1 + banners.length) % banners.length);
-  }, [banners.length]);
 
   const goTo = useCallback(
     (i: number) => {
@@ -42,10 +36,10 @@ const Hero: React.FC = () => {
   );
 
   useEffect(() => {
-    if (isHovering || banners.length <= 1) return;
-    const id = setInterval(next, 6000);
+    if (banners.length <= 1) return;
+    const id = setInterval(next, 5000);
     return () => clearInterval(id);
-  }, [next, isHovering, banners.length]);
+  }, [next, banners.length]);
 
   if (loading) {
     return (
@@ -91,8 +85,6 @@ const Hero: React.FC = () => {
       <section className="relative w-full max-w-7xl mx-auto px-0 sm:px-4 pt-2 sm:pt-4 group/carousel">
         <div
           className="relative h-[300px] sm:h-[360px] md:h-[420px] w-full overflow-hidden sm:rounded-[2rem] shadow-xl shadow-slate-200"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
         >
           {/* LAYER 1: Background Image & Gradient (Moving) */}
           <AnimatePresence initial={false} custom={direction}>
@@ -178,35 +170,7 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation Controls */}
-          <div className="absolute bottom-8 end-8 z-20 hidden md:flex gap-3">
-            <button
-              onClick={prev}
-              className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white transition-all hover:scale-110 active:scale-95 group"
-            >
-              <ChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform rtl-flip" />
-            </button>
-            <button
-              onClick={next}
-              className="p-4 rounded-full bg-white text-slate-900 shadow-lg shadow-white/10 transition-all hover:scale-110 active:scale-95 group"
-            >
-              <ChevronRight size={24} className="group-hover:translate-x-0.5 transition-transform rtl-flip" />
-            </button>
-          </div>
 
-          {/* Mobile Navigation */}
-          <button
-            onClick={prev}
-            className="absolute start-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
-          >
-            <ChevronLeft size={24} className="rtl-flip" />
-          </button>
-          <button
-            onClick={next}
-            className="absolute end-4 top-1/2 -translate-y-1/2 z-20 md:hidden p-2 rounded-full bg-black/20 text-white backdrop-blur-sm"
-          >
-            <ChevronRight size={24} className="rtl-flip" />
-          </button>
 
           {/* ✅ Progress Indicators: right-6 on mobile, resetting to left-12 on sm+ */}
           <div className="absolute bottom-6 end-6 sm:end-auto sm:start-12 md:start-20 lg:start-24 z-20 flex gap-2">

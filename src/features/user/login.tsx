@@ -28,7 +28,7 @@ const useOtpTimer = () => {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const expirationRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const startTimers = useCallback((isInitial: boolean) => {
+  const startTimers = useCallback(() => {
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     if (expirationRef.current) clearInterval(expirationRef.current);
 
@@ -202,7 +202,7 @@ const Login: React.FC = () => {
         email: otp_type === "email" ? localValue.trim() : undefined,
       })
     );
-    startTimers(true);
+    startTimers();
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
@@ -237,7 +237,7 @@ const Login: React.FC = () => {
         email: otp_type === "email" ? v : undefined,
       })
     );
-    startTimers(false);
+    startTimers();
   };
 
   // ✅ Clean up backend errors to be user friendly
