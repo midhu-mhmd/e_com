@@ -204,11 +204,16 @@ const ProductManagement: React.FC = () => {
         return result;
     }, [products, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
 
-    // Unique categories From data for dropdown
-    const uniqueCategories = useMemo(() =>
-        [...new Set(products.map((p: Product) => p.categoryName).filter(Boolean))] as string[],
-        [products]
-    );
+    // Unique categories From data for dropdown (id + name pairs)
+    const uniqueCategories = useMemo(() => {
+        const seen = new Map<number, string>();
+        products.forEach((p: Product) => {
+            if (p.categoryId && p.categoryName && !seen.has(p.categoryId)) {
+                seen.set(p.categoryId, p.categoryName);
+            }
+        });
+        return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
+    }, [products]);
 
     const selectedProduct = useMemo(
         () => filteredProducts.find((p: Product) => p.id === selectedProductId) ?? null,
@@ -415,7 +420,7 @@ const ProductManagement: React.FC = () => {
                                                     type="text"
                                                     placeholder="Filter name..."
                                                     value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                                                     className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                                                 />
                                             </div>
@@ -425,7 +430,7 @@ const ProductManagement: React.FC = () => {
                                         <td className="px-6 py-3">
                                             <select
                                                 value={statusFilter}
-                                                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                                                onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }}
                                                 className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                                             >
                                                 <option value="All">All Status</option>
@@ -439,12 +444,12 @@ const ProductManagement: React.FC = () => {
                                         <td className="px-6 py-3">
                                             <select
                                                 value={categoryFilter}
-                                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                                onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
                                                 className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                                             >
                                                 <option value="">All Categories</option>
                                                 {uniqueCategories.map((cat) => (
-                                                    <option key={cat} value={cat}>{cat}</option>
+                                                    <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
                                                 ))}
                                             </select>
                                         </td>

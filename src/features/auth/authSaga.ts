@@ -12,6 +12,7 @@ import {
   setUnauthenticated,
   logout,
 } from "./authSlice";
+import { profileApi } from "../user/profileApi";
 
 const getErrMsg = (err: any, fallback: string) =>
   err?.response?.data?.message ||
@@ -25,6 +26,8 @@ function* handleSendOtp(action: ReturnType<typeof requestOtp>): Generator<any, a
     const payload: any = { otp_type: action.payload.otp_type };
     if (action.payload.phone_number) payload.phone_number = action.payload.phone_number;
     if (action.payload.email) payload.email = action.payload.email;
+    if (action.payload.first_name) payload.first_name = action.payload.first_name;
+    if (action.payload.last_name) payload.last_name = action.payload.last_name;
 
     yield call(authApi.sendOtp, payload);
     yield put(setStep("otp"));
@@ -53,6 +56,8 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
     if (action.payload.phone_number) payload.phone_number = action.payload.phone_number;
     if (action.payload.email) payload.email = action.payload.email;
     if (action.payload.name) payload.name = action.payload.name;
+    if (action.payload.first_name) payload.first_name = action.payload.first_name;
+    if (action.payload.last_name) payload.last_name = action.payload.last_name;
 
     // ✅ verifies OTP & server returns access token + sets session cookie
     const verifyRes: { data: any } = yield call(authApi.verifyOtp, payload);
@@ -96,6 +101,24 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
       } catch (meErr: any) {
         console.error("[Auth] Failed to fetch /users/me/ after OTP:", meErr?.response?.data || meErr?.message);
         // Continue with user data from verify response
+      }
+    }
+
+    // If names were provided in registration but are missing in backend response, save them now
+    if (user?.id && (!user.first_name || !user.last_name) && (action.payload.first_name || action.payload.last_name)) {
+      try {
+        const updateRes: { data: any } = yield call(profileApi.updateProfile, user.id, {
+          first_name: user.first_name || action.payload.first_name || "",
+          last_name: user.last_name || action.payload.last_name || "",
+        });
+        if (updateRes?.data || updateRes) {
+          user = { ...user, ...(updateRes.data ?? updateRes) };
+        }
+      } catch (updateErr) {
+        console.error("[AuthSaga] Auto-save registration names failed:", updateErr);
+        // Fallback: merge locally if API update failed
+        if (!user.first_name && action.payload.first_name) user.first_name = action.payload.first_name;
+        if (!user.last_name && action.payload.last_name) user.last_name = action.payload.last_name;
       }
     }
 

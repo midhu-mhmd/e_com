@@ -7,12 +7,10 @@ import {
     ArrowRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 /* ── Component ── */
 const FreshnessSection: React.FC = () => {
     const { t } = useTranslation("home");
-    const { isArabic } = useLanguageToggle();
 
     const promises = [
         {
@@ -45,13 +43,6 @@ const FreshnessSection: React.FC = () => {
         },
     ];
 
-    const timeline = [
-        { time: t("freshness.timeline.0.time"), event: t("freshness.timeline.0.event"), emoji: "⛵" },
-        { time: t("freshness.timeline.1.time"), event: t("freshness.timeline.1.event"), emoji: "🐟" },
-        { time: t("freshness.timeline.2.time"), event: t("freshness.timeline.2.event"), emoji: "📦" },
-        { time: t("freshness.timeline.3.time"), event: t("freshness.timeline.3.event"), emoji: "🚚" },
-        { time: t("freshness.timeline.4.time"), event: t("freshness.timeline.4.event"), emoji: "🏠" },
-    ];
 
     return (
         <section className="relative bg-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -84,27 +75,6 @@ const FreshnessSection: React.FC = () => {
                     {promises.map((p, i) => (
                         <PromiseCard key={i} promise={p} index={i} />
                     ))}
-                </div>
-
-                {/* Journey Timeline */}
-                <div className="relative max-w-3xl mx-auto">
-                    <div className="text-center mb-10">
-                        <h3 className="text-xl font-bold text-zinc-900">{t("freshness.journeyTitle")}</h3>
-                        <p className="text-xs text-zinc-400 mt-1">
-                            {t("freshness.journeySubtitle")}
-                        </p>
-                    </div>
-
-                    {/* Timeline line (desktop center rail) */}
-                    <div className="absolute left-1/2 -translate-x-px top-[100px] bottom-[60px] w-[2px] bg-cyan-200 hidden sm:block" />
-                    {/* Timeline line (mobile side rail) */}
-                    <div className={`sm:hidden absolute ${isArabic ? 'right-4' : 'left-4'} top-[112px] bottom-[60px] w-[2px] bg-cyan-200`} />
-
-                    <div className="space-y-6 sm:space-y-0">
-                        {timeline.map((step, i) => (
-                            <TimelineStep key={i} step={step} index={i} isLeft={i % 2 === 0} />
-                        ))}
-                    </div>
                 </div>
 
                 <div className="text-center mt-10">
@@ -171,67 +141,6 @@ const PromiseCard: React.FC<{ promise: PromiseData; index: number }> = ({
                 </span>
                 <span className="text-[10px] text-zinc-400 font-medium">{promise.statLabel}</span>
             </div>
-        </div>
-    );
-};
-
-/* ── Timeline Step ── */
-const TimelineStep: React.FC<{
-    step: { time: string; event: string; emoji: string };
-    index: number;
-    isLeft: boolean;
-}> = ({ step, index, isLeft }) => {
-    const { isArabic } = useLanguageToggle();
-    const ref = useRef<HTMLDivElement>(null);
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const obs = new IntersectionObserver(
-            ([e]) => { if (e.isIntersecting) setVisible(true); },
-            { threshold: 0.3 }
-        );
-        obs.observe(el);
-        return () => obs.disconnect();
-    }, []);
-
-    return (
-        <div
-            ref={ref}
-            className={`relative flex flex-col items-center sm:flex-row sm:h-20 transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                } ${isLeft ? "sm:flex-row" : "sm:flex-row-reverse"}`}
-            style={{ transitionDelay: `${index * 100}ms` }}
-        >
-            {/* Content */}
-            <div className={`flex-1 w-full flex justify-center ${isLeft ? "sm:text-right sm:pr-10 sm:justify-end" : "sm:text-left sm:pl-10 sm:justify-start"}`}>
-                <div className="relative w-full sm:w-auto px-8">
-                    {/* Mobile dot on side rail */}
-                    <span className={`sm:hidden absolute top-1/2 -translate-y-1/2 ${isArabic ? 'right-4' : 'left-4'} w-3 h-3 bg-white border-[3px] border-cyan-400 rounded-full shadow-sm`} />
-                    <div
-                        className={`inline-flex w-full sm:w-auto flex-col items-start sm:items-center sm:flex-row gap-3 px-5 py-4 sm:px-4 sm:py-2.5 bg-white border border-zinc-100 rounded-2xl shadow-md hover:shadow-lg transition-all ${isLeft ? "sm:flex-row-reverse" : ""
-                            }`}
-                    >
-                        {/* Step badge (mobile-visible) */}
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <div className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-50 border border-cyan-100 text-[11px] font-extrabold text-cyan-700">
-                                {String(index + 1).padStart(2, "0")}
-                            </div>
-                            <span className="text-2xl sm:text-xl">{step.emoji}</span>
-                        </div>
-                        <div className={`flex-1 ${isLeft ? "sm:text-right" : "sm:text-left"}`}>
-                            <p className="text-sm sm:text-xs font-bold text-zinc-900">{step.event}</p>
-                            <p className="mt-0.5 text-[11px] sm:text-[10px] text-zinc-400 font-mono">{step.time}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Center dot */}
-            <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-[3px] border-cyan-400 shadow-sm z-10" />
-
-            {/* Spacer for other side */}
-            <div className="flex-1 hidden sm:block" />
         </div>
     );
 };

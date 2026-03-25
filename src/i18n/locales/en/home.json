@@ -149,30 +149,6 @@
         "statLabel": "Refund if not fresh"
       }
     ],
-    "journeyTitle": "Today's Catch Journey",
-    "journeySubtitle": "A typical day — from harbour to your home",
-    "timeline": [
-      {
-        "time": "4:00 AM",
-        "event": "Boats return to harbour"
-      },
-      {
-        "time": "5:30 AM",
-        "event": "Catch sorted & auctioned"
-      },
-      {
-        "time": "7:00 AM",
-        "event": "Cleaned & vacuum packed"
-      },
-      {
-        "time": "8:30 AM",
-        "event": "Loaded into cold-chain vans"
-      },
-      {
-        "time": "By Evening",
-        "event": "At your doorstep"
-      }
-    ],
     "footerCTA": "Every order ships with gel ice packs & insulated packaging"
   },
   "offers": {

@@ -5,6 +5,8 @@ export interface SendOtpRequest {
   otp_type: AuthMethod;
   phone_number?: string | number;
   email?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -13,6 +15,8 @@ export interface VerifyOtpRequest {
   email?: string;
   otp_code: string;
   name?: string;
+  first_name?: string;
+  last_name?: string;
   // If your backend uses a session ID instead of just cookies
   otpSessionId?: string;
 }

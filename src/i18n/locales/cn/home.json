@@ -149,30 +149,6 @@
         "statLabel": "不新鲜即退款"
       }
     ],
-    "journeyTitle": "今日捕捞之旅",
-    "journeySubtitle": "典型的一天——从港口到您的家",
-    "timeline": [
-      {
-        "time": "4:00 AM",
-        "event": "渔船返回港口"
-      },
-      {
-        "time": "5:30 AM",
-        "event": "鱼类分拣与拍卖"
-      },
-      {
-        "time": "7:00 AM",
-        "event": "清洗并真空包装"
-      },
-      {
-        "time": "8:30 AM",
-        "event": "装入冷链货车"
-      },
-      {
-        "time": "傍晚时分",
-        "event": "送达您的家门口"
-      }
-    ],
     "footerCTA": "每份订单都随附冰袋和隔热包装"
   },
   "offers": {

@@ -177,23 +177,23 @@ const OrderManagement: React.FC = () => {
         const data = await (await import("./ordersApi")).ordersApi.getDashboardAnalytics();
         const normalized = (data as any).users || (data as any).orders
           ? {
-              total_orders: (data as any).orders?.total ?? 0,
-              paid_last_30_days: (data as any).orders?.paid_last_30_days ?? 0,
-              average_order_value: String((data as any).orders?.avg_order_value ?? "0"),
-              total_revenue: String((data as any).revenue?.total ?? "0"),
-              revenue_per_day: (data as any).revenue?.per_day ?? [],
-              orders_by_status: (data as any).orders?.by_status ?? [],
-              top_products: (data as any).top_products ?? [],
-            }
+            total_orders: (data as any).orders?.total ?? 0,
+            paid_last_30_days: (data as any).orders?.paid_last_30_days ?? 0,
+            average_order_value: String((data as any).orders?.avg_order_value ?? "0"),
+            total_revenue: String((data as any).revenue?.total ?? "0"),
+            revenue_per_day: (data as any).revenue?.per_day ?? [],
+            orders_by_status: (data as any).orders?.by_status ?? [],
+            top_products: (data as any).top_products ?? [],
+          }
           : {
-              total_orders: (data as any).total_orders ?? 0,
-              paid_last_30_days: (data as any).paid_last_30_days ?? 0,
-              average_order_value: String((data as any).average_order_value ?? "0"),
-              total_revenue: String((data as any).total_revenue ?? "0"),
-              revenue_per_day: (data as any).revenue_per_day ?? [],
-              orders_by_status: (data as any).orders_by_status ?? [],
-              top_products: (data as any).top_products ?? [],
-            };
+            total_orders: (data as any).total_orders ?? 0,
+            paid_last_30_days: (data as any).paid_last_30_days ?? 0,
+            average_order_value: String((data as any).average_order_value ?? "0"),
+            total_revenue: String((data as any).total_revenue ?? "0"),
+            revenue_per_day: (data as any).revenue_per_day ?? [],
+            orders_by_status: (data as any).orders_by_status ?? [],
+            top_products: (data as any).top_products ?? [],
+          };
         setAnalytics(normalized);
       } catch (e) {
         setAnaError("Failed to load analytics");
@@ -308,81 +308,81 @@ const OrderManagement: React.FC = () => {
 
       {/* --- ANALYTICS --- */}
       {FEATURE_ORDERS_ANALYTICS && (
-      <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#EEEEEE] bg-[#FAFAFA] flex items-center justify-between">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA]">Orders Analytics</h2>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]">
-            <TrendingUp size={14} /> Last 30 days
+        <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#EEEEEE] bg-[#FAFAFA] flex items-center justify-between">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA]">Orders Analytics</h2>
+            <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]">
+              <TrendingUp size={14} /> Last 30 days
+            </div>
           </div>
-        </div>
-        {anaLoading ? (
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse">
-            <div className="lg:col-span-3 h-28 bg-gray-50 rounded-xl" />
-            <div className="lg:col-span-5 h-44 bg-gray-50 rounded-xl" />
-            <div className="lg:col-span-4 h-44 bg-gray-50 rounded-xl" />
-          </div>
-        ) : anaError ? (
-          <div className="p-6 text-sm text-rose-600">{anaError}</div>
-        ) : analytics ? (
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* KPI Cards */}
-            <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4">
-              <KpiCard icon={<ShoppingBag size={16} />} label="Total Orders" value={String(analytics.total_orders)} />
-              <KpiCard icon={<DollarSign size={16} />} label="Revenue" value={`AED ${Number(analytics.total_revenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
-              <KpiCard icon={<CreditCard size={16} />} label="Paid (30d)" value={String(analytics.paid_last_30_days || 0)} />
-              <KpiCard icon={<LineChart size={16} />} label="Avg Order" value={`AED ${Number(analytics.average_order_value || 0).toFixed(2)}`} />
+          {anaLoading ? (
+            <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse">
+              <div className="lg:col-span-3 h-28 bg-gray-50 rounded-xl" />
+              <div className="lg:col-span-5 h-44 bg-gray-50 rounded-xl" />
+              <div className="lg:col-span-4 h-44 bg-gray-50 rounded-xl" />
             </div>
-
-            {/* Revenue Trend */}
-            <div className="lg:col-span-5 bg-[#FAFAFA] border border-[#EEEEEE] rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]"><LineChart size={14} /> Revenue (last 30d)</div>
+          ) : anaError ? (
+            <div className="p-6 text-sm text-rose-600">{anaError}</div>
+          ) : analytics ? (
+            <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* KPI Cards */}
+              <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4">
+                <KpiCard icon={<ShoppingBag size={16} />} label="Total Orders" value={String(analytics.total_orders)} />
+                <KpiCard icon={<DollarSign size={16} />} label="Revenue" value={`AED ${Number(analytics.total_revenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
+                <KpiCard icon={<CreditCard size={16} />} label="Paid (30d)" value={String(analytics.paid_last_30_days || 0)} />
+                <KpiCard icon={<LineChart size={16} />} label="Avg Order" value={`AED ${Number(analytics.average_order_value || 0).toFixed(2)}`} />
               </div>
-              <div className="h-40 relative">
-                <RevenueLine data={analytics.revenue_per_day || []} />
-              </div>
-            </div>
 
-            {/* Status Breakdown */}
-            <div className="lg:col-span-4 bg-white border border-[#EEEEEE] rounded-2xl p-5">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><PieChart size={14} /> Orders by Status</div>
-              <StatusBars items={(analytics.orders_by_status || []).map((s: any) => ({
-                label: (s.status || s.name || "").toString(),
-                count: Number(s.count || s.value || 0),
-              }))} />
-            </div>
-
-            {/* Top Products */}
-            {Array.isArray(analytics.top_products) && analytics.top_products.length > 0 && (
-              <div className="lg:col-span-12 bg-white border border-[#EEEEEE] rounded-2xl p-5">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><BarChart3 size={14} /> Top Products</div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE]">
-                      <tr>
-                        <th className="py-2 text-left px-2">Product</th>
-                        <th className="py-2 text-left px-2">Qty</th>
-                        <th className="py-2 text-left px-2">Revenue</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#F4F4F5]">
-                      {analytics.top_products.slice(0, 10).map((p: any, idx: number) => (
-                        <tr key={`${p.product_id || p.id}-${idx}`} className="hover:bg-[#FBFBFA]">
-                          <td className="px-2 py-2 font-bold text-[#18181B]">{p.name || p.product_name}</td>
-                          <td className="px-2 py-2">{p.total_quantity ?? p.sales ?? 0}</td>
-                          <td className="px-2 py-2 font-black text-cyan-600">
-                            AED {Number(p.total_revenue ?? p.revenue ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Revenue Trend */}
+              <div className="lg:col-span-5 bg-[#FAFAFA] border border-[#EEEEEE] rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]"><LineChart size={14} /> Revenue (last 30d)</div>
+                </div>
+                <div className="h-40 relative">
+                  <RevenueLine data={analytics.revenue_per_day || []} />
                 </div>
               </div>
-            )}
-          </div>
-        ) : null}
-      </div>
+
+              {/* Status Breakdown */}
+              <div className="lg:col-span-4 bg-white border border-[#EEEEEE] rounded-2xl p-5">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><PieChart size={14} /> Orders by Status</div>
+                <StatusBars items={(analytics.orders_by_status || []).map((s: any) => ({
+                  label: (s.status || s.name || "").toString(),
+                  count: Number(s.count || s.value || 0),
+                }))} />
+              </div>
+
+              {/* Top Products */}
+              {Array.isArray(analytics.top_products) && analytics.top_products.length > 0 && (
+                <div className="lg:col-span-12 bg-white border border-[#EEEEEE] rounded-2xl p-5">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><BarChart3 size={14} /> Top Products</div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE]">
+                        <tr>
+                          <th className="py-2 text-left px-2">Product</th>
+                          <th className="py-2 text-left px-2">Qty</th>
+                          <th className="py-2 text-left px-2">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#F4F4F5]">
+                        {analytics.top_products.slice(0, 10).map((p: any, idx: number) => (
+                          <tr key={`${p.product_id || p.id}-${idx}`} className="hover:bg-[#FBFBFA]">
+                            <td className="px-2 py-2 font-bold text-[#18181B]">{p.name || p.product_name}</td>
+                            <td className="px-2 py-2">{p.total_quantity ?? p.sales ?? 0}</td>
+                            <td className="px-2 py-2 font-black text-cyan-600">
+                              AED {Number(p.total_revenue ?? p.revenue ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
       )}
 
       {/* --- STATS --- */}
@@ -525,7 +525,7 @@ const OrderManagement: React.FC = () => {
                           type="text"
                           placeholder="Order #..."
                           value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                           className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                         />
                       </div>
@@ -533,15 +533,13 @@ const OrderManagement: React.FC = () => {
                   )}
                   {isVisible("customer") && (
                     <td className="px-5 py-3">
-                      <td className="px-5 py-3">
-                        <input
-                          type="text"
-                          placeholder="Customer..."
-                          value={customerFilter}
-                          onChange={(e) => setCustomerFilter(e.target.value)}
-                          className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
-                        />
-                      </td>
+                      <input
+                        type="text"
+                        placeholder="Customer..."
+                        value={customerFilter}
+                        onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
+                        className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
+                      />
                     </td>
                   )}
                   {isVisible("items") && (
@@ -559,7 +557,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={paymentFilter}
-                        onChange={(e) => setPaymentFilter(e.target.value as FilterPaymentStatus)}
+                        onChange={(e) => { setPaymentFilter(e.target.value as FilterPaymentStatus); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="All">All</option>
@@ -573,7 +571,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as FilterOrderStatus)}
+                        onChange={(e) => { setStatusFilter(e.target.value as FilterOrderStatus); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="All">All Status</option>
@@ -591,7 +589,7 @@ const OrderManagement: React.FC = () => {
                       <input
                         type="date"
                         value={deliveryDateFilter}
-                        onChange={(e) => setDeliveryDateFilter(e.target.value)}
+                        onChange={(e) => { setDeliveryDateFilter(e.target.value); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -600,7 +598,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={deliverySlotFilter}
-                        onChange={(e) => setDeliverySlotFilter(e.target.value)}
+                        onChange={(e) => { setDeliverySlotFilter(e.target.value); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="">All Slots</option>
@@ -616,7 +614,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="City..."
                         value={cityFilter}
-                        onChange={(e) => setCityFilter(e.target.value)}
+                        onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -627,7 +625,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="Pay method..."
                         value={paymentMethodFilter}
-                        onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                        onChange={(e) => { setPaymentMethodFilter(e.target.value); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -638,7 +636,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="TXN ID..."
                         value={transactionIdFilter}
-                        onChange={(e) => setTransactionIdFilter(e.target.value)}
+                        onChange={(e) => { setTransactionIdFilter(e.target.value); setPage(1); }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -1032,10 +1030,10 @@ const OrderDetailsPanel = ({
                         key={s}
                         onClick={() => setSelectedStatus(s)}
                         className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all ${selectedStatus === s
-                            ? 'bg-black text-white border-black'
-                            : order.status === s
-                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-default'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                          ? 'bg-black text-white border-black'
+                          : order.status === s
+                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-default'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                           }`}
                         disabled={order.status === s}
                       >

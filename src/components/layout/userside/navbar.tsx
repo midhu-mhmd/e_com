@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     ShoppingCart,
@@ -22,6 +22,11 @@ import { useTranslation } from 'react-i18next';
 // ✅ your hook (user-side language + rtl)
 import useLanguageToggle from '../../../hooks/useLanguageToggle';
 
+// ✅ Logo images for each language
+import logoEn from '../../../assets/SIMAK FRESH FINAL PNG-01.png';
+import logoAr from '../../../assets/SIMAK FRESH FINAL PNG-02.png';
+import logoCn from '../../../assets/SIMAK FRESH FINAL PNG-03.png';
+
 const Navbar: React.FC = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -33,6 +38,15 @@ const Navbar: React.FC = () => {
 
     const { t } = useTranslation();
     const { setLanguage, currentLanguage, isArabic } = useLanguageToggle();
+
+    // ✅ Pick the right logo based on current language
+    const currentLogo = useMemo(() => {
+        switch (currentLanguage) {
+            case 'ar': return logoAr;
+            case 'cn': return logoCn;
+            default: return logoEn;
+        }
+    }, [currentLanguage]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -107,17 +121,12 @@ const Navbar: React.FC = () => {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
                     {/* Logo */}
-                    <Link to="/" className="shrink-0 flex items-center gap-3 group">
-                        <div className="relative">
-                            <div className="w-9 h-9 rounded-xl bg-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
-                                <span className="text-white font-black text-lg leading-none">S</span>
-                            </div>
-                        </div>
-                        <div className="hidden sm:block">
-                            <p className="text-base font-extrabold tracking-tight text-slate-900 leading-none">
-                                SIMAK <span className="text-cyan-600">FRESH</span>
-                            </p>
-                        </div>
+                    <Link to="/" className="shrink-0 flex items-center group">
+                        <img
+                            src={currentLogo}
+                            alt="SIMAK FRESH"
+                            className="h-10 w-auto object-contain"
+                        />
                     </Link>
 
                     {/* Actions */}
@@ -292,12 +301,7 @@ const Navbar: React.FC = () => {
 
                                 {/* Navigation Links */}
                                 <div className="px-4 space-y-1">
-                                    <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                        {t('mobile.shop')}
-                                    </p>
-                                    {[
-                                        { key: 'home', label: t('nav.home'), href: '/', icon: <div className="w-4 h-4 rounded-full bg-slate-200" /> },
-                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
+                                    {[                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
                                     ].map((link) => (
                                         <Link
                                             key={link.key}
@@ -316,13 +320,8 @@ const Navbar: React.FC = () => {
                                     ))}
                                 </div>
 
-                                <div className="border-t border-slate-100 my-4" />
-
                                 <div className="px-4 space-y-1">
-                                    <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                        {t('mobile.account')}
-                                    </p>
-
+                                   
                                     {[
                                         ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), href: '/orders', icon: <MapPin size={18} /> }] : []),
                                         { key: 'notifications', label: t('account.notifications'), href: '/notifications', icon: <Bell size={18} /> },

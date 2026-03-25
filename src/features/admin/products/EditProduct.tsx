@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle, Save } from "lucide-react";
 import {
     productsActions,
     selectProductsStatus,
@@ -95,7 +95,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
     const [validationError, setValidationError] = useState<string | null>(null);
-    
+
     // State for new tier managers
     const [deliveryTiers, setDeliveryTiers] = useState<DeliveryTierDto[]>([]);
     const [discountTiers, setDiscountTiers] = useState<DiscountTierDto[]>([]);
@@ -207,6 +207,29 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                         <p className="text-sm text-[#71717A]">Update inventory, pricing tiers, and media.</p>
                     </div>
                 </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/admin/products")}
+                        className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 transition-all active:scale-95"
+                    >
+                        Discard
+                    </button>
+                    <button
+                        type="submit"
+                        form="edit-product-form"
+                        disabled={status === "loading"}
+                        className="group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center gap-2.5 transition-all active:scale-95 border border-white/10"
+                    >
+                        {status === "loading" ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <Save size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
+                        )}
+                        <span>{status === "loading" ? "Saving..." : "Save Product"}</span>
+                    </button>
+                </div>
             </div>
 
             {/* Error Displays */}
@@ -220,7 +243,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="max-w-4xl mx-auto space-y-8 pb-24">
+            <form id="edit-product-form" onSubmit={handleSubmit(onSubmit, onInvalid)} className="max-w-4xl mx-auto space-y-8 pb-12">
 
                 {/* Basic Info */}
                 <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
@@ -289,7 +312,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                 {/* Advanced Tiers Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Discount Tiers Manager */}
-                    <DiscountTiersManager 
+                    <DiscountTiersManager
                         productId={productId}
                         finalPrice={dto.final_price}
                         onTiersChange={(tiers) => {
@@ -299,7 +322,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                     />
 
                     {/* Delivery Tiers Manager */}
-                    <DeliveryTiersManager 
+                    <DeliveryTiersManager
                         productId={productId}
                         onTiersChange={(tiers) => {
                             setDeliveryTiers(tiers);
@@ -433,24 +456,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                 </section>
 
-                {/* Fixed Footer Actions */}
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-4xl flex items-center justify-end gap-4 bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-2xl z-50">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/admin/products")}
-                        className="px-6 py-3 rounded-xl font-bold text-sm text-zinc-500 hover:bg-slate-100 transition-colors"
-                    >
-                        Discard Changes
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={status === "loading"}
-                        className="px-8 py-3 bg-black text-white rounded-xl font-bold text-sm hover:shadow-lg disabled:opacity-50 flex items-center gap-2 transition-all active:scale-95"
-                    >
-                        {status === "loading" && <Loader2 size={16} className="animate-spin" />}
-                        {status === "loading" ? "Updating..." : "Save Product"}
-                    </button>
-                </div>
+
             </form>
         </div>
     );

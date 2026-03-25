@@ -210,6 +210,8 @@ const RegisterWithOtp: React.FC = () => {
         otp_type: otp_type,
         phone_number: getFormattedPhone(),
         email: otp_type === "email" ? localValue.trim() : undefined,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
       })
     );
     startTimers();
@@ -225,7 +227,8 @@ const RegisterWithOtp: React.FC = () => {
         phone_number: getFormattedPhone(),
         email: otp_type === "email" ? (value || localValue.trim()) : undefined,
         otp_code: otp.trim(),
-        name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" "),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
       })
     );
   };

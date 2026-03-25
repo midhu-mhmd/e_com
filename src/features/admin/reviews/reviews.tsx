@@ -360,7 +360,7 @@ const ReviewsManagement: React.FC = () => {
                           type="text"
                           placeholder="Product..."
                           value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                           className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                         />
                       </div>
@@ -374,7 +374,7 @@ const ReviewsManagement: React.FC = () => {
                           type="text"
                           placeholder="Customer..."
                           value={customerFilter}
-                          onChange={(e) => setCustomerFilter(e.target.value)}
+                          onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
                           className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                         />
                       </div>
@@ -384,11 +384,12 @@ const ReviewsManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={filterRating}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setFilterRating(
                             e.target.value === "All" ? "All" : Number(e.target.value)
-                          )
-                        }
+                          );
+                          setPage(1);
+                        }}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="All">All Stars</option>
@@ -409,13 +410,16 @@ const ReviewsManagement: React.FC = () => {
                           type="text"
                           placeholder="Comment..."
                           value={commentFilter}
-                          onChange={(e) => setCommentFilter(e.target.value)}
+                          onChange={(e) => { setCommentFilter(e.target.value); setPage(1); }}
                           className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                         />
                       </div>
                     </td>
                   )}
                   
+                  {isVisible("visibility") && (
+                    <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
+                  )}
                   {isVisible("date") && (
                     <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
                   )}

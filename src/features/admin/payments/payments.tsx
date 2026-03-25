@@ -157,7 +157,6 @@ const PaymentManagement: React.FC = () => {
       if (!isNaN(max)) result = result.filter((p) => p.amount <= max);
     }
     return result;
-    return result;
   }, [payments, orderFilter, customerFilter, amountMin, amountMax]);
 
   // Export handler
@@ -260,13 +259,13 @@ const PaymentManagement: React.FC = () => {
             isColumnsOpen={isColumnsOpen}
             visibleColumns={visibleColumns}
             columnsRef={columnsRef}
-            onSearchChange={setSearchTerm}
-            onStatusChange={setStatusFilter}
-            onMethodChange={setMethodFilter}
-            onOrderFilterChange={setOrderFilter}
-            onCustomerFilterChange={setCustomerFilter}
-            onAmountMinChange={setAmountMin}
-            onAmountMaxChange={setAmountMax}
+            onSearchChange={(v) => { setSearchTerm(v); setPage(1); }}
+            onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+            onMethodChange={(v) => { setMethodFilter(v); setPage(1); }}
+            onOrderFilterChange={(v) => { setOrderFilter(v); setPage(1); }}
+            onCustomerFilterChange={(v) => { setCustomerFilter(v); setPage(1); }}
+            onAmountMinChange={(v) => { setAmountMin(v); setPage(1); }}
+            onAmountMaxChange={(v) => { setAmountMax(v); setPage(1); }}
             onToggleFilters={() => setShowFilters(!showFilters)}
             onToggleColumns={() => setIsColumnsOpen(!isColumnsOpen)}
             onToggleColumn={toggleColumn}
