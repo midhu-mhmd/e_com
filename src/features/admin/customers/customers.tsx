@@ -1217,49 +1217,6 @@ const CustomerManagement: React.FC = () => {
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            <button
-              onClick={showAllUsers}
-              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "All" && roleFilter === "All"
-                ? "bg-black text-white border-black"
-                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
-                }`}
-              title="Show all users"
-            >
-              <User size={14} /> All
-            </button>
-
-            <button
-              onClick={showAdmins}
-              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${roleFilter === "admin"
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
-                }`}
-              title="Show all admins"
-            >
-              <Shield size={14} /> Admins
-            </button>
-
-            <button
-              onClick={showActive}
-              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "Active"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
-                }`}
-              title="Show active users"
-            >
-              <CheckCircle2 size={14} /> Active
-            </button>
-
-            <button
-              onClick={showBlocked}
-              className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${statusFilter === "Blocked"
-                ? "bg-rose-600 text-white border-rose-600"
-                : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
-                }`}
-              title="Show blocked users"
-            >
-              <Ban size={14} /> Blocked
-            </button>
 
             <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
 

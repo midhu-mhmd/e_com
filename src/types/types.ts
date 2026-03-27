@@ -7,6 +7,7 @@ export interface SendOtpRequest {
   email?: string;
   first_name?: string;
   last_name?: string;
+  referral_code?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -17,6 +18,7 @@ export interface VerifyOtpRequest {
   name?: string;
   first_name?: string;
   last_name?: string;
+  referral_code?: string;
   // If your backend uses a session ID instead of just cookies
   otpSessionId?: string;
 }

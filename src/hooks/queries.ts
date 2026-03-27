@@ -1,4 +1,5 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
 import { bannerApi, type BannerDto } from "../features/admin/banners/bannerApi";
 import { productsApi, type ProductsQuery } from "../features/admin/products/productApi";
 import { profileApi } from "../features/user/profileApi";
@@ -75,10 +76,16 @@ export const useProductReviews = (id: number | undefined, limit: number = 10) =>
    User Profile Hook
    ══════════════════════════════════════════ */
 
-export const useUserProfile = (enabled: boolean = true) =>
-    useQuery({
+/**
+ * User profile hook — uses Redux state as initial data and only fetches if not present in Redux
+ */
+export const useUserProfile = (enabled: boolean = true) => {
+    const user = useSelector((state: any) => state.auth.user);
+    return useQuery({
         queryKey: ["userProfile"],
         queryFn: () => profileApi.getMe(),
-        enabled,
+        enabled: enabled && !user, // Only fetch if not already in Redux
         staleTime: 5 * 60 * 1000,
+        initialData: user || undefined,
     });
+};

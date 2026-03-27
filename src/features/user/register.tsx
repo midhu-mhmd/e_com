@@ -107,6 +107,7 @@ const RegisterWithOtp: React.FC = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [firstNameTouched, setFirstNameTouched] = useState(false);
   const [countryCode, setCountryCode] = useState("+971");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -212,6 +213,7 @@ const RegisterWithOtp: React.FC = () => {
         email: otp_type === "email" ? localValue.trim() : undefined,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
+        referral_code: referralCode.trim() || undefined,
       })
     );
     startTimers();
@@ -229,6 +231,7 @@ const RegisterWithOtp: React.FC = () => {
         otp_code: otp.trim(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
+        referral_code: referralCode.trim() || undefined,
       })
     );
   };
@@ -288,7 +291,7 @@ const RegisterWithOtp: React.FC = () => {
             {step === "input" && (
               <form onSubmit={onSendOtp} className="mt-6 space-y-5">
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label={t("auth.firstName", "First Name")}>
+                  <Field label={t("auth.firstName", "First Name")}> 
                     <div className="relative">
                       <User size={16} className={`absolute ${isArabic ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400`} />
                       <input
@@ -319,7 +322,18 @@ const RegisterWithOtp: React.FC = () => {
                                  focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
                     />
                   </Field>
+
                 </div>
+
+                <Field label={t("auth.referralCode", "Referral Code (optional)")}> 
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={e => setReferralCode(e.target.value)}
+                    placeholder={t("auth.referralCodePlaceholder", "Enter referral code (if any)")}
+                    className="w-full h-11 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none transition focus:border-cyan-600 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-gray-300"
+                  />
+                </Field>
 
                 <Field label={otp_type === "phone" ? t("auth.phoneNumber", "Phone number") : t("auth.email", "Email")}>
                   {otp_type === "phone" ? (

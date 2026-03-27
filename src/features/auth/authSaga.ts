@@ -28,6 +28,7 @@ function* handleSendOtp(action: ReturnType<typeof requestOtp>): Generator<any, a
     if (action.payload.email) payload.email = action.payload.email;
     if (action.payload.first_name) payload.first_name = action.payload.first_name;
     if (action.payload.last_name) payload.last_name = action.payload.last_name;
+    if (action.payload.referral_code) payload.referral_code = action.payload.referral_code;
 
     yield call(authApi.sendOtp, payload);
     yield put(setStep("otp"));
@@ -58,6 +59,7 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
     if (action.payload.name) payload.name = action.payload.name;
     if (action.payload.first_name) payload.first_name = action.payload.first_name;
     if (action.payload.last_name) payload.last_name = action.payload.last_name;
+    if (action.payload.referral_code) payload.referral_code = action.payload.referral_code;
 
     // ✅ verifies OTP & server returns access token + sets session cookie
     const verifyRes: { data: any } = yield call(authApi.verifyOtp, payload);

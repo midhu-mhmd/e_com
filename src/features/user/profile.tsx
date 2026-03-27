@@ -5,8 +5,11 @@ import {
     User, Mail, Phone, LogOut, Camera, Save, Loader2, Calendar,
     MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe, Star,
     ChevronRight, CheckCircle, Hash, Clock, Truck, XCircle, AlertCircle,
-    ChevronDown
+    ChevronDown, Gift, Copy, Share2, Users, ShoppingBag, Percent
 } from "lucide-react";
+import referralInviteImg from "../../assets/referral/referral_invite.png";
+import referralPurchaseImg from "../../assets/referral/referral_purchase.png";
+import referralRewardImg from "../../assets/referral/referral_reward.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { logout, setUser } from "../auth/authSlice";
 import { profileApi, type ProfileUpdatePayload } from "./profileApi";
@@ -24,7 +27,7 @@ import { useTranslation } from "react-i18next";
 /* ═══════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════ */
-type TabKey = "profile" | "orders" | "addresses" | "reviews";
+type TabKey = "profile" | "orders" | "addresses" | "reviews" | "referrals";
 
 const EMIRATES = [
     { value: "abu_dhabi", label: "Abu Dhabi" },
@@ -51,13 +54,8 @@ const ProfilePage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabKey>("profile");
     const [uploadingImage, setUploadingImage] = useState(false);
 
-    const { data: profileData, isLoading: loading, refetch } = useUserProfile(isAuthenticated);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            refetch();
-        }
-    }, [isAuthenticated, refetch]);
+    const { data: profileData, isLoading: loading } = useUserProfile(isAuthenticated);
+    // Removed useEffect that called refetch on mount to avoid double /me call
 
     // Force document direction to update dynamically based on language selection
     useEffect(() => {
@@ -142,6 +140,7 @@ const ProfilePage: React.FC = () => {
         { key: "orders", label: "My Orders", icon: <Package size={18} /> },
         { key: "reviews", label: "Reviews", icon: <Star size={18} /> },
         { key: "addresses", label: "Addresses", icon: <MapPin size={18} /> },
+        { key: "referrals", label: "Referrals", icon: <Gift size={18} /> },
     ];
 
     return (
@@ -249,6 +248,12 @@ const ProfilePage: React.FC = () => {
                                     key="addresses"
                                     onSuccess={(msg) => toast.show(msg, "success")}
                                     onError={(msg) => toast.show(msg, "error")}
+                                />
+                            )}
+                            {activeTab === "referrals" && (
+                                <ReferralTab
+                                    key="referrals"
+                                    user={displayUser}
                                 />
                             )}
                         </AnimatePresence>
@@ -1633,6 +1638,249 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                 onCancel={() => { if (!deleting) setDeleteId(null); }}
                 loading={deleting}
             />
+        </motion.div>
+    );
+};
+
+/* ═══════════════════════════════════════════════
+   Referral Tab
+   ═══════════════════════════════════════════════ */
+
+interface ReferralTabProps {
+    user: any;
+}
+
+const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
+    const { t } = useTranslation("profile");
+    const toast = useToast();
+    const [copied, setCopied] = useState(false);
+
+    // Prefer backend referral_code if present, else fallback to phone logic
+    let referralCode = user?.referral_code;
+    if (!referralCode) {
+        if (user?.phone_number) {
+            referralCode = `SIMAK${user.phone_number.replace(/[^0-9]/g, "").slice(-6)}`;
+        } else {
+            referralCode = "SIMAKFRESH";
+        }
+    }
+
+    const referralLink = `${window.location.origin}/register?ref=${referralCode}`;
+
+    const handleCopy = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            toast.show("Referral code copied!", "success");
+            setTimeout(() => setCopied(false), 2500);
+        } catch {
+            toast.show("Failed to copy", "error");
+        }
+    };
+
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Simak Fresh — Refer & Earn!",
+                    text: `Use my referral code ${referralCode} and get 20% OFF on your first order at Simak Fresh!`,
+                    url: referralLink,
+                });
+            } catch {
+                // User cancelled
+            }
+        } else {
+            handleCopy(referralLink);
+        }
+    };
+
+    const steps = [
+        {
+            num: "01",
+            title: "Invite a Friend",
+            desc: "Share your unique referral code with friends and family. Ask them to register on Simak Fresh.",
+            img: referralInviteImg,
+            gradient: "from-cyan-400 to-teal-400",
+        },
+        {
+            num: "02",
+            title: "Friend Makes First Purchase",
+            desc: "Your friend enters your referral code at checkout on their first order.",
+            img: referralPurchaseImg,
+            gradient: "from-violet-400 to-indigo-400",
+        },
+        {
+            num: "03",
+            title: "Both Get 20% OFF",
+            desc: "Your friend gets 20% OFF instantly! Once the order is delivered, you also receive a 20% discount coupon.",
+            img: referralRewardImg,
+            gradient: "from-amber-400 to-orange-400",
+        },
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+        >
+            {/* ── Hero Header ── */}
+            <div className="text-center mb-8 md:mb-10">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-2xl flex items-center justify-center">
+                    <Gift size={28} className="text-cyan-600" />
+                </div>
+                <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    Friends Who Refer<br />
+                    <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                        Stay Friends Forever
+                    </span>
+                </h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-3 max-w-sm mx-auto leading-relaxed">
+                    When you refer your friend to Simak Fresh, you get <strong className="text-slate-700">20% OFF</strong> on your next order and so does your friend. Then you both eat healthy ever after!
+                </p>
+            </div>
+
+            {/* ── Referral Code Card ── */}
+            <div className="bg-gradient-to-br from-cyan-500 via-cyan-600 to-teal-600 rounded-2xl p-5 md:p-6 mb-8 md:mb-10 relative overflow-hidden">
+                {/* Decorative blurs */}
+                <div className="absolute -top-10 -end-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+                <div className="absolute -bottom-10 -start-10 w-40 h-40 bg-cyan-300/10 rounded-full blur-3xl" />
+
+                <div className="relative z-10">
+                    <p className="text-cyan-100 text-[10px] md:text-[11px] font-bold uppercase tracking-widest mb-2">
+                        Your Referral Code
+                    </p>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="flex-1 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white font-mono text-lg md:text-xl font-black tracking-widest select-all">
+                            {referralCode}
+                        </div>
+                        <button
+                            onClick={() => handleCopy(referralCode)}
+                            className={`p-3 rounded-xl font-bold text-sm transition-all ${
+                                copied
+                                    ? "bg-emerald-400 text-white"
+                                    : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                            }`}
+                            title="Copy code"
+                        >
+                            {copied ? <CheckCircle size={20} /> : <Copy size={20} />}
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <button
+                            onClick={handleShare}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-cyan-700 rounded-xl font-bold text-sm hover:bg-cyan-50 transition-all shadow-lg shadow-black/10 active:scale-[0.97]"
+                        >
+                            <Share2 size={16} />
+                            Start Referring, Start Earning!
+                        </button>
+                        <button
+                            onClick={() => handleCopy(referralLink)}
+                            className="flex items-center justify-center gap-2 py-3 px-4 bg-white/15 backdrop-blur-sm text-white rounded-xl font-bold text-sm hover:bg-white/25 transition-all border border-white/20"
+                        >
+                            <Copy size={14} />
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── How it Works ── */}
+            <div className="mb-8 md:mb-10">
+                <h3 className="text-center text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-wider mb-6 md:mb-8">
+                    Here is How it{" "}
+                    <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Works</span>
+                </h3>
+
+                <div className="space-y-5 md:space-y-6">
+                    {steps.map((step, idx) => (
+                        <motion.div
+                            key={step.num}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.12, duration: 0.35 }}
+                            className="flex items-start gap-4 md:gap-5 group"
+                        >
+                            {/* Step Number */}
+                            <div className="flex flex-col items-center flex-shrink-0">
+                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white font-black text-sm md:text-base shadow-lg`}>
+                                    {step.num}
+                                </div>
+                                {idx < steps.length - 1 && (
+                                    <div className="w-0.5 h-8 md:h-10 bg-gradient-to-b from-slate-200 to-transparent mt-2" />
+                                )}
+                            </div>
+
+                            {/* Card */}
+                            <div className="flex-1 bg-slate-50 hover:bg-white border border-slate-100 hover:border-slate-200 rounded-2xl p-4 md:p-5 transition-all hover:shadow-sm group-hover:-translate-y-0.5">
+                                <div className="flex items-start gap-3 md:gap-4">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-white border border-slate-100 flex-shrink-0 shadow-sm">
+                                        <img
+                                            src={step.img}
+                                            alt={step.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm md:text-base font-bold text-slate-900 mb-1">
+                                            {step.title}
+                                        </h4>
+                                        <p className="text-[11px] md:text-xs text-slate-500 leading-relaxed">
+                                            {step.desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── Second CTA ── */}
+            <div className="text-center mb-8 md:mb-10">
+                <button
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-cyan-200/50 transition-all active:scale-[0.97]"
+                >
+                    <Gift size={18} />
+                    Start Referring, Start Earning!
+                </button>
+            </div>
+
+            {/* ── Stats (optional quick-look) ── */}
+            <div className="grid grid-cols-3 gap-3 mb-8 md:mb-10">
+                {[
+                    { icon: <Users size={18} />, label: "Friends Invited", value: "—", bg: "bg-cyan-50", color: "text-cyan-600" },
+                    { icon: <ShoppingBag size={18} />, label: "Successful", value: "—", bg: "bg-emerald-50", color: "text-emerald-600" },
+                    { icon: <Percent size={18} />, label: "Coupons Earned", value: "—", bg: "bg-amber-50", color: "text-amber-600" },
+                ].map((stat, i) => (
+                    <div key={i} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 md:p-4 text-center">
+                        <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-2 ${stat.color}`}>
+                            {stat.icon}
+                        </div>
+                        <div className="text-lg md:text-xl font-black text-slate-900">{stat.value}</div>
+                        <div className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{stat.label}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Terms & Conditions ── */}
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 md:p-5">
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <AlertCircle size={14} className="text-slate-400" />
+                    Terms and Conditions
+                </h4>
+                <ol className="list-decimal list-inside text-[10px] md:text-[11px] text-slate-500 space-y-1.5 leading-relaxed">
+                    <li>Your 20% Discount Coupon is valid for <strong className="text-slate-600">3 months</strong> from the date of issue and can be used only once.</li>
+                    <li>Maximum discount that can be availed is <strong className="text-slate-600">AED 20</strong>.</li>
+                    <li>This offer is <strong className="text-slate-600">ONLY valid in UAE</strong>.</li>
+                    <li>This offer is <strong className="text-slate-600">not transferable</strong>.</li>
+                    <li>Simak Fresh reserves the right to modify or terminate this program at any time.</li>
+                    <li>The referral code must be applied at checkout during the friend's <strong className="text-slate-600">first purchase</strong>.</li>
+                </ol>
+            </div>
         </motion.div>
     );
 };

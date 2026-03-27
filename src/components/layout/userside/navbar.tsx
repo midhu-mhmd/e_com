@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     ShoppingCart,
@@ -22,10 +22,8 @@ import { useTranslation } from 'react-i18next';
 // ✅ your hook (user-side language + rtl)
 import useLanguageToggle from '../../../hooks/useLanguageToggle';
 
-// ✅ Logo images for each language
-import logoEn from '../../../assets/SIMAK FRESH FINAL PNG-01.png';
-import logoAr from '../../../assets/SIMAK FRESH FINAL PNG-02.png';
-import logoCn from '../../../assets/SIMAK FRESH FINAL PNG-03.png';
+// ✅ Logo
+import simakLogo from '../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png';
 
 const Navbar: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -39,14 +37,7 @@ const Navbar: React.FC = () => {
     const { t } = useTranslation();
     const { setLanguage, currentLanguage, isArabic } = useLanguageToggle();
 
-    // ✅ Pick the right logo based on current language
-    const currentLogo = useMemo(() => {
-        switch (currentLanguage) {
-            case 'ar': return logoAr;
-            case 'cn': return logoCn;
-            default: return logoEn;
-        }
-    }, [currentLanguage]);
+
 
     useEffect(() => {
         const handleScroll = () => {
@@ -121,12 +112,20 @@ const Navbar: React.FC = () => {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
                     {/* Logo */}
-                    <Link to="/" className="shrink-0 flex items-center group">
+                    <Link to="/" className="shrink-0 flex items-center gap-2 group">
                         <img
-                            src={currentLogo}
+                            src={simakLogo}
                             alt="SIMAK FRESH"
                             className="h-10 w-auto object-contain"
                         />
+                        <div className="flex flex-col justify-center">
+                            <span className="text-xl font-black tracking-wider text-slate-800 uppercase leading-none">
+                                SIMAK <span className="text-cyan-600">FRESH</span>
+                            </span>
+                            <span className="text-[9px] sm:text-[10px] font-semibold tracking-[0.2em] text-cyan-700/80 uppercase mt-1 leading-none">
+                                Signature of Quality
+                            </span>
+                        </div>
                     </Link>
 
                     {/* Actions */}
@@ -301,7 +300,7 @@ const Navbar: React.FC = () => {
 
                                 {/* Navigation Links */}
                                 <div className="px-4 space-y-1">
-                                    {[                                        ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
+                                    {[...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
                                     ].map((link) => (
                                         <Link
                                             key={link.key}
@@ -321,7 +320,7 @@ const Navbar: React.FC = () => {
                                 </div>
 
                                 <div className="px-4 space-y-1">
-                                   
+
                                     {[
                                         ...(isAuthenticated ? [{ key: 'track', label: t('top.trackOrder'), href: '/orders', icon: <MapPin size={18} /> }] : []),
                                         { key: 'notifications', label: t('account.notifications'), href: '/notifications', icon: <Bell size={18} /> },
