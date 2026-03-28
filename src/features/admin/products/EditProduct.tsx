@@ -13,6 +13,8 @@ import { productsApi } from "./productApi";
 import DeliveryTiersManager from "./DeliveryTiersManager";
 import DiscountTiersManager from "./DiscountTiersManager";
 import type { DeliveryTierDto, DiscountTierDto } from "./tierApi";
+import ProductLocationsField from "./ProductLocationsField";
+import { extractProductLocationValues } from "./productLocationOptions";
 
 /* ─────────────────────────────────────────────
    Extended Interface for Form Handling
@@ -95,6 +97,11 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
     const [validationError, setValidationError] = useState<string | null>(null);
+    const [selectedLocations, setSelectedLocations] = useState<string[]>(() =>
+        extractProductLocationValues(
+            dto.available_locations ?? dto.available_emirates ?? dto.service_areas
+        )
+    );
 
     // State for new tier managers
     const [deliveryTiers, setDeliveryTiers] = useState<DeliveryTierDto[]>([]);
@@ -123,6 +130,11 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
             });
             setExistingImages(dto.images || []);
             setExistingVideos(dto.videos || []);
+            setSelectedLocations(
+                extractProductLocationValues(
+                    dto.available_locations ?? dto.available_emirates ?? dto.service_areas
+                )
+            );
         }
     }, [dto, reset]);
 
@@ -193,6 +205,16 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         }
 
         dispatch(productsActions.updateProductRequest({ id: productId, data: formData }));
+    };
+
+    const toggleLocation = (location: string) => {
+        setSelectedLocations((prev) =>
+            Array.isArray(prev)
+                ? prev.includes(location)
+                    ? prev.filter((item) => item !== location)
+                    : [...prev, location]
+                : [location]
+        );
     };
 
     return (
@@ -380,6 +402,14 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                             className="w-full px-4 py-3 bg-[#FAFAFA] border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-black outline-none transition-all"
                         />
                     </div>
+                </section>
+
+                <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
+                    <h2 className="text-lg font-bold">Availability by Location</h2>
+                    <ProductLocationsField
+                        selectedValues={selectedLocations}
+                        onToggle={toggleLocation}
+                    />
                 </section>
 
                 {/* Media Section */}

@@ -19,6 +19,7 @@ import {
     selectProductsError,
     selectProducts,
 } from "./productsSlice";
+import ProductLocationsField from "./ProductLocationsField";
 
 /* ────────────────────── Types ────────────────────── */
 
@@ -166,6 +167,18 @@ const AddProduct: React.FC = () => {
         setVideoRows((prev) =>
             prev.map((r) => (r.id === id ? { ...r, file } : r))
         );
+
+    const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+
+    const toggleLocation = useCallback((location: string) => {
+        setSelectedLocations((prev) =>
+            Array.isArray(prev)
+                ? prev.includes(location)
+                    ? prev.filter((item) => item !== location)
+                    : [...prev, location]
+                : [location]
+        );
+    }, []);
 
     /* ── Main image state ── */
     const [mainImage, setMainImage] = useState<File | null>(null);
@@ -456,6 +469,13 @@ const AddProduct: React.FC = () => {
                             Available for purchase
                         </label>
                     </div>
+                </Section>
+
+                <Section title="Availability by Location">
+                    <ProductLocationsField
+                        selectedValues={selectedLocations}
+                        onToggle={toggleLocation}
+                    />
                 </Section>
 
                 {/* ─── 4. Main Image ─── */}

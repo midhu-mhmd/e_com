@@ -58,6 +58,9 @@ export interface ProductDto {
   videos: ProductVideoDto[];
   discount_tiers: DiscountTierDto[];
   delivery_tiers: DeliveryTierDto[];
+  available_locations?: string[];
+  available_emirates?: string[];
+  service_areas?: Array<string | Record<string, unknown>>;
   average_rating: number;
   total_reviews: number;
   created_at: string;
