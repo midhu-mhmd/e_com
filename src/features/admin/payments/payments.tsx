@@ -14,7 +14,6 @@ import {
   selectPayments,
   selectPaymentsStatus,
   selectPaymentsError,
-  selectPaymentsTotal,
 } from "./paymentsSlice";
 import type { Payment, PaymentStatus, PaymentMethod } from "./paymentsSlice";
 
@@ -41,6 +40,7 @@ const COLUMNS: ColumnDef[] = [
 
 /* --- TYPES --- */
 type ViewType = "dashboard" | "payments" | "refunds" | "settlements" | "cod" | "disputes";
+const FETCH_ALL_PAYMENTS_LIMIT = 1000;
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -57,7 +57,6 @@ const PaymentManagement: React.FC = () => {
   const dispatch = useDispatch();
 
   const payments = useSelector(selectPayments);
-  const totalCount = useSelector(selectPaymentsTotal);
   const status = useSelector(selectPaymentsStatus);
   const error = useSelector(selectPaymentsError);
 
@@ -103,24 +102,14 @@ const PaymentManagement: React.FC = () => {
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
   useEffect(() => {
-    const offset = (page - 1) * limit;
     dispatch(
       paymentsActions.fetchPaymentsRequest({
-        q: debouncedSearch || undefined,
-        payment_status:
-          statusFilter === "All"
-            ? undefined
-            : statusFilter.toLowerCase(),
-        payment_method:
-          methodFilter === "All"
-            ? undefined
-            : methodFilter.toLowerCase(),
-        page,
-        limit,
-        offset,
+        page: 1,
+        limit: FETCH_ALL_PAYMENTS_LIMIT,
+        offset: 0,
       })
     );
-  }, [dispatch, debouncedSearch, statusFilter, methodFilter, page, limit]);
+  }, [dispatch]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -135,9 +124,24 @@ const PaymentManagement: React.FC = () => {
 
   const hasActiveFilters = !!(searchTerm || statusFilter !== "All" || methodFilter !== "All" || orderFilter || customerFilter || amountMin || amountMax);
 
-  // Client-side filtering for columns not supported by API
+  // Filter from the full loaded dataset, then paginate the filtered rows locally.
   const filteredPayments = useMemo(() => {
     let result = payments;
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
+      result = result.filter((p) =>
+        p.paymentId.toLowerCase().includes(query) ||
+        p.orderNumber.toLowerCase().includes(query) ||
+        p.customerName.toLowerCase().includes(query) ||
+        p.customerEmail.toLowerCase().includes(query)
+      );
+    }
+    if (statusFilter !== "All") {
+      result = result.filter((p) => p.paymentStatus === statusFilter);
+    }
+    if (methodFilter !== "All") {
+      result = result.filter((p) => p.paymentMethod === methodFilter);
+    }
     if (orderFilter) {
       result = result.filter((p) =>
         p.orderNumber.toLowerCase().includes(orderFilter.toLowerCase())
@@ -157,7 +161,13 @@ const PaymentManagement: React.FC = () => {
       if (!isNaN(max)) result = result.filter((p) => p.amount <= max);
     }
     return result;
-  }, [payments, orderFilter, customerFilter, amountMin, amountMax]);
+  }, [payments, debouncedSearch, statusFilter, methodFilter, orderFilter, customerFilter, amountMin, amountMax]);
+
+  const totalFilteredCount = filteredPayments.length;
+  const paginatedPayments = useMemo(
+    () => filteredPayments.slice((page - 1) * limit, page * limit),
+    [filteredPayments, page, limit]
+  );
 
   // Export handler
   const handleExport = () => {
@@ -239,8 +249,8 @@ const PaymentManagement: React.FC = () => {
 
         {currentView === "payments" && (
           <PaymentsListView
-            payments={filteredPayments}
-            totalCount={totalCount}
+            payments={paginatedPayments}
+            totalCount={totalFilteredCount}
             page={page}
             limit={limit}
             onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
@@ -424,7 +434,12 @@ const PaymentsListView = ({
   onPageChange: (p: number) => void;
   onSelect: (p: Payment) => void;
   onExport: () => void;
-}) => (
+}) => {
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
+
+  return (
   <div className="animate-in fade-in space-y-4">
     <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
       {/* Header */}
@@ -694,7 +709,7 @@ const PaymentsListView = ({
       <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
         <div className="flex items-center gap-4">
           <div className="text-[11px] text-[#A1A1AA] font-medium">
-            Showing {payments.length} of {totalCount} transactions
+            Showing {visibleStart}-{visibleEnd} of {totalCount} transactions
           </div>
           <select
             value={limit}
@@ -715,10 +730,10 @@ const PaymentsListView = ({
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="text-xs font-bold px-2">Page {page}</span>
+          <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
           <button
             onClick={() => onPageChange(page + 1)}
-            disabled={payments.length < limit || status === "loading"}
+            disabled={page >= totalPages || status === "loading"}
             className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight size={14} />
@@ -727,7 +742,8 @@ const PaymentsListView = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ── 3. PAYMENT DETAIL DRAWER ── */
 const PaymentDetailDrawer = ({

@@ -37,6 +37,7 @@ import type { Product } from "./productsSlice";
 
 /* --- LOCAL UI TYPES --- */
 type StatusFilter = "All" | "Active" | "Draft" | "Out of Stock";
+const FETCH_ALL_PRODUCTS_LIMIT = 1000;
 
 /* --- Column definitions --- */
 type ColumnKey =
@@ -139,20 +140,16 @@ const ProductManagement: React.FC = () => {
 
     const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-    // Fetch when params change
+    // Fetch the full dataset once, then filter + paginate locally.
     useEffect(() => {
-        const offset = (page - 1) * limit;
         dispatch(
             productsActions.fetchProductsRequest({
-                q: debouncedSearch || undefined,
-                status: statusFilter === "All" ? undefined : statusFilter,
-                category: categoryFilter || undefined,
-                page,
-                limit,
-                offset,
+                page: 1,
+                limit: FETCH_ALL_PRODUCTS_LIMIT,
+                offset: 0,
             })
         );
-    }, [dispatch, debouncedSearch, statusFilter, categoryFilter, page, limit]);
+    }, [dispatch]);
 
     const handleReset = () => {
         setSearchTerm("");
@@ -168,9 +165,24 @@ const ProductManagement: React.FC = () => {
         setPage(1);
     };
 
-    // Client-side filtering for columns not supported by API
+    // Filter from the full loaded dataset, then paginate the filtered rows locally.
     const filteredProducts = useMemo(() => {
         let result = products;
+        if (debouncedSearch) {
+            const query = debouncedSearch.toLowerCase();
+            result = result.filter((p: Product) =>
+                p.name.toLowerCase().includes(query) ||
+                p.slug.toLowerCase().includes(query) ||
+                p.categoryName.toLowerCase().includes(query) ||
+                p.sku.toLowerCase().includes(query)
+            );
+        }
+        if (statusFilter !== "All") {
+            result = result.filter((p: Product) => p.status === statusFilter);
+        }
+        if (categoryFilter) {
+            result = result.filter((p: Product) => String(p.categoryId) === categoryFilter);
+        }
         if (minPrice) {
             const min = parseFloat(minPrice);
             if (!isNaN(min)) result = result.filter((p: Product) => p.finalPrice >= min);
@@ -202,7 +214,7 @@ const ProductManagement: React.FC = () => {
             );
         }
         return result;
-    }, [products, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
+    }, [products, debouncedSearch, statusFilter, categoryFilter, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
 
     // Unique categories From data for dropdown (id + name pairs)
     const uniqueCategories = useMemo(() => {
@@ -219,6 +231,15 @@ const ProductManagement: React.FC = () => {
         () => filteredProducts.find((p: Product) => p.id === selectedProductId) ?? null,
         [filteredProducts, selectedProductId]
     );
+
+    const totalFilteredCount = filteredProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
+    const paginatedProducts = useMemo(
+        () => filteredProducts.slice((page - 1) * limit, page * limit),
+        [filteredProducts, page, limit]
+    );
+    const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
+    const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedProducts.length, totalFilteredCount);
 
     const handleDelete = (id: number) => {
         if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
@@ -558,7 +579,7 @@ const ProductManagement: React.FC = () => {
                                     </tr>
                                 ))
                             ) : (
-                                filteredProducts.map((p: Product, index: number) => (
+                                paginatedProducts.map((p: Product, index: number) => (
                                     <tr
                                         key={p.id}
                                         className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
@@ -728,7 +749,7 @@ const ProductManagement: React.FC = () => {
                         </tbody>
                     </table>
 
-                    {status !== "loading" && products.length === 0 && (
+                    {status !== "loading" && totalFilteredCount === 0 && (
                         <div className="py-20 text-center space-y-3">
                             <Package className="mx-auto text-[#D4D4D8]" size={32} />
                             <p className="text-sm font-bold text-[#18181B]">No products found</p>
@@ -746,7 +767,7 @@ const ProductManagement: React.FC = () => {
                 <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
                     <div className="flex items-center gap-4">
                         <div className="text-[11px] text-[#A1A1AA] font-medium">
-                            Showing {products.length} of {totalCount} products
+                            Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} products
                         </div>
                         <select
                             value={limit}
@@ -767,10 +788,10 @@ const ProductManagement: React.FC = () => {
                         >
                             <ChevronLeft size={14} />
                         </button>
-                        <span className="text-xs font-bold px-2">Page {page}</span>
+                        <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
                         <button
                             onClick={() => setPage((p) => p + 1)}
-                            disabled={products.length < limit || status === "loading"}
+                            disabled={page >= totalPages || status === "loading"}
                             className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronRight size={14} />

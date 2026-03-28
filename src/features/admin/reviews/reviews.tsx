@@ -64,6 +64,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "updated", label: "Updated", icon: <Calendar size={12} />, defaultVisible: false },
   { key: "actions", label: "Actions", defaultVisible: true, alwaysVisible: true },
 ];
+const FETCH_ALL_REVIEWS_LIMIT = 1000;
 
  
 
@@ -127,18 +128,16 @@ const ReviewsManagement: React.FC = () => {
 
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-  // Fetch when params change
+  // Fetch the full dataset once, then filter + paginate locally.
   useEffect(() => {
-    const offset = (page - 1) * limit;
     dispatch(
       reviewsActions.fetchReviewsRequest({
-        rating: filterRating === "All" ? undefined : filterRating,
-        page,
-        limit,
-        offset,
+        page: 1,
+        limit: FETCH_ALL_REVIEWS_LIMIT,
+        offset: 0,
       })
     );
-  }, [dispatch, debouncedSearch, filterRating, page, limit]);
+  }, [dispatch]);
 
   const handleReset = () => {
     setSearchTerm("");
@@ -148,13 +147,16 @@ const ReviewsManagement: React.FC = () => {
     setPage(1);
   };
 
-  // Client-side filtering for columns not supported by API
+  // Filter from the full loaded dataset, then paginate the filtered rows locally.
   const filteredReviews = useMemo(() => {
     let result = reviews;
     if (debouncedSearch) {
       result = result.filter((r) =>
         r.productName.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
+    }
+    if (filterRating !== "All") {
+      result = result.filter((r) => r.rating === filterRating);
     }
     if (customerFilter) {
       result = result.filter((r) =>
@@ -173,6 +175,15 @@ const ReviewsManagement: React.FC = () => {
     () => filteredReviews.find((r) => r.id === selectedReviewId) ?? null,
     [filteredReviews, selectedReviewId]
   );
+
+  const totalFilteredCount = filteredReviews.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
+  const paginatedReviews = useMemo(
+    () => filteredReviews.slice((page - 1) * limit, page * limit),
+    [filteredReviews, page, limit]
+  );
+  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedReviews.length, totalFilteredCount);
 
   // Export handler
   const handleExport = () => {
@@ -455,7 +466,7 @@ const ReviewsManagement: React.FC = () => {
                   </tr>
                 ))
               ) : (
-                filteredReviews.map((r, index) => (
+                paginatedReviews.map((r, index) => (
                   <tr key={r.id} className="group hover:bg-[#FBFBFA] transition-colors">
                     {isVisible("index") && (
                       <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
@@ -552,13 +563,11 @@ const ReviewsManagement: React.FC = () => {
                                 toast.show(err?.response?.data?.detail || "Failed to toggle visibility", "error");
                               } finally {
                                 setTogglingId(null);
-                                const offset = (page - 1) * limit;
                                 dispatch(
                                   reviewsActions.fetchReviewsRequest({
-                                    rating: filterRating === "All" ? undefined : filterRating,
-                                    page,
-                                    limit,
-                                    offset,
+                                    page: 1,
+                                    limit: FETCH_ALL_REVIEWS_LIMIT,
+                                    offset: 0,
                                   })
                                 );
                               }
@@ -588,7 +597,7 @@ const ReviewsManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && filteredReviews.length === 0 && (
+          {status !== "loading" && totalFilteredCount === 0 && (
             <div className="py-20 text-center space-y-3">
               <MessageSquare className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No reviews found</p>
@@ -607,7 +616,7 @@ const ReviewsManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {filteredReviews.length} of {totalCount} reviews
+              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} reviews
             </div>
             <select
               value={limit}
@@ -628,10 +637,10 @@ const ReviewsManagement: React.FC = () => {
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-xs font-bold px-2">Page {page}</span>
+            <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
             <button
               onClick={() => setPage((p) => p + 1)}
-              disabled={reviews.length < limit || status === "loading"}
+              disabled={page >= totalPages || status === "loading"}
               className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />

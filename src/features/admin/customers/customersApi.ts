@@ -9,6 +9,7 @@ export interface UserDto {
   email: string | null;
   phone_number: string | null;
   role: "user" | "admin" | "staff";
+  status?: string | null;
   is_active: boolean;
   is_email_verified: boolean;
   is_phone_verified: boolean;

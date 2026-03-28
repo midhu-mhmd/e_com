@@ -69,6 +69,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "status", label: "Status", defaultVisible: true },
   { key: "updated", label: "Last seen", defaultVisible: true },
 ];
+const FETCH_ALL_CARTS_LIMIT = 1000;
 
 /* ══════════════════════════════════════════
    MAIN COMPONENT
@@ -132,18 +133,16 @@ const CartManagement: React.FC = () => {
 
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-  /* --- Fetch --- */
+  /* --- Fetch full carts list once, then filter + paginate locally --- */
   useEffect(() => {
-    const offset = (page - 1) * limit;
     dispatch(
       adminCartsActions.fetchCartsRequest({
-        q: debouncedSearch || undefined,
-        page,
-        limit,
-        offset,
+        page: 1,
+        limit: FETCH_ALL_CARTS_LIMIT,
+        offset: 0,
       })
     );
-  }, [dispatch, debouncedSearch, page, limit]);
+  }, [dispatch]);
 
   const handleReset = () => {
     setSearchTerm("");
@@ -151,11 +150,39 @@ const CartManagement: React.FC = () => {
     setPage(1);
   };
 
-  /* --- Client-side status filter (status not sent to API) --- */
+  /* --- Filter from the full loaded dataset, then paginate locally --- */
   const filteredCarts = useMemo(() => {
-    if (statusFilter === "All") return carts;
-    return carts.filter(c => getCartStatus(c.updatedAt) === statusFilter);
-  }, [carts, statusFilter]);
+    let result = carts;
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
+      result = result.filter((c) =>
+        String(c.id).includes(query) ||
+        String(c.userId).includes(query)
+      );
+    }
+    if (statusFilter !== "All") {
+      result = result.filter(c => getCartStatus(c.updatedAt) === statusFilter);
+    }
+    return result;
+  }, [carts, debouncedSearch, statusFilter]);
+
+  const totalFilteredCount = filteredCarts.length;
+  const totalCartPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
+  const paginatedCarts = useMemo(
+    () => filteredCarts.slice((page - 1) * limit, page * limit),
+    [filteredCarts, page, limit]
+  );
+  const totalItemPages = Math.max(1, Math.ceil(allItems.length / limit));
+  const paginatedItems = useMemo(
+    () => allItems.slice((page - 1) * limit, page * limit),
+    [allItems, page, limit]
+  );
+  const visibleStart = viewMode === "carts"
+    ? (totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1)
+    : (allItems.length === 0 ? 0 : (page - 1) * limit + 1);
+  const visibleEnd = viewMode === "carts"
+    ? (totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedCarts.length, totalFilteredCount))
+    : (allItems.length === 0 ? 0 : Math.min((page - 1) * limit + paginatedItems.length, allItems.length));
 
   /* --- Stats --- */
   const stats = useMemo(() => {
@@ -317,7 +344,7 @@ const CartManagement: React.FC = () => {
             </div>
 
             <button
-              onClick={() => dispatch(adminCartsActions.fetchCartsRequest({ page, limit }))}
+              onClick={() => dispatch(adminCartsActions.fetchCartsRequest({ page: 1, limit: FETCH_ALL_CARTS_LIMIT, offset: 0 }))}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEEEE] rounded-xl text-xs font-bold hover:bg-[#FAFAFA] transition-colors"
             >
               <RefreshCcw size={13} className={status === "loading" ? "animate-spin" : ""} /> Refresh
@@ -355,7 +382,7 @@ const CartManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EEEEEE]">
-                {status === "loading" && filteredCarts.length === 0
+                {status === "loading" && totalFilteredCount === 0
                   ? Array.from({ length: limit }).map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       <td className="px-5 py-4"><div className="h-4 w-8 bg-gray-100 rounded mx-auto" /></td>
@@ -368,7 +395,7 @@ const CartManagement: React.FC = () => {
                       <td className="px-5 py-4"><div className="h-6 w-6 bg-gray-100 rounded ml-auto" /></td>
                     </tr>
                   ))
-                  : filteredCarts.map((cart, index) => {
+                  : paginatedCarts.map((cart, index) => {
                     const cartStatus = getCartStatus(cart.updatedAt);
                     return (
                       <tr
@@ -434,7 +461,7 @@ const CartManagement: React.FC = () => {
               </tbody>
             </table>
 
-            {status !== "loading" && filteredCarts.length === 0 && (
+            {status !== "loading" && totalFilteredCount === 0 && (
               <div className="py-20 text-center space-y-3">
                 <ShoppingCart className="mx-auto text-[#D4D4D8]" size={32} />
                 <p className="text-sm font-bold text-[#18181B]">No carts found</p>
@@ -481,7 +508,7 @@ const CartManagement: React.FC = () => {
                       <td className="px-5 py-4"><div className="h-4 w-20 bg-gray-100 rounded" /></td>
                     </tr>
                   ))
-                  : allItems.slice((page - 1) * limit, page * limit).map((item, index) => (
+                  : paginatedItems.map((item, index) => (
                     <tr
                       key={`${item.cartId}-${item.id || index}`}
                       className="group hover:bg-[#FBFBFA] transition-colors"
@@ -540,8 +567,8 @@ const CartManagement: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
               {viewMode === "carts"
-                ? `Showing ${filteredCarts.length} of ${totalCount} carts`
-                : `Showing ${allItems.length} total items`
+                ? `Showing ${visibleStart}-${visibleEnd} of ${totalFilteredCount} carts`
+                : `Showing ${visibleStart}-${visibleEnd} of ${allItems.length} items`
               }
             </div>
             <select
@@ -563,10 +590,12 @@ const CartManagement: React.FC = () => {
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-xs font-bold px-2">Page {page}</span>
+            <span className="text-xs font-bold px-2">
+              Page {page} of {viewMode === "carts" ? totalCartPages : totalItemPages}
+            </span>
             <button
               onClick={() => setPage(p => p + 1)}
-              disabled={(viewMode === "carts" ? filteredCarts : allItems).length < limit || status === "loading"}
+              disabled={(viewMode === "carts" ? page >= totalCartPages : page >= totalItemPages) || status === "loading"}
               className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />

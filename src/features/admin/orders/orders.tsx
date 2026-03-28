@@ -44,6 +44,7 @@ import type { Order, OrderStatus, PaymentStatus } from "./ordersSlice";
 /* --- FILTER TYPES --- */
 type FilterOrderStatus = OrderStatus | "All";
 type FilterPaymentStatus = PaymentStatus | "All";
+const FETCH_ALL_ORDERS_LIMIT = 1000;
 
 /* --- Column definitions --- */
 type ColumnKey =
@@ -154,18 +155,14 @@ const OrderManagement: React.FC = () => {
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
   useEffect(() => {
-    const offset = (page - 1) * limit;
     dispatch(
       ordersActions.fetchOrdersRequest({
-        q: debouncedSearch || undefined,
-        status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
-        payment_status: paymentFilter === "All" ? undefined : paymentFilter.toLowerCase(),
-        page,
-        limit,
-        offset,
+        page: 1,
+        limit: FETCH_ALL_ORDERS_LIMIT,
+        offset: 0,
       })
     );
-  }, [dispatch, debouncedSearch, statusFilter, paymentFilter, page, limit]);
+  }, [dispatch]);
 
   // Fetch dashboard analytics for orders page
   useEffect(() => {
@@ -217,9 +214,23 @@ const OrderManagement: React.FC = () => {
     setPage(1);
   };
 
-  // Client-side filtering for columns not supported by API
+  // Filter from the full loaded dataset, then paginate the filtered rows locally.
   const filteredOrders = useMemo(() => {
     let result = orders;
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
+      result = result.filter((o) =>
+        o.orderNumber.toLowerCase().includes(query) ||
+        (o.shippingAddress.fullName || "").toLowerCase().includes(query) ||
+        (o.shippingAddress.phoneNumber || "").toLowerCase().includes(query)
+      );
+    }
+    if (statusFilter !== "All") {
+      result = result.filter((o) => o.status === statusFilter);
+    }
+    if (paymentFilter !== "All") {
+      result = result.filter((o) => o.paymentStatus === paymentFilter);
+    }
     if (customerFilter) {
       result = result.filter((o) =>
         (o.shippingAddress.fullName || "").toLowerCase().includes(customerFilter.toLowerCase())
@@ -251,7 +262,7 @@ const OrderManagement: React.FC = () => {
       );
     }
     return result;
-  }, [orders, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
+  }, [orders, debouncedSearch, statusFilter, paymentFilter, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
 
   // Stats
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
@@ -266,6 +277,15 @@ const OrderManagement: React.FC = () => {
     [...new Set(orders.map((o) => o.deliverySlot).filter(Boolean) as string[])],
     [orders]
   );
+
+  const totalFilteredCount = filteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
+  const paginatedOrders = useMemo(
+    () => filteredOrders.slice((page - 1) * limit, page * limit),
+    [filteredOrders, page, limit]
+  );
+  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedOrders.length, totalFilteredCount);
 
   // Export handler
   const handleExport = () => {
@@ -669,7 +689,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-4"><div className="h-8 w-8 bg-gray-100 rounded-lg ml-auto" /></td>
                   </tr>
                 ))
-                : filteredOrders.map((order, index) => (
+                : paginatedOrders.map((order, index) => (
                   <tr
                     key={order.id}
                     className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
@@ -794,7 +814,7 @@ const OrderManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && orders.length === 0 && (
+          {status !== "loading" && totalFilteredCount === 0 && (
             <div className="py-20 text-center space-y-3">
               <ShoppingBag className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No orders found</p>
@@ -813,7 +833,7 @@ const OrderManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {filteredOrders.length} of {totalCount} orders
+              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} orders
             </div>
             <select
               value={limit}
@@ -838,10 +858,10 @@ const OrderManagement: React.FC = () => {
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-xs font-bold px-2">Page {page}</span>
+            <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
             <button
               onClick={() => setPage((p) => p + 1)}
-              disabled={orders.length < limit || status === "loading"}
+              disabled={page >= totalPages || status === "loading"}
               className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />

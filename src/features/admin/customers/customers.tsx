@@ -1,6 +1,5 @@
 import React, {
   useCallback,
-  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -100,16 +99,7 @@ const COLUMNS: ColumnDef[] = [
 
 type StatusFilter = "All" | "Active" | "Blocked";
 type RoleFilter = "All" | "user" | "admin";
-
-// Simple debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const handler = window.setTimeout(() => setDebouncedValue(value), delay);
-    return () => window.clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-}
+const FETCH_ALL_USERS_LIMIT = 1000;
 
 /* ─────────────────────────────
    Memo Sub-components
@@ -896,10 +886,6 @@ const CustomerManagement: React.FC = () => {
     }
   }, []);
 
-  // smoother typing
-  const deferredSearchTerm = useDeferredValue(searchTerm);
-  const debouncedSearch = useDebounce(deferredSearchTerm, 500);
-
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
     const init = {} as Record<ColumnKey, boolean>;
@@ -930,18 +916,14 @@ const CustomerManagement: React.FC = () => {
 
   // Fetch when params change (includes showDeleted)
   useEffect(() => {
-    const offset = (page - 1) * limit;
     dispatch(
       customersActions.fetchCustomersRequest({
-        q: debouncedSearch || undefined,
-        status: statusFilter === "All" ? undefined : statusFilter.toLowerCase(),
-        role: roleFilter === "All" ? undefined : roleFilter,
-        page,
-        limit,
-        offset,
+        page: 1,
+        limit: FETCH_ALL_USERS_LIMIT,
+        offset: 0,
       })
     );
-  }, [dispatch, debouncedSearch, statusFilter, roleFilter, page, limit, showDeleted]);
+  }, [dispatch, showDeleted]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
@@ -952,9 +934,31 @@ const CustomerManagement: React.FC = () => {
     setPage(1);
   }, []);
 
-  // Client-side filtering + stats in ONE memo (big win)
-  const { filteredCustomers, stats } = useMemo(() => {
+  const stats = useMemo(() => {
+    let active = 0;
+    let blocked = 0;
+    let admins = 0;
+
+    for (const c of customers) {
+      if (c.status === "Active") active++;
+      else if (c.status === "Blocked") blocked++;
+      if (c.role === "admin") admins++;
+    }
+
+    return { active, blocked, admins };
+  }, [customers]);
+
+  const filteredCustomers = useMemo(() => {
     let result = customers;
+
+    if (searchTerm) {
+      const query = searchTerm.toLowerCase();
+      result = result.filter((c) =>
+        c.name.toLowerCase().includes(query) ||
+        (c.email ?? "").toLowerCase().includes(query) ||
+        (c.phone ?? "").toLowerCase().includes(query)
+      );
+    }
 
     if (statusFilter !== "All") {
       result = result.filter((c) => c.status === statusFilter);
@@ -974,18 +978,8 @@ const CustomerManagement: React.FC = () => {
       result = result.filter((c) => (c.phone ?? "").toLowerCase().includes(pf));
     }
 
-    let active = 0,
-      blocked = 0,
-      admins = 0;
-
-    for (const c of result) {
-      if (c.status === "Active") active++;
-      else if (c.status === "Blocked") blocked++;
-      if (c.role === "admin") admins++;
-    }
-
-    return { filteredCustomers: result, stats: { active, blocked, admins } };
-  }, [customers, statusFilter, roleFilter, verifiedFilter, phoneFilter]);
+    return result;
+  }, [customers, searchTerm, statusFilter, roleFilter, verifiedFilter, phoneFilter]);
 
   // If phone filter is present in URL and exactly one match, open details panel
   useEffect(() => {
@@ -1003,10 +997,19 @@ const CustomerManagement: React.FC = () => {
     [filteredCustomers, selectedCustomerId]
   );
 
+  const totalFilteredCount = filteredCustomers.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
+  const paginatedCustomers = useMemo(
+    () => filteredCustomers.slice((page - 1) * limit, page * limit),
+    [filteredCustomers, page, limit]
+  );
+  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedCustomers.length, totalFilteredCount);
+
   // Pre-format dates for table (avoid repeated new Date per cell)
   const formattedDates = useMemo(() => {
     const map = new Map<string, { joined: string; lastLogin: string }>();
-    for (const c of filteredCustomers) {
+    for (const c of paginatedCustomers) {
       const joined = new Date(c.createdAt).toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "short",
@@ -1022,7 +1025,7 @@ const CustomerManagement: React.FC = () => {
       map.set(c.id, { joined, lastLogin });
     }
     return map;
-  }, [filteredCustomers]);
+  }, [paginatedCustomers]);
 
   // View handler navigates to full-page user details
   const onViewCustomer = useCallback(
@@ -1085,30 +1088,6 @@ const CustomerManagement: React.FC = () => {
       URL.revokeObjectURL(url);
     }, 0);
   }, [filteredCustomers]);
-
-  const showAllUsers = useCallback(() => {
-    setStatusFilter("All");
-    setRoleFilter("All");
-    setPage(1);
-  }, []);
-
-  const showAdmins = useCallback(() => {
-    setRoleFilter("admin");
-    setStatusFilter("All");
-    setPage(1);
-  }, []);
-
-  const showActive = useCallback(() => {
-    setStatusFilter("Active");
-    setRoleFilter("All");
-    setPage(1);
-  }, []);
-
-  const showBlocked = useCallback(() => {
-    setStatusFilter("Blocked");
-    setRoleFilter("All");
-    setPage(1);
-  }, []);
 
   // Action handler for block/unblock/softDelete/restore/setRole
   const onAction = useCallback(
@@ -1329,7 +1308,10 @@ const CustomerManagement: React.FC = () => {
                           type="text"
                           placeholder="Name / email..."
                           value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                          }}
                           className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                         />
                       </div>
@@ -1474,7 +1456,7 @@ const CustomerManagement: React.FC = () => {
                     </td>
                   </tr>
                 ))
-                : filteredCustomers.map((c, index) => {
+                : paginatedCustomers.map((c, index) => {
                   const fd = formattedDates.get(c.id);
                   return (
                     <CustomerRow
@@ -1494,7 +1476,7 @@ const CustomerManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && filteredCustomers.length === 0 && (
+          {status !== "loading" && totalFilteredCount === 0 && (
             <div className="py-20 text-center space-y-3">
               <User className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No matching results</p>
@@ -1509,7 +1491,7 @@ const CustomerManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {filteredCustomers.length} of {totalCount} users
+              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} users
             </div>
             <select
               value={limit}
@@ -1535,10 +1517,10 @@ const CustomerManagement: React.FC = () => {
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-xs font-bold px-2">Page {page}</span>
+            <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
             <button
               onClick={() => setPage((p) => p + 1)}
-              disabled={customers.length < limit || status === "loading"}
+              disabled={page >= totalPages || status === "loading"}
               className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={14} />

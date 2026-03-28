@@ -11,6 +11,12 @@ function mapUserDtoToCustomer(dto: UserDto): Customer {
   const lastName = dto.last_name || "";
   let name = `${firstName} ${lastName}`.trim();
   if (!name) name = dto.full_name || dto.phone_number || "Unknown";
+  const normalizedStatus = (dto.status || "").toLowerCase();
+  const isBlocked =
+    normalizedStatus === "blocked" ||
+    normalizedStatus === "inactive" ||
+    normalizedStatus === "suspended" ||
+    dto.is_active === false;
 
   return {
     id: String(dto.id),
@@ -18,7 +24,7 @@ function mapUserDtoToCustomer(dto: UserDto): Customer {
     email: dto.email || "",
     phone: dto.phone_number || "",
     role: dto.role,
-    status: dto.is_active ? "Active" : "Blocked",
+    status: isBlocked ? "Blocked" : "Active",
     isDeleted: !!dto.deleted_at,
     isEmailVerified: dto.is_email_verified,
     isPhoneVerified: dto.is_phone_verified,

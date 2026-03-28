@@ -1651,7 +1651,6 @@ interface ReferralTabProps {
 }
 
 const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
-    const { t } = useTranslation("profile");
     const toast = useToast();
     const [copied, setCopied] = useState(false);
 
