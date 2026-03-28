@@ -2,6 +2,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
+import { reloadErrorReturnPath } from '../../utils/errorRedirect';
 
 export const NetworkError: React.FC = () => {
     const { t } = useTranslation("common");
@@ -11,7 +12,7 @@ export const NetworkError: React.FC = () => {
             title={t("errors.network.title")}
             description={t("errors.network.description")}
             primaryActionLabel={t("errors.network.tryAgain")}
-            onPrimaryAction={() => window.location.reload()}
+            onPrimaryAction={reloadErrorReturnPath}
             showBackButton={false}
         />
     );

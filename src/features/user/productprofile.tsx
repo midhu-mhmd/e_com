@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown, X } from "lucide-react";
+import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown, X, MapPin } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
 import { addToCart } from "../admin/cart/cartSlice";
 import { useTranslation } from "react-i18next";
 import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import { API_BASE_URL } from "../../config/constants";
+import {
+  extractProductLocationValues,
+  getProductLocationLabel,
+} from "../admin/products/productLocationOptions";
 
 /** Unified media item for the gallery */
 type MediaItem =
@@ -180,6 +184,10 @@ const ProductProfile: React.FC = () => {
       : product.unit === "Gram"
         ? "100g"
         : t("details.perUnitFallback");
+
+  const availableLocations = extractProductLocationValues(
+    product.available_locations ?? product.available_emirates ?? product.service_areas
+  ).map(getProductLocationLabel);
 
   // ✅ Calculate total dynamic price based on quantity
   const basePriceTotal = (parseFloat(product.price) * quantity).toFixed(2);
@@ -492,6 +500,33 @@ const ProductProfile: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {availableLocations.length > 0 && (
+            <div className="bg-white rounded-3xl border border-stone-100 p-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-50 rounded-xl text-cyan-600">
+                  <MapPin size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900">Available in</p>
+                  <p className="text-xs text-stone-500">
+                    This product can be delivered in the following emirates.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {availableLocations.map((location) => (
+                  <span
+                    key={location}
+                    className="rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 border border-cyan-100"
+                  >
+                    {location}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-3xl border border-stone-100 p-6">
             <div className="flex items-end justify-between mb-6">

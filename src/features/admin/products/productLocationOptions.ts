@@ -45,3 +45,20 @@ export function extractProductLocationValues(value: unknown): string[] {
 
     return Array.from(new Set(normalized));
 }
+
+export function getProductLocationLabel(value: string): string {
+    const normalizedValue = value.trim();
+    const matchedOption = PRODUCT_LOCATION_OPTIONS.find(
+        (option) => option.value === normalizedValue
+    );
+
+    if (matchedOption) {
+        return matchedOption.label;
+    }
+
+    return normalizedValue
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}

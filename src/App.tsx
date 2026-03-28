@@ -7,6 +7,7 @@ import { AppRoutes } from "./routes/AppRoutes";
 import { useToast } from "./components/ui/Toast";
 import { useInitializeCart } from "./hooks/useInitializeCart";
 import { navigateTo } from "./utils/navigate";
+import { rememberErrorReturnPath, reloadErrorReturnPath } from "./utils/errorRedirect";
 
 function App() {
   const dispatch = useDispatch();
@@ -25,12 +26,15 @@ function App() {
   useEffect(() => {
     const handleOffline = () => {
       if (window.location.pathname !== "/network-error") {
-        try { navigateTo("/network-error", { replace: true }); } catch {}
+        try {
+          rememberErrorReturnPath();
+          navigateTo("/network-error", { replace: true });
+        } catch {}
       }
     };
     const handleOnline = () => {
       if (window.location.pathname === "/network-error") {
-        try { window.history.back(); } catch {}
+        try { reloadErrorReturnPath(); } catch {}
       }
     };
     window.addEventListener("offline", handleOffline);

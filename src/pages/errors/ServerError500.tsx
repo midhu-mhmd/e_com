@@ -2,6 +2,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorPageLayout } from '../../components/ui/ErrorPageLayout';
+import { reloadErrorReturnPath } from '../../utils/errorRedirect';
 
 export const ServerError500: React.FC = () => {
     const { t } = useTranslation("common");
@@ -10,6 +11,8 @@ export const ServerError500: React.FC = () => {
             errorCode="500"
             title={t("errors.serverError.title")}
             description={t("errors.serverError.description")}
+            primaryActionLabel={t("errors.network.tryAgain")}
+            onPrimaryAction={reloadErrorReturnPath}
         />
     );
 };

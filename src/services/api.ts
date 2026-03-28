@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "../config/constants";
 import { navigateTo } from "../utils/navigate";
+import { rememberErrorReturnPath } from "../utils/errorRedirect";
 
 /**
  * ✅ In-memory access token (NOT localStorage)
@@ -109,6 +110,7 @@ api.interceptors.response.use(
     if (!err.response) {
       try {
         if (typeof window !== "undefined" && !window.location.pathname.startsWith("/network-error")) {
+          rememberErrorReturnPath();
           navigateTo("/network-error", { replace: true });
         }
       } catch {}
@@ -121,6 +123,7 @@ api.interceptors.response.use(
       if (!cfg?.suppressGlobal5xx) {
         try {
           if (typeof window !== "undefined" && !window.location.pathname.startsWith("/500")) {
+            rememberErrorReturnPath();
             navigateTo("/500", { replace: true });
           }
         } catch {}
