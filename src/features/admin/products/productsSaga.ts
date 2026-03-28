@@ -189,11 +189,24 @@ function* updateProductWorker(
         yield put(productsActions.updateProductSuccess(product));
     } catch (e: any) {
         console.error("Update Product Error:", e);
-        const errMsg =
-            e?.response?.data?.detail ||
-            e?.response?.data?.message ||
-            e?.message ||
-            "Failed to update product";
+        const responseData = e?.response?.data;
+        let errMsg = "Failed to update product";
+
+        if (typeof responseData === "string") {
+            errMsg = responseData;
+        } else if (responseData?.detail) {
+            errMsg = responseData.detail;
+        } else if (responseData?.message) {
+            errMsg = responseData.message;
+        } else if (responseData && typeof responseData === "object") {
+            const fieldErrors = Object.entries(responseData)
+                .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(", ") : val}`)
+                .join(" | ");
+            if (fieldErrors) errMsg = fieldErrors;
+        } else if (e?.message) {
+            errMsg = e.message;
+        }
+
         yield put(productsActions.updateProductFailure(errMsg));
     }
 }

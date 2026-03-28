@@ -23,6 +23,11 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
   }, [productId]);
 
   const fetchTiers = async () => {
+    if (!productId) {
+      setTiers([]);
+      onTiersChange?.([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -46,6 +51,21 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
       return;
     }
 
+    if (!productId) {
+      const newLocalTier = { 
+        id: Date.now(), 
+        product: 0, 
+        min_quantity: newTier.min_quantity, 
+        delivery_days: newTier.delivery_days 
+      };
+      const updated = [...tiers, newLocalTier];
+      setTiers(updated);
+      onTiersChange?.(updated);
+      setNewTier({ min_quantity: 1, delivery_days: 0 });
+      setError(null);
+      return;
+    }
+
     try {
       await tierApi.deliveryTiers.create({
         product: productId,
@@ -63,6 +83,13 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
   };
 
   const handleDeleteTier = async (id: number) => {
+    if (!productId) {
+      const updated = tiers.filter((t: any) => t.id !== id);
+      setTiers(updated);
+      onTiersChange?.(updated);
+      return;
+    }
+
     try {
       await tierApi.deliveryTiers.delete(id);
       setError(null);

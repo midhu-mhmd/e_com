@@ -28,6 +28,11 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
   }, [productId]);
 
   const fetchTiers = async () => {
+    if (!productId) {
+      setTiers([]);
+      onTiersChange?.([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -56,6 +61,21 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
       return;
     }
 
+    if (!productId) {
+      const newLocalTier = {
+        id: Date.now(),
+        product: 0,
+        min_quantity: newTier.min_quantity,
+        discount_percentage: newTier.discount_percentage,
+      };
+      const updated = [...tiers, newLocalTier];
+      setTiers(updated);
+      onTiersChange?.(updated);
+      setNewTier({ min_quantity: 1, discount_percentage: 0 });
+      setError(null);
+      return;
+    }
+
     try {
       await tierApi.discountTiers.create({
         product: productId,
@@ -73,6 +93,13 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
   };
 
   const handleDeleteTier = async (id: number) => {
+    if (!productId) {
+      const updated = tiers.filter((t: any) => t.id !== id);
+      setTiers(updated);
+      onTiersChange?.(updated);
+      return;
+    }
+
     try {
       await tierApi.discountTiers.delete(id);
       setError(null);

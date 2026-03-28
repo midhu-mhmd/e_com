@@ -129,7 +129,10 @@ export const productsApi = {
     id: number,
     payload: Partial<ProductDto> | FormData
   ): Promise<ProductDto> => {
-    const res = await api.patch<ProductDto>(`/products/products/${id}/`, payload);
+    const isFormData = payload instanceof FormData;
+    const res = await api.patch<ProductDto>(`/products/products/${id}/`, payload, {
+      ...(isFormData && { timeout: 60000 }),
+    });
     return res.data;
   },
 

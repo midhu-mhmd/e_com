@@ -32,7 +32,6 @@ import CustomerManagement from '../features/admin/customers/customers';
 import CustomerDetailsPage from '../features/admin/customers/CustomerDetailsPage';
 import ReviewsManagement from '../features/admin/reviews/reviews';
 import PaymentManagement from '../features/admin/payments/payments';
-import SettingsPage from '../features/admin/settings/settings';
 import ProductManagement from '../features/admin/products/products';
 import AddProduct from '../features/admin/products/AddProduct';
 import EditProduct from '../features/admin/products/EditProduct';
@@ -147,7 +146,6 @@ export const AppRoutes: React.FC = () => {
           <Route path="banners" element={<BannersManagement />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="support" element={<ContactMessagesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>
 

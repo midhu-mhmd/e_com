@@ -20,6 +20,9 @@ import {
     selectProducts,
 } from "./productsSlice";
 import ProductLocationsField from "./ProductLocationsField";
+import DeliveryTiersManager from "./DeliveryTiersManager";
+import DiscountTiersManager from "./DiscountTiersManager";
+import type { DeliveryTierDto, DiscountTierDto } from "./tierApi";
 
 /* ────────────────────── Types ────────────────────── */
 
@@ -94,6 +97,7 @@ const AddProduct: React.FC = () => {
     const {
         register,
         handleSubmit,
+        watch,
         formState: { errors },
     } = useForm<ProductFormData>({
         defaultValues: {
@@ -168,6 +172,10 @@ const AddProduct: React.FC = () => {
             prev.map((r) => (r.id === id ? { ...r, file } : r))
         );
 
+    /* ── Tiers State ── */
+    const [deliveryTiers, setDeliveryTiers] = useState<DeliveryTierDto[]>([]);
+    const [discountTiers, setDiscountTiers] = useState<DiscountTierDto[]>([]);
+
     const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
     const toggleLocation = useCallback((location: string) => {
@@ -208,6 +216,8 @@ const AddProduct: React.FC = () => {
         if (data.expected_delivery_time)
             fd.append("expected_delivery_time", data.expected_delivery_time);
 
+        fd.append("available_emirates", JSON.stringify(selectedLocations));
+
         // Main image
         if (mainImage) fd.append("image", mainImage);
 
@@ -232,6 +242,10 @@ const AddProduct: React.FC = () => {
                 vidIdx++;
             }
         });
+
+        // Delivery and Discount Tiers
+        fd.append("delivery_tiers", JSON.stringify(deliveryTiers));
+        fd.append("discount_tiers", JSON.stringify(discountTiers));
 
         submitted.current = true;
         // @ts-ignore
@@ -477,6 +491,28 @@ const AddProduct: React.FC = () => {
                         onToggle={toggleLocation}
                     />
                 </Section>
+
+                {/* ─── Tiers Grid ─── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Discount Tiers Manager */}
+                    <DiscountTiersManager
+                        productId={0}
+                        finalPrice={watch("price") || 0}
+                        onTiersChange={(tiers) => {
+                            setDiscountTiers(tiers);
+                            console.log("Discount tiers updated:", tiers);
+                        }}
+                    />
+
+                    {/* Delivery Tiers Manager */}
+                    <DeliveryTiersManager
+                        productId={0}
+                        onTiersChange={(tiers) => {
+                            setDeliveryTiers(tiers);
+                            console.log("Delivery tiers updated:", tiers);
+                        }}
+                    />
+                </div>
 
                 {/* ─── 4. Main Image ─── */}
                 <Section title="Main Image">

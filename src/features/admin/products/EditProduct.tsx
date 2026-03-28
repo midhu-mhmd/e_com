@@ -12,7 +12,6 @@ import type { ProductDto } from "./productApi";
 import { productsApi } from "./productApi";
 import DeliveryTiersManager from "./DeliveryTiersManager";
 import DiscountTiersManager from "./DiscountTiersManager";
-import type { DeliveryTierDto, DiscountTierDto } from "./tierApi";
 import ProductLocationsField from "./ProductLocationsField";
 import { extractProductLocationValues } from "./productLocationOptions";
 
@@ -103,10 +102,6 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         )
     );
 
-    // State for new tier managers
-    const [deliveryTiers, setDeliveryTiers] = useState<DeliveryTierDto[]>([]);
-    const [discountTiers, setDiscountTiers] = useState<DiscountTierDto[]>([]);
-
     const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<ProductFormValues>({
         defaultValues: dto
     });
@@ -166,7 +161,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         formData.append("category", String(data.category));
         formData.append("price", String(data.price));
         formData.append("stock", String(data.stock));
-        formData.append("is_available", data.is_available ? "true" : "false");
+        formData.append("is_available", data.is_available ? "True" : "False");
 
         // Safely handle discount price so backend doesn't crash on empty string
         if (data.discount_price) {
@@ -179,10 +174,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         if (data.sku) formData.append("sku", data.sku);
         if (data.expected_delivery_time) formData.append("expected_delivery_time", data.expected_delivery_time);
 
-        // 2. Append Tiers from state (managed by tier manager components)
-        // NOTE: Tier managers handle these independently, but we include them here for completeness
-        formData.append("delivery_tiers", JSON.stringify(deliveryTiers || []));
-        formData.append("discount_tiers", JSON.stringify(discountTiers || []));
+        formData.append("available_emirates", JSON.stringify(selectedLocations));
 
         formData.append("retained_image_ids", JSON.stringify(existingImages.map(img => img.id)));
         formData.append("retained_video_ids", JSON.stringify(existingVideos.map(vid => vid.id)));
@@ -337,19 +329,11 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                     <DiscountTiersManager
                         productId={productId}
                         finalPrice={dto.final_price}
-                        onTiersChange={(tiers) => {
-                            setDiscountTiers(tiers);
-                            console.log("Discount tiers updated:", tiers);
-                        }}
                     />
 
                     {/* Delivery Tiers Manager */}
                     <DeliveryTiersManager
                         productId={productId}
-                        onTiersChange={(tiers) => {
-                            setDeliveryTiers(tiers);
-                            console.log("Delivery tiers updated:", tiers);
-                        }}
                     />
                 </div>
 
