@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import simakLogo from "../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /**
  * SIMAK FRESH branded preloader.
@@ -61,7 +62,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
                     className="relative"
                 >
                     <motion.div
-                        className="w-14 h-14 rounded-2xl bg-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/25"
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25 bg-white overflow-hidden"
                         animate={{ boxShadow: [
                             "0 10px 15px -3px rgba(6,182,212,0.25)",
                             "0 10px 25px -3px rgba(6,182,212,0.4)",
@@ -69,7 +70,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
                         ]}}
                         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <span className="text-white font-black text-2xl leading-none">S</span>
+                        <img src={simakLogo} alt="SIMAK FRESH" className="w-12 h-12 object-contain" />
                     </motion.div>
 
                     {/* Shrimp orbiting top-right */}

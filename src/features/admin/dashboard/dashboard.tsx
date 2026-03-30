@@ -7,7 +7,6 @@ import {
   ArrowDownRight,
   ShoppingCart,
   Users,
-  CreditCard,
   Star,
   TrendingUp,
   ChevronRight,
@@ -16,49 +15,48 @@ import {
 } from "lucide-react";
 
 /* ── Redux selectors ── */
-import { ordersActions, selectOrders, selectOrdersTotal, selectOrdersStatus } from "../orders/ordersSlice";
-import { selectProducts, selectProductsTotal, selectProductsStatus } from "../products/productsSlice";
+import { selectOrders, selectOrdersStatus } from "../orders/ordersSlice";
+import { selectProducts, selectProductsStatus } from "../products/productsSlice";
 import { productsActions } from "../products/productsSlice";
-import { selectCustomers, selectCustomersTotal } from "../customers/customersSlice";
-import { customersActions } from "../customers/customersSlice";
 import { selectPayments } from "../payments/paymentsSlice";
 import { paymentsActions } from "../payments/paymentsSlice";
 import { selectReviews, selectReviewsTotal } from "../reviews/reviewsSlice";
 import { reviewsActions } from "../reviews/reviewsSlice";
 import type { Order } from "../orders/ordersSlice";
 import type { Product } from "../products/productsSlice";
+import { dashboardCountsActions } from "./dashboardCountsSlice";
+import { useSelector as useReduxSelector } from "react-redux";
+// Dashboard counts selector
+const selectDashboardCounts = (state: any) => state.dashboardCounts;
+const formatDashboardCount = (value: number | null | undefined) =>
+  typeof value === "number" && Number.isFinite(value) ? `${value}` : "-";
 
 /* ── MAIN COMPONENT ── */
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
+  const dashboardCounts = useReduxSelector(selectDashboardCounts);
+  // Fetch dashboard counts on mount
+  useEffect(() => {
+    dispatch(dashboardCountsActions.fetchCountsRequest());
+  }, [dispatch]);
   const pendingStatusSet = useMemo(() => new Set(["pending", "confirmed", "processing"]), []);
   const cancelledStatusSet = useMemo(() => new Set(["cancelled", "canceled"]), []);
   const successfulPaymentSet = useMemo(() => new Set(["success", "paid", "completed"]), []);
 
   // Selectors
   const orders = useSelector(selectOrders);
-  const ordersTotal = useSelector(selectOrdersTotal);
   const ordersStatus = useSelector(selectOrdersStatus);
   const products = useSelector(selectProducts);
-  const productsTotal = useSelector(selectProductsTotal);
   const productsStatus = useSelector(selectProductsStatus);
-  const customers = useSelector(selectCustomers);
-  const customersTotal = useSelector(selectCustomersTotal);
   const payments = useSelector(selectPayments);
   const reviews = useSelector(selectReviews);
   const reviewsTotal = useSelector(selectReviewsTotal);
 
   // Dispatch fetches on mount if data is empty
   useEffect(() => {
-    if (orders.length === 0 && ordersStatus !== "loading") {
-      // Dashboard KPIs need a broad dataset, not a single small page.
-      dispatch(ordersActions.fetchOrdersRequest({ limit: 1000, page: 1 }));
-    }
+    // Removed orders fetch with limit=1000 as per requirements
     if (products.length === 0 && productsStatus !== "loading") {
       dispatch(productsActions.fetchProductsRequest({ limit: 20, page: 1 }));
-    }
-    if (customers.length === 0) {
-      dispatch(customersActions.fetchCustomersRequest({ limit: 10, page: 1 }));
     }
     if (payments.length === 0) {
       dispatch(paymentsActions.fetchPaymentsRequest({ limit: 10, page: 1 }));
@@ -69,9 +67,6 @@ const Dashboard: React.FC = () => {
   }, [dispatch]);
 
   // Computed stats
-  const completedOrders = useMemo(() => {
-    return orders.filter((o) => o.status.toLowerCase() === "delivered").length;
-  }, [orders]);
   const pendingOrders = useMemo(
     () => orders.filter((o) => pendingStatusSet.has(o.status.toLowerCase())).length,
     [orders, pendingStatusSet]
@@ -80,18 +75,6 @@ const Dashboard: React.FC = () => {
     () => orders.filter((o) => cancelledStatusSet.has(o.status.toLowerCase())).length,
     [orders, cancelledStatusSet]
   );
-  const paidOrders = useMemo(() => {
-    return orders.filter((o) => {
-      const orderStatus = o.status.toLowerCase();
-      const paymentStatus = o.paymentStatus.toLowerCase();
-      if (cancelledStatusSet.has(orderStatus)) return false;
-      return successfulPaymentSet.has(paymentStatus) || orderStatus === "delivered";
-    });
-  }, [orders, cancelledStatusSet, successfulPaymentSet]);
-
-  const totalRevenue = useMemo(() => {
-    return paidOrders.reduce((sum, order) => sum + (Number.isFinite(order.total) ? order.total : 0), 0);
-  }, [paidOrders]);
   const avgRating = useMemo(
     () => reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "0.0",
     [reviews]
@@ -172,11 +155,6 @@ const Dashboard: React.FC = () => {
   const revenueMax = useMemo(() => Math.max(...chartData.revenueAmounts, 1), [chartData]);
   const ordersMax = useMemo(() => Math.max(...chartData.orderCounts, 1), [chartData]);
 
-  const activeProducts = useMemo(
-    () => products.filter((p) => p.status === "Active").length,
-    [products]
-  );
-
   // Payment method breakdown
   const methodBreakdown = useMemo(() => {
     const total = payments.length || 1;
@@ -216,29 +194,27 @@ const Dashboard: React.FC = () => {
       {/* --- TOP STATS GRID --- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
-          label="Total Revenue"
-          value={`AED ${totalRevenue.toLocaleString("en-IN")}`}
-          icon={<CreditCard size={18} strokeWidth={1.5} />}
-          trend="up"
-        />
-        <StatCard
           label="Total Orders"
-          value={`${ordersTotal}`}
-          sub={`${completedOrders} delivered`}
+          value={formatDashboardCount(dashboardCounts.orders)}
           icon={<ShoppingCart size={18} strokeWidth={1.5} />}
           trend="up"
         />
         <StatCard
           label="Products"
-          value={`${productsTotal}`}
-          sub={`${activeProducts} active`}
+          value={formatDashboardCount(dashboardCounts.products)}
           icon={<Package size={18} strokeWidth={1.5} />}
           trend="up"
         />
         <StatCard
           label="Customers"
-          value={`${customersTotal}`}
+          value={formatDashboardCount(dashboardCounts.users)}
           icon={<Users size={18} strokeWidth={1.5} />}
+          trend="up"
+        />
+        <StatCard
+          label="Reviews"
+          value={formatDashboardCount(dashboardCounts.reviews)}
+          icon={<Star size={18} strokeWidth={1.5} />}
           trend="up"
         />
       </div>

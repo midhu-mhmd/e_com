@@ -11,6 +11,7 @@ export interface UserDto {
   role: "user" | "admin" | "staff";
   status?: string | null;
   is_active: boolean;
+  isActive?: boolean | null;
   is_email_verified: boolean;
   is_phone_verified: boolean;
   google_id: string | null;
@@ -75,7 +76,7 @@ export interface Customer {
 
 export type CustomersQuery = {
   q?: string;
-  status?: string;
+  is_active?: boolean;
   role?: string;
   page?: number;
   limit?: number;
@@ -85,13 +86,20 @@ export type CustomersQuery = {
 export const customersApi = {
   /** GET /users/ — active users */
   list: async (params?: CustomersQuery): Promise<{ results: UserDto[]; count: number }> => {
-    const res = await api.get<{ results: UserDto[]; count: number }>("/users/", { params });
+    const { page: _page, ...requestParams } = params ?? {};
+    // Always enforce limit=10 in the query
+    const res = await api.get<{ results: UserDto[]; count: number }>("/users/", {
+      params: { ...requestParams, limit: 10 },
+    });
     return res.data;
   },
 
   /** GET /users/all/ — all users including soft-deleted */
   listAll: async (params?: CustomersQuery): Promise<{ results: UserDto[]; count: number }> => {
-    const res = await api.get<{ results: UserDto[]; count: number }>("/users/all/", { params });
+    const { page: _page, ...requestParams } = params ?? {};
+    const res = await api.get<{ results: UserDto[]; count: number }>("/users/all/", {
+      params: requestParams,
+    });
     return res.data;
   },
 

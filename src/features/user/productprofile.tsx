@@ -486,7 +486,7 @@ const ProductProfile: React.FC = () => {
               </div>
               <div>
                 <p className="font-bold text-stone-900">{t("details.meta.fastDelivery.title")}</p>
-                <p className="text-stone-500 text-xs">{t("details.meta.fastDelivery.subtitle")}</p>
+                <p className="text-stone-500 text-xs">within 2 or 3 days</p>
               </div>
             </div>
 
@@ -528,21 +528,22 @@ const ProductProfile: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl border border-stone-100 p-6">
-            <div className="flex items-end justify-between mb-6">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
-                  {t("details.reviews.title", { defaultValue: "Reviews" })}
-                </p>
-                <p className="text-stone-500 text-sm font-bold">
-                  {t("details.reviews.basedOn", {
-                    count: product.total_reviews,
-                    defaultValue: `Based on ${product.total_reviews} reviews`,
-                  })}
-                </p>
+          {/* Only show reviews section if there are reviews */}
+          {reviewsData?.results && reviewsData.results.length > 0 && (
+            <div className="bg-white rounded-3xl border border-stone-100 p-6">
+              <div className="flex items-end justify-between mb-6">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
+                    {t("details.reviews.title", { defaultValue: "Reviews" })}
+                  </p>
+                  <p className="text-stone-500 text-sm font-bold">
+                    {t("details.reviews.basedOn", {
+                      count: product.total_reviews,
+                      defaultValue: `Based on ${product.total_reviews} reviews`,
+                    })}
+                  </p>
+                </div>
               </div>
-            </div>
-            {reviewsData?.results && reviewsData.results.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {reviewsData.results.map((r) => (
                   <div key={r.id} className="p-5 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white transition-colors shadow-sm">
@@ -589,14 +590,8 @@ const ProductProfile: React.FC = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="flex items-center justify-between p-5 rounded-2xl border border-dashed border-stone-200">
-                <p className="text-stone-500 text-sm font-bold">
-                  {t("details.reviews.empty", { defaultValue: "No reviews yet" })}
-                </p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </main>
       {/* Lightbox viewer */}

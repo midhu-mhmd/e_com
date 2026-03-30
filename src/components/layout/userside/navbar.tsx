@@ -115,15 +115,15 @@ const Navbar: React.FC = () => {
                     <Link to="/" className="shrink-0 flex items-center gap-2 group">
                         <img
                             src={simakLogo}
-                            alt="SIMAK FRESH"
+                            alt={t('brand.name')}
                             className="h-10 w-auto object-contain"
                         />
                         <div className="flex flex-col justify-center">
                             <span className="text-xl font-black tracking-wider text-slate-800 uppercase leading-none">
-                                SIMAK <span className="text-cyan-600">FRESH</span>
+                                {t('brand.name')}
                             </span>
-                            <span className="text-[9px] sm:text-[10px] font-semibold tracking-[0.2em] text-cyan-700/80 uppercase mt-1 leading-none">
-                                Signature of Quality
+                            <span className="text-[9px] sm:text-[9.7px] font-semibold tracking-[0.2em] text-cyan-700/80 uppercase mt-1 leading-none">
+                                {t('brand.signature')}
                             </span>
                         </div>
                     </Link>

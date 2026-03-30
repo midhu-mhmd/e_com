@@ -19,7 +19,7 @@ const ShrimpLoader = () => {
                     className="relative"
                 >
                     <motion.div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25"
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25 bg-white overflow-hidden"
                         animate={{
                             boxShadow: [
                                 "0 10px 15px -3px rgba(6,182,212,0.25)",
@@ -31,7 +31,6 @@ const ShrimpLoader = () => {
                     >
                         <img src={simakLogo} alt="SIMAK FRESH" className="w-12 h-12 object-contain" />
                     </motion.div>
-
                     {/* Shrimp orbiting top-right */}
                     <motion.span
                         className="absolute -top-2 -right-2 text-xs select-none"
@@ -42,7 +41,6 @@ const ShrimpLoader = () => {
                     >
                         🦐
                     </motion.span>
-
                     {/* Crab orbiting bottom-left */}
                     <motion.span
                         className="absolute -bottom-2 -left-2 text-xs select-none"

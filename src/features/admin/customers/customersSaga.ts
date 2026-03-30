@@ -12,11 +12,12 @@ function mapUserDtoToCustomer(dto: UserDto): Customer {
   let name = `${firstName} ${lastName}`.trim();
   if (!name) name = dto.full_name || dto.phone_number || "Unknown";
   const normalizedStatus = (dto.status || "").toLowerCase();
+  const isInactive = dto.is_active === false || dto.isActive === false;
   const isBlocked =
     normalizedStatus === "blocked" ||
     normalizedStatus === "inactive" ||
     normalizedStatus === "suspended" ||
-    dto.is_active === false;
+    isInactive;
 
   return {
     id: String(dto.id),

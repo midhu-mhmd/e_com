@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { type BannerDto } from "../../features/admin/banners/bannerApi";
 import { useBanners } from "../../hooks/queries";
+import simakLogo from "../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /* ── Component ── */
 const OffersSection: React.FC = () => {
@@ -131,7 +132,7 @@ const OffersSection: React.FC = () => {
                 {/* Offer Cards Slider / Grid */}
                 {!loading && displayOffers.length > 0 && (
                     <div className="relative group/slider">
-                        
+
                         {/* ✅ Left Arrow (Hidden on Desktop grid) */}
                         {canScrollLeft && (
                             <button
@@ -154,18 +155,18 @@ const OffersSection: React.FC = () => {
                             </button>
                         )}
 
-                        <div 
+                        <div
                             ref={scrollRef}
                             onScroll={handleScroll}
                             className="flex lg:grid lg:grid-cols-4 gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-6 px-1 -mx-1"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                         >
                             {displayOffers.map((offer, i) => (
-                                <OfferCard 
-                                    key={offer.id} 
-                                    offer={offer as any} 
-                                    index={i} 
-                                    className="w-[85vw] sm:w-[320px] lg:w-auto shrink-0 snap-center lg:snap-align-none" 
+                                <OfferCard
+                                    key={offer.id}
+                                    offer={offer as any}
+                                    index={i}
+                                    className="w-[85vw] sm:w-[320px] lg:w-auto shrink-0 snap-center lg:snap-align-none"
                                 />
                             ))}
                         </div>
@@ -228,9 +229,8 @@ const OfferCard: React.FC<{ offer: Offer; index: number; className?: string }> =
     return (
         <div
             ref={ref}
-            className={`group relative bg-white border border-zinc-100 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-default ${
-                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            } ${className}`}
+            className={`group relative bg-white border border-zinc-100 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-default ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                } ${className}`}
             style={{ transitionDelay: `${index * 80}ms` }}
         >
             {/* Top gradient strip */}
@@ -319,9 +319,8 @@ const BannerCTA: React.FC<{ bannerOffer: any }> = ({ bannerOffer }) => {
     return (
         <div
             ref={ref}
-            className={`relative rounded-3xl ${bannerOffer.gradient} overflow-hidden transition-all duration-700 ${
-                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+            className={`relative rounded-3xl ${bannerOffer.gradient} overflow-hidden transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                }`}
         >
             {/* Glow effects */}
             <div className="absolute -top-20 left-1/4 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl" />
@@ -350,7 +349,12 @@ const BannerCTA: React.FC<{ bannerOffer: any }> = ({ bannerOffer }) => {
 
             <div className="relative flex flex-col sm:flex-row items-center justify-between p-8 sm:p-12 gap-6 z-10 text-center sm:text-left">
                 <div>
-                    <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
+                    <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 flex items-center gap-3">
+                        <img 
+                            src={simakLogo} 
+                            alt="SIMAK LOGO" 
+                            className="h-8 sm:h-10 w-auto object-contain brightness-0 invert" 
+                        />
                         {bannerOffer.title}
                     </h3>
                     <p className="text-sm text-zinc-400">{bannerOffer.subtitle}</p>

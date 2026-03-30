@@ -27,6 +27,7 @@ import {
 
 import {
     productsActions,
+    selectCategories,
     selectProducts,
     selectProductsStatus,
     selectProductsError,
@@ -37,7 +38,6 @@ import type { Product } from "./productsSlice";
 
 /* --- LOCAL UI TYPES --- */
 type StatusFilter = "All" | "Active" | "Draft" | "Out of Stock";
-const FETCH_ALL_PRODUCTS_LIMIT = 1000;
 
 /* --- Column definitions --- */
 type ColumnKey =
@@ -92,6 +92,7 @@ const ProductManagement: React.FC = () => {
 
     // Redux data
     const products = useSelector(selectProducts);
+    const categories = useSelector(selectCategories);
     const totalCount = useSelector(selectProductsTotal);
     const status = useSelector(selectProductsStatus);
     const error = useSelector(selectProductsError);
@@ -140,15 +141,23 @@ const ProductManagement: React.FC = () => {
 
     const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-    // Fetch the full dataset once, then filter + paginate locally.
     useEffect(() => {
+        const offset = (page - 1) * limit;
         dispatch(
             productsActions.fetchProductsRequest({
-                page: 1,
-                limit: FETCH_ALL_PRODUCTS_LIMIT,
-                offset: 0,
+                q: debouncedSearch || undefined,
+                search: debouncedSearch || undefined,
+                status: statusFilter === "All" ? undefined : statusFilter,
+                category: categoryFilter || undefined,
+                page,
+                limit,
+                offset,
             })
         );
+    }, [dispatch, debouncedSearch, statusFilter, categoryFilter, page, limit]);
+
+    useEffect(() => {
+        dispatch(productsActions.fetchCategoriesRequest());
     }, [dispatch]);
 
     const handleReset = () => {
@@ -165,24 +174,9 @@ const ProductManagement: React.FC = () => {
         setPage(1);
     };
 
-    // Filter from the full loaded dataset, then paginate the filtered rows locally.
+    // Keep only filters the backend does not currently expose client-side.
     const filteredProducts = useMemo(() => {
         let result = products;
-        if (debouncedSearch) {
-            const query = debouncedSearch.toLowerCase();
-            result = result.filter((p: Product) =>
-                p.name.toLowerCase().includes(query) ||
-                p.slug.toLowerCase().includes(query) ||
-                p.categoryName.toLowerCase().includes(query) ||
-                p.sku.toLowerCase().includes(query)
-            );
-        }
-        if (statusFilter !== "All") {
-            result = result.filter((p: Product) => p.status === statusFilter);
-        }
-        if (categoryFilter) {
-            result = result.filter((p: Product) => String(p.categoryId) === categoryFilter);
-        }
         if (minPrice) {
             const min = parseFloat(minPrice);
             if (!isNaN(min)) result = result.filter((p: Product) => p.finalPrice >= min);
@@ -214,32 +208,24 @@ const ProductManagement: React.FC = () => {
             );
         }
         return result;
-    }, [products, debouncedSearch, statusFilter, categoryFilter, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
+    }, [products, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
 
-    // Unique categories From data for dropdown (id + name pairs)
-    const uniqueCategories = useMemo(() => {
-        const seen = new Map<number, string>();
-        products.forEach((p: Product) => {
-            if (p.categoryId && p.categoryName && !seen.has(p.categoryId)) {
-                seen.set(p.categoryId, p.categoryName);
-            }
-        });
-        return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
-    }, [products]);
+    const hasServerFilters = !!(debouncedSearch || statusFilter !== "All" || categoryFilter);
+    const displayedProducts = hasServerFilters ? products : filteredProducts;
+
+    const uniqueCategories = useMemo(
+        () => categories.map((category) => ({ id: category.id, name: category.name })),
+        [categories]
+    );
 
     const selectedProduct = useMemo(
-        () => filteredProducts.find((p: Product) => p.id === selectedProductId) ?? null,
-        [filteredProducts, selectedProductId]
+        () => displayedProducts.find((p: Product) => p.id === selectedProductId) ?? null,
+        [displayedProducts, selectedProductId]
     );
 
-    const totalFilteredCount = filteredProducts.length;
-    const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
-    const paginatedProducts = useMemo(
-        () => filteredProducts.slice((page - 1) * limit, page * limit),
-        [filteredProducts, page, limit]
-    );
-    const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
-    const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedProducts.length, totalFilteredCount);
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+    const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+    const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + displayedProducts.length, totalCount);
 
     const handleDelete = (id: number) => {
         if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
@@ -250,7 +236,7 @@ const ProductManagement: React.FC = () => {
     // Export handler
     const handleExport = () => {
         const headers = ["ID", "Name", "Category", "Price", "Stock", "Status", "SKU", "Rating"];
-        const rows = filteredProducts.map((p: Product) => [
+        const rows = displayedProducts.map((p: Product) => [
             p.id,
             p.name,
             p.categoryName,
@@ -279,9 +265,9 @@ const ProductManagement: React.FC = () => {
     };
 
     // Compute stats from current page data
-    const activeCount = filteredProducts.filter((p: Product) => p.status === "Active").length;
-    const outOfStockCount = filteredProducts.filter((p: Product) => p.status === "Out of Stock").length;
-    const lowStockCount = filteredProducts.filter((p: Product) => p.stock > 0 && p.stock <= 20).length;
+    const activeCount = displayedProducts.filter((p: Product) => p.status === "Active").length;
+    const outOfStockCount = displayedProducts.filter((p: Product) => p.status === "Out of Stock").length;
+    const lowStockCount = displayedProducts.filter((p: Product) => p.stock > 0 && p.stock <= 20).length;
 
     return (
         <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
@@ -333,16 +319,6 @@ const ProductManagement: React.FC = () => {
                 <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
 
                     <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                        <button
-                            onClick={handleReset}
-                            className="p-2 text-[#A1A1AA] hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                            title="Clear Filters"
-                        >
-                            <RotateCcw size={16} />
-                        </button>
-
-                        <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
-
                         <button
                             onClick={() => setIsFilterOpen(!isFilterOpen)}
                             className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen
@@ -579,7 +555,7 @@ const ProductManagement: React.FC = () => {
                                     </tr>
                                 ))
                             ) : (
-                                paginatedProducts.map((p: Product, index: number) => (
+                                displayedProducts.map((p: Product, index: number) => (
                                     <tr
                                         key={p.id}
                                         className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
@@ -749,7 +725,7 @@ const ProductManagement: React.FC = () => {
                         </tbody>
                     </table>
 
-                    {status !== "loading" && totalFilteredCount === 0 && (
+                    {status !== "loading" && displayedProducts.length === 0 && (
                         <div className="py-20 text-center space-y-3">
                             <Package className="mx-auto text-[#D4D4D8]" size={32} />
                             <p className="text-sm font-bold text-[#18181B]">No products found</p>
@@ -767,7 +743,7 @@ const ProductManagement: React.FC = () => {
                 <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
                     <div className="flex items-center gap-4">
                         <div className="text-[11px] text-[#A1A1AA] font-medium">
-                            Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} products
+                            Showing {visibleStart}-{visibleEnd} of {totalCount} products
                         </div>
                         <select
                             value={limit}

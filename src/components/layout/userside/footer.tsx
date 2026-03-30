@@ -1,6 +1,5 @@
 import React from "react";
 import {
-    Fish,
     Phone,
     Mail,
     MapPin,
@@ -16,7 +15,9 @@ import {
     ShieldCheck,
 } from "lucide-react";
 
+
 import { useTranslation } from "react-i18next";
+import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /* ── Component ── */
 const Footer: React.FC = () => {
@@ -72,11 +73,15 @@ const Footer: React.FC = () => {
                         {/* Brand Column */}
                         <div className="col-span-2 sm:col-span-3 lg:col-span-1">
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Fish size={18} className="text-cyan-900" />
+                                <div className="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                    <img
+                                        src={simakLogo}
+                                        alt={t('brand.name')}
+                                        className="h-7 w-7 object-contain"
+                                    />
                                 </div>
                                 <span className="text-lg font-extrabold text-white tracking-tight">
-                                    SIMAK FRESH
+                                    {t('brand.name')}
                                 </span>
                             </div>
                             <p className="text-xs text-cyan-200/60 leading-relaxed mb-5 max-w-xs">

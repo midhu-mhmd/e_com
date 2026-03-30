@@ -1,11 +1,13 @@
 import React, {
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
   useState,
   memo,
 } from "react";
+import { dashboardApi } from "../dashboard/dashboardApi";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
@@ -13,7 +15,6 @@ import {
   X,
   Phone,
   Mail,
-  RotateCcw,
   ChevronRight,
   ChevronLeft,
   Download,
@@ -99,7 +100,6 @@ const COLUMNS: ColumnDef[] = [
 
 type StatusFilter = "All" | "Active" | "Blocked";
 type RoleFilter = "All" | "user" | "admin";
-const FETCH_ALL_USERS_LIMIT = 1000;
 
 /* ─────────────────────────────
    Memo Sub-components
@@ -489,7 +489,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
         className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 transition-opacity"
         onClick={onClose}
       />
-      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-[60] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="p-6 border-b border-[#EEEEEE] flex justify-between items-center bg-white sticky top-0">
           <div className="flex items-center gap-3">
@@ -871,6 +871,7 @@ const CustomerManagement: React.FC = () => {
   const [phoneFilter, setPhoneFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim());
 
   // Prefill phone filter from URL ?phone= query
   useEffect(() => {
@@ -914,16 +915,30 @@ const CustomerManagement: React.FC = () => {
 
   const isVisible = useCallback((key: ColumnKey) => !!visibleColumns[key], [visibleColumns]);
 
-  // Fetch when params change (includes showDeleted)
+  const roleQueryValue = useMemo(() => {
+    if (roleFilter === "All") return undefined;
+    return roleFilter;
+  }, [roleFilter]);
+
+  // Fetch the current page from the backend using server-supported filters.
   useEffect(() => {
+    const offset = (page - 1) * limit;
     dispatch(
       customersActions.fetchCustomersRequest({
-        page: 1,
-        limit: FETCH_ALL_USERS_LIMIT,
-        offset: 0,
+        q: deferredSearchTerm || undefined,
+        is_active:
+          statusFilter === "All"
+            ? undefined
+            : statusFilter === "Active"
+              ? true
+              : false,
+        role: roleQueryValue,
+        page,
+        limit,
+        offset,
       })
     );
-  }, [dispatch, showDeleted]);
+  }, [dispatch, deferredSearchTerm, statusFilter, roleQueryValue, page, limit, showDeleted]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
@@ -934,39 +949,44 @@ const CustomerManagement: React.FC = () => {
     setPage(1);
   }, []);
 
-  const stats = useMemo(() => {
-    let active = 0;
-    let blocked = 0;
-    let admins = 0;
 
-    for (const c of customers) {
-      if (c.status === "Active") active++;
-      else if (c.status === "Blocked") blocked++;
-      if (c.role === "admin") admins++;
-    }
+  // User counts from API
+  const [userCounts, setUserCounts] = useState({
+    total_users: 0,
+    active: 0,
+    blocked: 0,
+    admins: 0,
+  });
+  const [countsLoading, setCountsLoading] = useState(true);
+  const [countsError, setCountsError] = useState<string | null>(null);
 
-    return { active, blocked, admins };
-  }, [customers]);
+  useEffect(() => {
+    let mounted = true;
+    setCountsLoading(true);
+    setCountsError(null);
+    dashboardApi.fetchUsersCount()
+      .then((res: any) => {
+        if (mounted) {
+          const data = res.data || res;
+          setUserCounts({
+            total_users: data.total_users ?? 0,
+            active: data.active ?? 0,
+            blocked: data.blocked ?? 0,
+            admins: data.admins ?? 0,
+          });
+        }
+      })
+      .catch(() => {
+        if (mounted) setCountsError("Failed to load user counts");
+      })
+      .finally(() => {
+        if (mounted) setCountsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const filteredCustomers = useMemo(() => {
     let result = customers;
-
-    if (searchTerm) {
-      const query = searchTerm.toLowerCase();
-      result = result.filter((c) =>
-        c.name.toLowerCase().includes(query) ||
-        (c.email ?? "").toLowerCase().includes(query) ||
-        (c.phone ?? "").toLowerCase().includes(query)
-      );
-    }
-
-    if (statusFilter !== "All") {
-      result = result.filter((c) => c.status === statusFilter);
-    }
-
-    if (roleFilter !== "All") {
-      result = result.filter((c) => c.role === roleFilter);
-    }
 
     if (verifiedFilter === "email") result = result.filter((c) => c.isEmailVerified);
     else if (verifiedFilter === "phone") result = result.filter((c) => c.isPhoneVerified);
@@ -979,37 +999,39 @@ const CustomerManagement: React.FC = () => {
     }
 
     return result;
-  }, [customers, searchTerm, statusFilter, roleFilter, verifiedFilter, phoneFilter]);
+  }, [customers, verifiedFilter, phoneFilter]);
+
+  const hasServerFilters = !!(
+    deferredSearchTerm ||
+    statusFilter !== "All" ||
+    roleFilter !== "All"
+  );
+  const displayedCustomers = hasServerFilters ? customers : filteredCustomers;
 
   // If phone filter is present in URL and exactly one match, open details panel
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const phone = params.get("phone");
-    if (phone && filteredCustomers.length === 1) {
-      dispatch(customersActions.setSelectedCustomerId(filteredCustomers[0].id));
+    if (phone && displayedCustomers.length === 1) {
+      dispatch(customersActions.setSelectedCustomerId(displayedCustomers[0].id));
     }
-  }, [filteredCustomers, dispatch]);
+  }, [displayedCustomers, dispatch]);
 
   const navigate = useNavigate();
   const location = useLocation();
   const selectedCustomer = useMemo(
-    () => filteredCustomers.find((c) => c.id === selectedCustomerId) ?? null,
-    [filteredCustomers, selectedCustomerId]
+    () => displayedCustomers.find((c) => c.id === selectedCustomerId) ?? null,
+    [displayedCustomers, selectedCustomerId]
   );
 
-  const totalFilteredCount = filteredCustomers.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
-  const paginatedCustomers = useMemo(
-    () => filteredCustomers.slice((page - 1) * limit, page * limit),
-    [filteredCustomers, page, limit]
-  );
-  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
-  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedCustomers.length, totalFilteredCount);
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + displayedCustomers.length, totalCount);
 
   // Pre-format dates for table (avoid repeated new Date per cell)
   const formattedDates = useMemo(() => {
     const map = new Map<string, { joined: string; lastLogin: string }>();
-    for (const c of paginatedCustomers) {
+    for (const c of displayedCustomers) {
       const joined = new Date(c.createdAt).toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "short",
@@ -1025,7 +1047,7 @@ const CustomerManagement: React.FC = () => {
       map.set(c.id, { joined, lastLogin });
     }
     return map;
-  }, [paginatedCustomers]);
+  }, [displayedCustomers]);
 
   // View handler navigates to full-page user details
   const onViewCustomer = useCallback(
@@ -1041,11 +1063,11 @@ const CustomerManagement: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const phone = params.get("phone");
     if (!phone) return;
-    const matches = filteredCustomers.filter((c: Customer) => c.phone && c.phone.includes(phone));
+    const matches = displayedCustomers.filter((c: Customer) => c.phone && c.phone.includes(phone));
     if (matches.length === 1) {
       navigate(`/admin/users/${matches[0].id}`, { replace: true });
     }
-  }, [location.search, filteredCustomers, navigate]);
+  }, [location.search, displayedCustomers, navigate]);
 
   const onClosePanel = useCallback(() => {
     dispatch(customersActions.setSelectedCustomerId(null));
@@ -1055,7 +1077,7 @@ const CustomerManagement: React.FC = () => {
   const handleExport = useCallback(() => {
     window.setTimeout(() => {
       const headers = ["Name", "Email", "Status", "Role", "Phone", "Verified", "Joined"];
-      const rows = filteredCustomers.map((c) => [
+      const rows = displayedCustomers.map((c) => [
         c.name,
         c.email,
         c.status,
@@ -1087,7 +1109,7 @@ const CustomerManagement: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }, 0);
-  }, [filteredCustomers]);
+  }, [displayedCustomers]);
 
   // Action handler for block/unblock/softDelete/restore/setRole
   const onAction = useCallback(
@@ -1111,7 +1133,7 @@ const CustomerManagement: React.FC = () => {
             initial={{ opacity: 0, y: -40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100]"
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-100"
           >
             <div
               className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl shadow-2xl border text-sm font-bold backdrop-blur-xl ${toast.type === "success"
@@ -1148,15 +1170,15 @@ const CustomerManagement: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat
           label="Total Users"
-          value={`${totalCount}`}
-          sub="All registered"
+          value={countsLoading ? "..." : `${userCounts.total_users}`}
+          sub={countsError ? countsError : "All registered"}
           icon={<User size={16} className="text-[#A1A1AA]" />}
           onClick={handleReset}
         />
         <QuickStat
           label="Active"
-          value={`${stats.active}`}
-          sub="Active accounts"
+          value={countsLoading ? "..." : `${userCounts.active}`}
+          sub={countsError ? countsError : "Active accounts"}
           icon={<CheckCircle2 size={16} className="text-emerald-500" />}
           onClick={() => {
             setStatusFilter("Active");
@@ -1167,8 +1189,8 @@ const CustomerManagement: React.FC = () => {
         />
         <QuickStat
           label="Blocked"
-          value={`${stats.blocked}`}
-          sub="Suspended"
+          value={countsLoading ? "..." : `${userCounts.blocked}`}
+          sub={countsError ? countsError : "Suspended"}
           icon={<XCircle size={16} className="text-rose-500" />}
           onClick={() => {
             setStatusFilter("Blocked");
@@ -1179,8 +1201,8 @@ const CustomerManagement: React.FC = () => {
         />
         <QuickStat
           label="Admins"
-          value={`${stats.admins}`}
-          sub="Admin role"
+          value={countsLoading ? "..." : `${userCounts.admins}`}
+          sub={countsError ? countsError : "Admin role"}
           icon={<Shield size={16} className="text-blue-500" />}
           onClick={() => {
             setRoleFilter("admin");
@@ -1196,19 +1218,6 @@ const CustomerManagement: React.FC = () => {
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-
-            <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
-
-            <button
-              onClick={handleReset}
-              className="p-2 text-[#A1A1AA] hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-              title="Clear Filters"
-            >
-              <RotateCcw size={16} />
-            </button>
-
-            <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
-
             <button
               onClick={() => setIsFilterOpen((v) => !v)}
               className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen ? "bg-black text-white border-black" : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
@@ -1272,7 +1281,7 @@ const CustomerManagement: React.FC = () => {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+          <table className="w-full text-left border-collapse min-w-250">
             <thead className="bg-[#FAFAFA]">
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
                 {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
@@ -1456,7 +1465,7 @@ const CustomerManagement: React.FC = () => {
                     </td>
                   </tr>
                 ))
-                : paginatedCustomers.map((c, index) => {
+                : displayedCustomers.map((c, index) => {
                   const fd = formattedDates.get(c.id);
                   return (
                     <CustomerRow
@@ -1476,7 +1485,7 @@ const CustomerManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && totalFilteredCount === 0 && (
+          {status !== "loading" && displayedCustomers.length === 0 && (
             <div className="py-20 text-center space-y-3">
               <User className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No matching results</p>
@@ -1491,7 +1500,7 @@ const CustomerManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} users
+              Showing {visibleStart}-{visibleEnd} of {totalCount} users
             </div>
             <select
               value={limit}

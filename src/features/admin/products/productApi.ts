@@ -95,9 +95,10 @@ export const productsApi = {
   list: async (
     params?: ProductsQuery
   ): Promise<{ results: ProductDto[]; count: number }> => {
+    const { page: _page, ...requestParams } = params ?? {};
     const res = await api.get<{ results: ProductDto[]; count: number }>(
       "/products/products/",
-      { params }
+      { params: requestParams }
     );
     return res.data;
   },

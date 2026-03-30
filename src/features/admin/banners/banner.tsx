@@ -211,14 +211,20 @@ const BannersManagement: React.FC = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60" />
 
                                     {/* Status Badge */}
-                                    <div className="absolute top-4 left-4">
+                                    <div className="absolute top-4 left-4 flex items-center gap-2">
                                         <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${banner.is_active ? "bg-green-500 text-white" : "bg-slate-500 text-white"
                                             }`}>
                                             {banner.is_active ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
                                             {banner.is_active ? "Active" : "Paused"}
                                         </span>
-                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white ml-2">
-                                            {banner.position || "home_hero"}
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white">
+                                            {banner.position === 'home_hero' ? 'HERO' : 
+                                             banner.position === 'home_banner' ? 'HOME BANNER' : 
+                                             banner.position === 'category_banner' ? 'CATEGORY BANNER' :
+                                             banner.position === 'popup' ? 'POPUP' :
+                                             banner.position === 'announcement' ? 'ANNOUNCEMENT' :
+                                             banner.position === 'home_offer_card' ? 'OFFER CARD' : 
+                                             String(banner.position || "HOME HERO").toUpperCase().replace('_', ' ')}
                                         </span>
                                     </div>
 
@@ -377,14 +383,17 @@ const BannersManagement: React.FC = () => {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Banner Position</label>
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Banner Type</label>
                                                 <select
                                                     value={formData.position}
                                                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                                                     className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold appearance-none cursor-pointer"
                                                 >
                                                     <option value="home_hero">Home Hero Carousel</option>
-                                                    <option value="home_banner">Home Banner (Standard)</option>
+                                                    <option value="home_banner">Home Banner</option>
+                                                    <option value="category_banner">Category Banner</option>
+                                                    <option value="popup">Popup</option>
+                                                    <option value="announcement">Announcement</option>
                                                     <option value="home_offer_card">Home Offer Card (Small)</option>
                                                 </select>
                                             </div>
@@ -436,8 +445,6 @@ const BannersManagement: React.FC = () => {
                                                 />
                                             </div>
                                         </div>
-
-                                        {/* Active checkbox moved above */}
                                     </div>
 
                                     {/* Right Column: Images */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import { dashboardApi } from "../dashboard/dashboardApi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -44,7 +45,6 @@ import type { Order, OrderStatus, PaymentStatus } from "./ordersSlice";
 /* --- FILTER TYPES --- */
 type FilterOrderStatus = OrderStatus | "All";
 type FilterPaymentStatus = PaymentStatus | "All";
-const FETCH_ALL_ORDERS_LIMIT = 1000;
 
 /* --- Column definitions --- */
 type ColumnKey =
@@ -155,14 +155,18 @@ const OrderManagement: React.FC = () => {
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
   useEffect(() => {
+    const offset = (page - 1) * limit;
     dispatch(
       ordersActions.fetchOrdersRequest({
-        page: 1,
-        limit: FETCH_ALL_ORDERS_LIMIT,
-        offset: 0,
+        q: debouncedSearch || undefined,
+        status: statusFilter === "All" ? undefined : statusFilter,
+        payment_status: paymentFilter === "All" ? undefined : paymentFilter,
+        page,
+        limit,
+        offset,
       })
     );
-  }, [dispatch]);
+  }, [dispatch, debouncedSearch, statusFilter, paymentFilter, page, limit]);
 
   // Fetch dashboard analytics for orders page
   useEffect(() => {
@@ -214,23 +218,9 @@ const OrderManagement: React.FC = () => {
     setPage(1);
   };
 
-  // Filter from the full loaded dataset, then paginate the filtered rows locally.
+  // Keep only filters the backend does not currently expose client-side.
   const filteredOrders = useMemo(() => {
     let result = orders;
-    if (debouncedSearch) {
-      const query = debouncedSearch.toLowerCase();
-      result = result.filter((o) =>
-        o.orderNumber.toLowerCase().includes(query) ||
-        (o.shippingAddress.fullName || "").toLowerCase().includes(query) ||
-        (o.shippingAddress.phoneNumber || "").toLowerCase().includes(query)
-      );
-    }
-    if (statusFilter !== "All") {
-      result = result.filter((o) => o.status === statusFilter);
-    }
-    if (paymentFilter !== "All") {
-      result = result.filter((o) => o.paymentStatus === paymentFilter);
-    }
     if (customerFilter) {
       result = result.filter((o) =>
         (o.shippingAddress.fullName || "").toLowerCase().includes(customerFilter.toLowerCase())
@@ -262,15 +252,48 @@ const OrderManagement: React.FC = () => {
       );
     }
     return result;
-  }, [orders, debouncedSearch, statusFilter, paymentFilter, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
+  }, [orders, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
 
-  // Stats
-  const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0);
-  const processingCount = filteredOrders.filter(
-    (o) => o.status === "PROCESSING" || o.status === "PAID"
-  ).length;
-  const shippedCount = filteredOrders.filter((o) => o.status === "SHIPPED").length;
-  const deliveredCount = filteredOrders.filter((o) => o.status === "DELIVERED").length;
+  const hasServerFilters = !!(debouncedSearch || statusFilter !== "All" || paymentFilter !== "All");
+  const displayedOrders = hasServerFilters ? orders : filteredOrders;
+
+
+  // Order counts from API
+  const [orderCounts, setOrderCounts] = useState({
+    total_orders: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    total_revenue: "0.00",
+  });
+  const [countsLoading, setCountsLoading] = useState(true);
+  const [countsError, setCountsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setCountsLoading(true);
+    setCountsError(null);
+    dashboardApi.fetchOrdersCount()
+      .then((res: any) => {
+        if (mounted) {
+          const data = res.data || res;
+          setOrderCounts({
+            total_orders: data.total_orders ?? 0,
+            processing: data.processing ?? 0,
+            shipped: data.shipped ?? 0,
+            delivered: data.delivered ?? 0,
+            total_revenue: data.total_revenue ?? "0.00",
+          });
+        }
+      })
+      .catch(() => {
+        if (mounted) setCountsError("Failed to load order counts");
+      })
+      .finally(() => {
+        if (mounted) setCountsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   // Unique slots from data for dropdown
   const uniqueSlots = useMemo(() =>
@@ -278,19 +301,14 @@ const OrderManagement: React.FC = () => {
     [orders]
   );
 
-  const totalFilteredCount = filteredOrders.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
-  const paginatedOrders = useMemo(
-    () => filteredOrders.slice((page - 1) * limit, page * limit),
-    [filteredOrders, page, limit]
-  );
-  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
-  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedOrders.length, totalFilteredCount);
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + displayedOrders.length, totalCount);
 
   // Export handler
   const handleExport = () => {
     const headers = ["Order ID", "Customer", "Items", "Total", "Status", "Date", "Payment", "Payment Method"];
-    const rows = filteredOrders.map(o => [
+    const rows = displayedOrders.map(o => [
       o.orderNumber,
       o.shippingAddress.fullName || "",
       o.items.length,
@@ -409,26 +427,26 @@ const OrderManagement: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat
           label="Total Orders"
-          value={`${totalCount}`}
-          sub={`AED ${totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+          value={countsLoading ? "..." : `${orderCounts.total_orders}`}
+          sub={countsError ? countsError : `AED ${Number(orderCounts.total_revenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
           icon={<ShoppingBag size={16} className="text-[#A1A1AA]" />}
         />
         <QuickStat
           label="Processing"
-          value={`${processingCount}`}
-          sub="Awaiting fulfillment"
+          value={countsLoading ? "..." : `${orderCounts.processing}`}
+          sub={countsError ? countsError : "Awaiting fulfillment"}
           icon={<Clock size={16} className="text-amber-500" />}
         />
         <QuickStat
           label="Shipped"
-          value={`${shippedCount}`}
-          sub="In transit"
+          value={countsLoading ? "..." : `${orderCounts.shipped}`}
+          sub={countsError ? countsError : "In transit"}
           icon={<Truck size={16} className="text-blue-500" />}
         />
         <QuickStat
           label="Delivered"
-          value={`${deliveredCount}`}
-          sub="Completed"
+          value={countsLoading ? "..." : `${orderCounts.delivered}`}
+          sub={countsError ? countsError : "Completed"}
           icon={<CheckCircle2 size={16} className="text-emerald-500" />}
         />
       </div>
@@ -439,14 +457,6 @@ const OrderManagement: React.FC = () => {
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
 
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            <button
-              onClick={handleReset}
-              className="p-2 text-[#A1A1AA] hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-              title="Clear Filters"
-            >
-              <RotateCcw size={16} />
-            </button>
-            <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen
@@ -512,7 +522,7 @@ const OrderManagement: React.FC = () => {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+          <table className="w-full text-left border-collapse min-w-225">
             <thead className="bg-[#FAFAFA]">
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
                 {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
@@ -539,16 +549,7 @@ const OrderManagement: React.FC = () => {
                   )}
                   {isVisible("order") && (
                     <td className="px-5 py-3">
-                      <div className="relative">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={12} />
-                        <input
-                          type="text"
-                          placeholder="Order #..."
-                          value={searchTerm}
-                          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                          className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
-                        />
-                      </div>
+                      <div className="text-[10px] text-[#A1A1AA] font-medium italic">—</div>
                     </td>
                   )}
                   {isVisible("customer") && (
@@ -689,7 +690,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-4"><div className="h-8 w-8 bg-gray-100 rounded-lg ml-auto" /></td>
                   </tr>
                 ))
-                : paginatedOrders.map((order, index) => (
+                : displayedOrders.map((order, index) => (
                   <tr
                     key={order.id}
                     className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
@@ -814,7 +815,7 @@ const OrderManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && totalFilteredCount === 0 && (
+          {status !== "loading" && displayedOrders.length === 0 && (
             <div className="py-20 text-center space-y-3">
               <ShoppingBag className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No orders found</p>
@@ -833,7 +834,7 @@ const OrderManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} orders
+              Showing {visibleStart}-{visibleEnd} of {totalCount} orders
             </div>
             <select
               value={limit}
@@ -998,7 +999,7 @@ const OrderDetailsPanel = ({
         className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 transition-opacity"
         onClick={onClose}
       />
-      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-[60] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="p-6 border-b border-[#EEEEEE] flex justify-between items-center bg-white sticky top-0">
           <div className="flex items-center gap-3">
@@ -1190,7 +1191,7 @@ const OrderDetailsPanel = ({
               <div className="space-y-3">
                 {order.statusHistory.map((entry, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] flex-shrink-0" />
+                    <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] shrink-0" />
                     <div>
                       <p className="text-xs font-bold text-[#18181B]">{entry.status}</p>
                       <p className="text-[10px] text-[#A1A1AA]">

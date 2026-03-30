@@ -80,7 +80,16 @@ export interface DeliveryEstimationDto {
     }>;
 }
 
-/* ── Order DTO from backend ── */
+/* --- Order Counts DTO --- */
+export interface OrderCountsDto {
+    total: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+}
+
+/* --- Order DTO from backend --- */
 export interface OrderDto {
     id: number;
     status: string;
@@ -110,9 +119,10 @@ export const ordersApi = {
     list: async (
         params?: OrdersQuery
     ): Promise<{ results: OrderDto[]; count: number }> => {
+        const { page: _page, ...requestParams } = params ?? {};
         const res = await api.get<{ results: OrderDto[]; count: number }>(
             "/orders/",
-            { params }
+            { params: requestParams }
         );
         return res.data;
     },

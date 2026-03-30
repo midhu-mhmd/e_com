@@ -41,7 +41,7 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
                         <span className="text-white font-black text-[10px] leading-none">S</span>
                     </div>
                     <span className="text-xs font-black tracking-widest text-gray-900 uppercase">
-                        Simak Fresh
+                        {t('brand.name')}
                     </span>
                 </div>
                 {showBackButton && (

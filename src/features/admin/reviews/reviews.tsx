@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Star,
@@ -64,7 +64,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "updated", label: "Updated", icon: <Calendar size={12} />, defaultVisible: false },
   { key: "actions", label: "Actions", defaultVisible: true, alwaysVisible: true },
 ];
-const FETCH_ALL_REVIEWS_LIMIT = 1000;
 
  
 
@@ -128,16 +127,20 @@ const ReviewsManagement: React.FC = () => {
 
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
-  // Fetch the full dataset once, then filter + paginate locally.
+  const reviewsQuery = useMemo(
+    () => ({
+      q: debouncedSearch || undefined,
+      rating: filterRating === "All" ? undefined : filterRating,
+      page,
+      limit,
+      offset: (page - 1) * limit,
+    }),
+    [debouncedSearch, filterRating, page, limit]
+  );
+
   useEffect(() => {
-    dispatch(
-      reviewsActions.fetchReviewsRequest({
-        page: 1,
-        limit: FETCH_ALL_REVIEWS_LIMIT,
-        offset: 0,
-      })
-    );
-  }, [dispatch]);
+    dispatch(reviewsActions.fetchReviewsRequest(reviewsQuery));
+  }, [dispatch, reviewsQuery]);
 
   const handleReset = () => {
     setSearchTerm("");
@@ -147,17 +150,9 @@ const ReviewsManagement: React.FC = () => {
     setPage(1);
   };
 
-  // Filter from the full loaded dataset, then paginate the filtered rows locally.
+  // Keep only filters the backend does not currently expose client-side.
   const filteredReviews = useMemo(() => {
     let result = reviews;
-    if (debouncedSearch) {
-      result = result.filter((r) =>
-        r.productName.toLowerCase().includes(debouncedSearch.toLowerCase())
-      );
-    }
-    if (filterRating !== "All") {
-      result = result.filter((r) => r.rating === filterRating);
-    }
     if (customerFilter) {
       result = result.filter((r) =>
         r.userName.toLowerCase().includes(customerFilter.toLowerCase())
@@ -169,26 +164,28 @@ const ReviewsManagement: React.FC = () => {
       );
     }
     return result;
-  }, [reviews, debouncedSearch, customerFilter, commentFilter]);
+  }, [reviews, customerFilter, commentFilter]);
+
+  const hasServerFilters = !!(debouncedSearch || filterRating !== "All");
+  const displayedReviews = hasServerFilters ? reviews : filteredReviews;
 
   const selectedReview = useMemo(
-    () => filteredReviews.find((r) => r.id === selectedReviewId) ?? null,
-    [filteredReviews, selectedReviewId]
+    () => displayedReviews.find((r) => r.id === selectedReviewId) ?? null,
+    [displayedReviews, selectedReviewId]
   );
 
-  const totalFilteredCount = filteredReviews.length;
-  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / limit));
-  const paginatedReviews = useMemo(
-    () => filteredReviews.slice((page - 1) * limit, page * limit),
-    [filteredReviews, page, limit]
-  );
-  const visibleStart = totalFilteredCount === 0 ? 0 : (page - 1) * limit + 1;
-  const visibleEnd = totalFilteredCount === 0 ? 0 : Math.min((page - 1) * limit + paginatedReviews.length, totalFilteredCount);
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + displayedReviews.length, totalCount);
+
+  const refetchReviews = useCallback(() => {
+    dispatch(reviewsActions.fetchReviewsRequest(reviewsQuery));
+  }, [dispatch, reviewsQuery]);
 
   // Export handler
   const handleExport = () => {
     const headers = ["ID", "Product", "Customer", "Rating", "Comment", "Visibility", "Date"];
-    const rows = filteredReviews.map(r => [
+    const rows = displayedReviews.map(r => [
       r.id,
       r.productName,
       r.userName,
@@ -217,11 +214,11 @@ const ReviewsManagement: React.FC = () => {
 
   // Stats from current data
   const avgRating =
-    filteredReviews.length > 0
-      ? (filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1)
+    displayedReviews.length > 0
+      ? (displayedReviews.reduce((sum, r) => sum + r.rating, 0) / displayedReviews.length).toFixed(1)
       : "0.0";
-  const visibleCount = filteredReviews.filter((r) => r.isVisible).length;
-  const hiddenCount = filteredReviews.length - visibleCount;
+  const visibleCount = displayedReviews.filter((r) => r.isVisible).length;
+  const hiddenCount = displayedReviews.length - visibleCount;
 
   return (
     <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
@@ -265,16 +262,6 @@ const ReviewsManagement: React.FC = () => {
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
 
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            <button
-              onClick={handleReset}
-              className="p-2 text-[#A1A1AA] hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-              title="Clear Filters"
-            >
-              <RotateCcw size={16} />
-            </button>
-
-            <div className="h-6 w-px bg-[#EEEEEE] mx-1" />
-
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen
@@ -466,7 +453,7 @@ const ReviewsManagement: React.FC = () => {
                   </tr>
                 ))
               ) : (
-                paginatedReviews.map((r, index) => (
+                displayedReviews.map((r, index) => (
                   <tr key={r.id} className="group hover:bg-[#FBFBFA] transition-colors">
                     {isVisible("index") && (
                       <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
@@ -563,13 +550,7 @@ const ReviewsManagement: React.FC = () => {
                                 toast.show(err?.response?.data?.detail || "Failed to toggle visibility", "error");
                               } finally {
                                 setTogglingId(null);
-                                dispatch(
-                                  reviewsActions.fetchReviewsRequest({
-                                    page: 1,
-                                    limit: FETCH_ALL_REVIEWS_LIMIT,
-                                    offset: 0,
-                                  })
-                                );
+                                refetchReviews();
                               }
                             }}
                             disabled={!!togglingId}
@@ -597,7 +578,7 @@ const ReviewsManagement: React.FC = () => {
             </tbody>
           </table>
 
-          {status !== "loading" && totalFilteredCount === 0 && (
+          {status !== "loading" && displayedReviews.length === 0 && (
             <div className="py-20 text-center space-y-3">
               <MessageSquare className="mx-auto text-[#D4D4D8]" size={32} />
               <p className="text-sm font-bold text-[#18181B]">No reviews found</p>
@@ -616,7 +597,7 @@ const ReviewsManagement: React.FC = () => {
         <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
-              Showing {visibleStart}-{visibleEnd} of {totalFilteredCount} reviews
+              Showing {visibleStart}-{visibleEnd} of {totalCount} reviews
             </div>
             <select
               value={limit}
@@ -653,6 +634,7 @@ const ReviewsManagement: React.FC = () => {
       {selectedReview && (
         <ReviewDetailPanel
           review={selectedReview}
+          onRefetch={refetchReviews}
           onClose={() => dispatch(reviewsActions.setSelectedReviewId(null))}
         />
       )}
@@ -663,9 +645,11 @@ const ReviewsManagement: React.FC = () => {
 /* ── REVIEW DETAIL SLIDE-OVER ── */
 const ReviewDetailPanel = ({
   review,
+  onRefetch,
   onClose,
 }: {
   review: Review;
+  onRefetch: () => void;
   onClose: () => void;
 }) => {
   const [response, setResponse] = useState(review.adminResponse ?? "");
@@ -694,7 +678,7 @@ const ReviewDetailPanel = ({
       const res = await reviewsApi.toggleVisibility(review.id);
       setLocalVisible((v) => !v);
       toast.show(res?.message || "Visibility toggled", "success");
-      dispatch(reviewsActions.fetchReviewsRequest(undefined));
+      onRefetch();
     } catch (e: any) {
       toast.show(e?.response?.data?.detail || "Failed to toggle visibility", "error");
     } finally {

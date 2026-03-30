@@ -31,9 +31,10 @@ export const reviewsApi = {
     list: async (
         params?: ReviewsQuery
     ): Promise<{ results: ReviewDto[]; count: number }> => {
+        const { page: _page, ...requestParams } = params ?? {};
         const res = await api.get<{ results: ReviewDto[]; count: number }>(
             "/reviews/",
-            { params }
+            { params: requestParams }
         );
         return res.data;
     },

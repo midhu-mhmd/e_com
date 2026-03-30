@@ -19,8 +19,10 @@ import {
   ScanLine,
   Image as BannersIcon
 } from 'lucide-react';
+
 import ScannerModal from './ScannerModal';
 import AdminNotificationsDropdown from '../../../features/admin/notifications/AdminNotificationsDropdown';
+import simakLogo from '../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png';
 
 
 interface NavItem {
@@ -89,7 +91,13 @@ const AdminLayout: React.FC = () => {
       >
         <div className="h-20 flex items-center justify-between px-6">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-black flex items-center justify-center text-white font-mono font-bold text-sm">S</div>
+            <div className="w-8 h-8 bg-white flex items-center justify-center rounded overflow-hidden">
+              <img
+                src={simakLogo}
+                alt="SIMAK FRESH"
+                className="h-7 w-7 object-contain"
+              />
+            </div>
             {(isSidebarOpen || isMobileMenuOpen) && (
               <span className="ml-3 font-bold text-sm tracking-[0.2em] uppercase">SIMAK FRESH</span>
             )}
