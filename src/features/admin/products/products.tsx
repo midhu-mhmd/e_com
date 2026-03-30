@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     Search,
     Filter,
-    RotateCcw,
     ChevronRight,
     ChevronLeft,
     Download,

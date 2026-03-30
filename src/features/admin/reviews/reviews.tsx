@@ -8,7 +8,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Download,
-  RotateCcw,
   MessageSquare,
   ListFilter,
   Columns3,
