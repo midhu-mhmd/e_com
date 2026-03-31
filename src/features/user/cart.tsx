@@ -59,9 +59,6 @@ const CartPage: React.FC = () => {
         );
     }
 
-    const shippingCost = cartTotal > 500 ? 0 : 50; // Free shipping over AED 500
-    const finalTotal = Number((cartTotal + shippingCost).toFixed(2));
-
     if (cartItems.length === 0) {
         return (
             <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4">
@@ -189,18 +186,16 @@ const CartPage: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-sm text-stone-500">
                                 <span>{t('cart.shipping')}</span>
-                                <span className="font-bold text-green-600">{shippingCost === 0 ? t('cart.free') : `AED ${shippingCost.toFixed(2)}`}</span>
+                                <span className="font-bold text-stone-500">Calculated at checkout</span>
                             </div>
-                            {shippingCost > 0 && (
-                                <p className="text-xs text-stone-400 italic">
-                                    {t('cart.addMoreForFreeShipping', { amount: (500 - cartTotal).toFixed(2) })}
-                                </p>
-                            )}
+                            <p className="text-xs text-stone-400 italic">
+                                Delivery is free for orders AED 40 or more after discount.
+                            </p>
                         </div>
 
                         <div className="flex justify-between items-end">
-                            <span className="text-sm font-bold text-stone-900">{t('cart.total')}</span>
-                            <span className="text-2xl font-black text-cyan-900">AED {finalTotal.toFixed(2)}</span>
+                            <span className="text-sm font-bold text-stone-900">Items total</span>
+                            <span className="text-2xl font-black text-cyan-900">AED {cartTotal.toFixed(2)}</span>
                         </div>
 
                         <button

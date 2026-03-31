@@ -3,26 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { useDeliveryEstimation } from "../../hooks/useDeliveryEstimation";
 import { selectCartItems, selectCartTotal, clearCart } from "../admin/cart/cartSlice";
-import { ordersApi } from "../admin/orders/ordersApi";
+import { ordersApi, type CheckoutSummaryResponse } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
   CheckCircle, MapPin, CreditCard, Truck, ArrowLeft, Loader2,
-  Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info, Check
+  Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info, Check, Tag, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../components/ui/Toast";
 import { MdDeliveryDining } from "react-icons/md";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
-  import { profileApi } from "./profileApi";
-  import { setUser } from "../auth/authSlice";
-  import { tokenManager } from "../../services/api";
+import { profileApi } from "./profileApi";
+import { setUser } from "../auth/authSlice";
+import { api, tokenManager } from "../../services/api";
 
 /* ─── Delivery Slot Options ─── */
 const DELIVERY_SLOTS = [
-  { value: "morning", key: "delivery.slots.morning" },
-  { value: "afternoon", key: "delivery.slots.afternoon" },
-  { value: "evening", key: "delivery.slots.evening" },
+  { value: "9AM-12PM", key: "delivery.slots.morning" },
+  { value: "2PM-5PM", key: "delivery.slots.afternoon" },
+  { value: "6PM-9PM", key: "delivery.slots.evening" },
 ];
 
 // ✅ Updated Tip Presets
@@ -43,6 +43,87 @@ const EMIRATES = [
   { value: "ras_al_khaimah", key: "emirates.ras_al_khaimah" },
   { value: "fujairah", key: "emirates.fujairah" },
 ];
+
+type CouponFeedback = {
+  type: "success" | "error";
+  message: string;
+};
+
+type AvailableCoupon = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  badge?: string;
+};
+
+const parseAmount = (value?: string | number | null) => {
+  const parsed = Number.parseFloat(String(value ?? 0));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeCouponCode = (value?: string | null) =>
+  String(value ?? "").trim().toUpperCase();
+
+const normalizeAvailableCoupon = (raw: any, index: number): AvailableCoupon | null => {
+  const code = normalizeCouponCode(raw?.coupon_code ?? raw?.code ?? raw?.promo_code);
+
+  if (!code) return null;
+
+  const discountType = String(raw?.discount_type ?? "").toLowerCase();
+  const percentage = raw?.discount_percentage ?? raw?.percentage;
+  const fixedAmount = raw?.discount_amount ?? raw?.amount ?? raw?.discount_value;
+
+  let badge = "";
+  if (discountType === "percentage" && percentage !== undefined && percentage !== null) {
+    badge = `${percentage}% OFF`;
+  } else if (fixedAmount !== undefined && fixedAmount !== null && String(fixedAmount).trim() !== "") {
+    badge = `AED ${parseAmount(fixedAmount).toFixed(0)} OFF`;
+  }
+
+  return {
+    id: String(raw?.id ?? `${code}-${index}`),
+    code,
+    title: raw?.title ?? raw?.name ?? code,
+    description:
+      raw?.description ??
+      raw?.message ??
+      raw?.short_description ??
+      (badge ? `Apply ${badge.toLowerCase()} to this order.` : "Available coupon"),
+    badge: badge || undefined,
+  };
+};
+
+const getApiErrorMessage = (error: any, fallback: string) => {
+  const data = error?.response?.data;
+
+  if (typeof data === "string" && data.trim()) return data;
+  if (typeof data?.message === "string" && data.message.trim()) return data.message;
+  if (typeof data?.error === "string" && data.error.trim()) return data.error;
+  if (typeof data?.detail === "string" && data.detail.trim()) return data.detail;
+
+  if (Array.isArray(data?.non_field_errors) && data.non_field_errors.length > 0) {
+    return String(data.non_field_errors[0]);
+  }
+
+  if (data && typeof data === "object") {
+    const firstFieldError = Object.values(data).find(
+      (value) =>
+        (Array.isArray(value) && value.length > 0) ||
+        (typeof value === "string" && value.trim())
+    );
+
+    if (Array.isArray(firstFieldError) && firstFieldError.length > 0) {
+      return String(firstFieldError[0]);
+    }
+
+    if (typeof firstFieldError === "string" && firstFieldError.trim()) {
+      return firstFieldError;
+    }
+  }
+
+  return fallback;
+};
 
 const CheckoutPage: React.FC = () => {
   const { t } = useTranslation("checkout");
@@ -70,6 +151,17 @@ const CheckoutPage: React.FC = () => {
   const [tipAmount, setTipAmount] = useState(0);
   const [customTip, setCustomTip] = useState<string>("");
   const [isCustomTip, setIsCustomTip] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [couponFeedback, setCouponFeedback] = useState<CouponFeedback | null>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [couponsError, setCouponsError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryResponse | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [summaryUnsupported, setSummaryUnsupported] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "TELR">("COD");
 
@@ -177,15 +269,202 @@ const CheckoutPage: React.FC = () => {
   }, []);
 
   // ─── Computed ───
-  const shippingCost = cartTotal > 500 ? 0 : 50;
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAvailableCoupons = async () => {
+      setLoadingCoupons(true);
+      setCouponsError(null);
+
+      try {
+        const response = await api.get("/marketing/coupons/");
+        const rawCoupons = Array.isArray(response.data)
+          ? response.data
+          : Array.isArray(response.data?.results)
+            ? response.data.results
+            : [];
+
+        const normalizedCoupons = rawCoupons
+          .map((coupon: any, index: number) => normalizeAvailableCoupon(coupon, index))
+          .filter(Boolean) as AvailableCoupon[];
+
+        if (isMounted) {
+          setAvailableCoupons(normalizedCoupons);
+        }
+      } catch (error: any) {
+        if (isMounted) {
+          setCouponsError(
+            getApiErrorMessage(error, "Unable to load available coupons right now.")
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingCoupons(false);
+        }
+      }
+    };
+
+    void loadAvailableCoupons();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const effectiveTip = isCustomTip ? (parseFloat(customTip) || 0) : tipAmount;
-  const finalTotal = Number((cartTotal + shippingCost + effectiveTip).toFixed(2));
+  const summarySubtotal = checkoutSummary ? parseAmount(checkoutSummary.cart_total_before_discount) : cartTotal;
+  const summaryDiscount = checkoutSummary ? parseAmount(checkoutSummary.discount_amount) : 0;
+  const summaryAfterDiscount = checkoutSummary ? parseAmount(checkoutSummary.cart_total_after_discount) : cartTotal;
+  const summaryDeliveryCharge = checkoutSummary ? parseAmount(checkoutSummary.delivery_charge) : null;
+  const summaryTip = checkoutSummary ? parseAmount(checkoutSummary.tip_amount) : effectiveTip;
+  const finalTotal = checkoutSummary
+    ? parseAmount(checkoutSummary.final_total)
+    : Number((cartTotal + effectiveTip).toFixed(2));
 
   // Min date = earliest possible delivery (based on tier estimation)
   const deliveryDaysNeeded = estimation?.max_delivery_days || 1;
   const minDate = new Date(Date.now() + deliveryDaysNeeded * 86400000).toISOString().split("T")[0];
 
   // ─── Add Address Handler ───
+  const fetchCheckoutSummary = async () => {
+    if (summaryUnsupported) {
+      return "unsupported" as const;
+    }
+
+    if (!selectedAddressId) {
+      setCheckoutSummary(null);
+      setSummaryError(null);
+      return null;
+    }
+
+    if (!deliveryDate) {
+      setCheckoutSummary(null);
+      setSummaryError(null);
+      return null;
+    }
+
+    setSummaryLoading(true);
+    setSummaryError(null);
+
+    try {
+      const summary = await ordersApi.checkoutSummary({
+        address_id: selectedAddressId,
+        coupon_code: appliedCouponCode || undefined,
+        tip_amount: effectiveTip > 0 ? effectiveTip : undefined,
+        preferred_delivery_date: deliveryDate || undefined,
+        preferred_delivery_slot: deliverySlot || undefined,
+      });
+
+      setCheckoutSummary(summary);
+      setSummaryUnsupported(false);
+
+      if (summary.coupon_message) {
+        setCouponFeedback({
+          type: parseAmount(summary.discount_amount) > 0 ? "success" : "error",
+          message: summary.coupon_message,
+        });
+      }
+
+      return summary;
+    } catch (error: any) {
+      if (error?.response?.status === 405) {
+        setCheckoutSummary(null);
+        setSummaryUnsupported(true);
+        setSummaryError(
+          "This server does not support checkout summary yet. You can still continue to place the order."
+        );
+        return "unsupported" as const;
+      }
+
+      const message = getApiErrorMessage(
+        error,
+        "Unable to load the checkout summary right now."
+      );
+
+      setSummaryError(message);
+      return null;
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!selectedAddressId || !deliveryDate) {
+      setCheckoutSummary(null);
+      setSummaryError(null);
+      return;
+    }
+
+    if (summaryUnsupported) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void fetchCheckoutSummary();
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [selectedAddressId, appliedCouponCode, effectiveTip, deliveryDate, deliverySlot, summaryUnsupported]);
+
+  const handleApplyCoupon = async (couponCode = couponInput) => {
+    const normalizedCoupon = String(couponCode ?? "").trim().toUpperCase();
+
+    if (!normalizedCoupon) {
+      setCouponFeedback({
+        type: "error",
+        message: "Enter a coupon code to apply it.",
+      });
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponFeedback(null);
+    setCouponInput(normalizedCoupon);
+
+    try {
+      const result = await ordersApi.validateCoupon({
+        coupon_code: normalizedCoupon,
+        cart_total: cartTotal,
+      });
+
+      if (result.success) {
+        const resolvedCode = result.coupon_code || normalizedCoupon;
+        setAppliedCouponCode(resolvedCode);
+        setCouponInput(resolvedCode);
+        setCouponFeedback({
+          type: "success",
+          message: result.message,
+        });
+      } else {
+        setAppliedCouponCode("");
+        setCouponFeedback({
+          type: "error",
+          message: result.message,
+        });
+      }
+    } catch (error: any) {
+      const message = getApiErrorMessage(
+        error,
+        "Unable to validate this coupon right now."
+      );
+
+      setAppliedCouponCode("");
+      setCouponFeedback({
+        type: "error",
+        message,
+      });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponInput("");
+    setAppliedCouponCode("");
+    setCouponFeedback(null);
+  };
+
   const handleSaveAddress = async () => {
     if (!validateAddress()) return;
 
@@ -236,6 +515,26 @@ const CheckoutPage: React.FC = () => {
 
     setSubmitting(true);
     try {
+      const latestSummary = await fetchCheckoutSummary();
+
+      if (latestSummary === null) {
+        toast.show(
+          summaryError || "Unable to confirm your final total right now. Please try again.",
+          "error"
+        );
+        return;
+      }
+
+      if (
+        latestSummary !== "unsupported" &&
+        appliedCouponCode &&
+        latestSummary.coupon_message &&
+        parseAmount(latestSummary.discount_amount) <= 0
+      ) {
+        toast.show(latestSummary.coupon_message, "error");
+        return;
+      }
+
       const payload: any = {
         address_id: selectedAddressId,
         payment_method: paymentMethod,
@@ -244,6 +543,7 @@ const CheckoutPage: React.FC = () => {
       if (deliverySlot) payload.preferred_delivery_slot = deliverySlot;
       if (deliveryNotes.trim()) payload.delivery_notes = deliveryNotes.trim();
       if (effectiveTip > 0) payload.tip_amount = effectiveTip;
+      if (appliedCouponCode) payload.coupon_code = appliedCouponCode;
 
       const res = await ordersApi.checkout(payload);
 
@@ -820,7 +1120,168 @@ const CheckoutPage: React.FC = () => {
         {/* ═══ Right Column - Order Summary ═══ */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm sticky top-24 space-y-6">
-            <h2 className="text-lg font-black text-slate-900">{t("summary.title")}</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black text-slate-900">{t("summary.title")}</h2>
+              {summaryLoading && (
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-cyan-700">
+                  <Loader2 size={14} className="animate-spin" />
+                  Updating
+                </span>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-100 rounded-xl text-cyan-700">
+                  <Tag size={16} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-slate-900">
+                    {t("coupon.title", { defaultValue: "Coupon Code" })}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {t("coupon.subtitle", { defaultValue: "Validate your code before placing the order." })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void handleApplyCoupon();
+                    }
+                  }}
+                  placeholder={t("coupon.placeholder", { defaultValue: "Enter coupon code" })}
+                  className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm uppercase tracking-wide focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={appliedCouponCode ? handleRemoveCoupon : () => void handleApplyCoupon()}
+                  disabled={validatingCoupon}
+                  className={`px-4 py-3 rounded-xl text-sm font-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${appliedCouponCode
+                    ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                    : "bg-cyan-600 text-white hover:bg-cyan-700"
+                    }`}
+                >
+                  {validatingCoupon ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : appliedCouponCode ? (
+                    t("coupon.remove", { defaultValue: "Remove" })
+                  ) : (
+                    t("coupon.apply", { defaultValue: "Apply" })
+                  )}
+                </button>
+              </div>
+
+              {appliedCouponCode && (
+                <div className="flex items-center justify-between rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+                  <span className="text-xs font-bold text-emerald-700">
+                    {t("coupon.applied", {
+                      defaultValue: "Applied coupon: {{code}}",
+                      code: appliedCouponCode,
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-emerald-700 hover:text-emerald-900 transition-colors"
+                    aria-label={t("coupon.remove", { defaultValue: "Remove coupon" })}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              {couponFeedback && (
+                <div className={`rounded-xl border px-3 py-2 text-xs font-medium ${couponFeedback.type === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-rose-200 bg-rose-50 text-rose-700"
+                  }`}>
+                  {couponFeedback.message}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    {t("coupon.availableTitle", { defaultValue: "Available Coupons" })}
+                  </p>
+                  {availableCoupons.length > 0 && (
+                    <span className="text-[11px] font-bold text-cyan-700">{availableCoupons.length}</span>
+                  )}
+                </div>
+
+                {loadingCoupons && (
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+                    <Loader2 size={14} className="animate-spin text-cyan-600" />
+                    {t("coupon.loading", { defaultValue: "Loading available coupons..." })}
+                  </div>
+                )}
+
+                {!loadingCoupons && couponsError && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                    {couponsError}
+                  </div>
+                )}
+
+                {!loadingCoupons && !couponsError && availableCoupons.length === 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+                    {t("coupon.empty", { defaultValue: "No coupons are available right now." })}
+                  </div>
+                )}
+
+                {!loadingCoupons && availableCoupons.length > 0 && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {availableCoupons.map((coupon) => {
+                      const isApplied = normalizeCouponCode(appliedCouponCode) === coupon.code;
+
+                      return (
+                        <button
+                          key={coupon.id}
+                          type="button"
+                          onClick={() => void handleApplyCoupon(coupon.code)}
+                          disabled={validatingCoupon}
+                          className={`w-full text-left rounded-2xl border px-3 py-3 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${isApplied
+                            ? "border-emerald-200 bg-emerald-50"
+                            : "border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50/40"
+                            }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-black text-slate-900">{coupon.code}</p>
+                              {coupon.title !== coupon.code && (
+                                <p className="mt-0.5 text-xs font-semibold text-slate-700">{coupon.title}</p>
+                              )}
+                              <p className="mt-1 text-xs text-slate-500">{coupon.description}</p>
+                            </div>
+                            <div className="shrink-0 flex flex-col items-end gap-2">
+                              {coupon.badge && (
+                                <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-cyan-700">
+                                  {coupon.badge}
+                                </span>
+                              )}
+                              <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${isApplied
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-100 text-slate-600"
+                                }`}>
+                                {isApplied
+                                  ? t("coupon.appliedShort", { defaultValue: "Applied" })
+                                  : t("coupon.applyShort", { defaultValue: "Tap to apply" })}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Items */}
             <div className="space-y-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
@@ -847,23 +1308,84 @@ const CheckoutPage: React.FC = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">{t("summary.subtotal")}</span>
                 <span className="font-bold text-slate-900">
-                  {t("currency.aed", { value: cartTotal.toFixed(2) })}
+                  {t("currency.aed", { value: summarySubtotal.toFixed(2) })}
                 </span>
               </div>
+
+              {summaryDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-emerald-600">
+                    {t("summary.discount", { defaultValue: "Discount" })}
+                    {checkoutSummary?.discount_code ? ` (${checkoutSummary.discount_code})` : ""}
+                  </span>
+                  <span className="font-bold text-emerald-600">
+                    -{t("currency.aed", { value: summaryDiscount.toFixed(2) })}
+                  </span>
+                </div>
+              )}
+
+              {summaryDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">
+                    {t("summary.afterDiscount", { defaultValue: "After Discount" })}
+                  </span>
+                  <span className="font-bold text-slate-900">
+                    {t("currency.aed", { value: summaryAfterDiscount.toFixed(2) })}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">{t("summary.shipping")}</span>
-                <span className={`font-bold ${shippingCost === 0 ? "text-emerald-600" : "text-slate-900"}`}>
-                  {shippingCost === 0 ? t("summary.free") : t("currency.aed", { value: shippingCost.toFixed(2) })}
-                </span>
+                {summaryDeliveryCharge === null ? (
+                  <span className="font-bold text-slate-500">
+                    {t("summary.calculatedAtCheckout", { defaultValue: "Calculated at checkout" })}
+                  </span>
+                ) : (
+                  <span className={`font-bold ${summaryDeliveryCharge === 0 ? "text-emerald-600" : "text-slate-900"}`}>
+                    {summaryDeliveryCharge === 0
+                      ? t("summary.free")
+                      : t("currency.aed", { value: summaryDeliveryCharge.toFixed(2) })}
+                  </span>
+                )}
               </div>
 
-              {effectiveTip > 0 && (
+              {summaryDeliveryCharge === null && (
+                <p className="text-xs text-slate-400">
+                  {t("summary.deliveryRule", {
+                    defaultValue: "Delivery is free for orders AED 40 or more after discount.",
+                  })}
+                </p>
+              )}
+
+              {summaryTip > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">{t("summary.tip")}</span>
                   <span className="font-bold text-rose-500">
-                    {t("currency.aed", { value: effectiveTip.toFixed(2) })}
+                    {t("currency.aed", { value: summaryTip.toFixed(2) })}
                   </span>
+                </div>
+              )}
+
+              {summaryError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                  {summaryError}
+                </div>
+              )}
+
+              {!selectedAddressId && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+                  {t("summary.selectAddressHint", {
+                    defaultValue: "Select a delivery address to calculate the final delivery charge.",
+                  })}
+                </div>
+              )}
+
+              {selectedAddressId && !deliveryDate && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+                  {t("summary.selectDateHint", {
+                    defaultValue: "Choose your delivery date to preview the final total and delivery charge.",
+                  })}
                 </div>
               )}
 
@@ -904,7 +1426,7 @@ const CheckoutPage: React.FC = () => {
               )}
               <button
                 onClick={handlePlaceOrder}
-                disabled={submitting || !selectedAddressId || !phoneVerified}
+                disabled={submitting || summaryLoading || !selectedAddressId || !phoneVerified}
                 className="w-full py-4 bg-linear-to-r from-cyan-600 to-cyan-700 text-white rounded-2xl font-black text-base hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-xl shadow-cyan-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {submitting ? (
