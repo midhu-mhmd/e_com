@@ -58,9 +58,6 @@ const Dashboard: React.FC = () => {
     if (products.length === 0 && productsStatus !== "loading") {
       dispatch(productsActions.fetchProductsRequest({ limit: 20, page: 1 }));
     }
-    if (payments.length === 0) {
-      dispatch(paymentsActions.fetchPaymentsRequest({ limit: 10, page: 1 }));
-    }
     if (reviews.length === 0) {
       dispatch(reviewsActions.fetchReviewsRequest({ limit: 10, page: 1 }));
     }

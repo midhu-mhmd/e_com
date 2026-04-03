@@ -4,6 +4,7 @@ import { tokenManager } from "../../services/api";
 import {
   requestOtp,
   verifyOtp,
+  googleLogin,
   setStep,
   authError,
   setUser,
@@ -137,6 +138,40 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
   }
 }
 
+function* handleGoogleLogin(action: ReturnType<typeof googleLogin>): Generator<any, any, any> {
+  try {
+    const { credential, referral_code } = action.payload;
+    const res: { data: any } = yield call(authApi.googleCallback, {
+      code: credential,
+      referral_code: referral_code || undefined,
+    });
+
+    // Extract and store access token
+    const accessToken = res.data?.access || res.data?.accessToken || res.data?.token;
+    if (accessToken) {
+      tokenManager.set(accessToken);
+    }
+
+    // Get user from response or fetch from /me
+    let user = res.data?.user ?? res.data;
+    if (!user || (!user.id && !user.email)) {
+      const meRes: { data: any } = yield call(authApi.me);
+      user = meRes.data?.user ?? meRes.data;
+    }
+
+    // Sync query cache
+    import("../../main").then(({ queryClient }) => {
+      queryClient.setQueryData(["userProfile"], user);
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    });
+
+    yield put(setUser(user));
+  } catch (err: any) {
+    const msg = getErrMsg(err, "Google login failed");
+    yield put(authError(msg));
+  }
+}
+
 function* handleCheckAuth(): Generator<any, any, any> {
   try {
     // ✅ Skip if user is already authenticated (e.g. just verified OTP)
@@ -183,6 +218,7 @@ function* handleLogout(): Generator<any, any, any> {
 export function* authSaga(): Generator<any, any, any> {
   yield takeLatest(requestOtp.type, handleSendOtp);
   yield takeLatest(verifyOtp.type, handleVerifyOtp);
+  yield takeLatest(googleLogin.type, handleGoogleLogin);
   yield takeLatest(checkAuth.type, handleCheckAuth);
   yield takeLatest(logout.type, handleLogout);
 }

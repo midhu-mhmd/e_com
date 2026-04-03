@@ -14,10 +14,11 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useGoogleLogin } from "@react-oauth/google";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
 
 import type { AuthMethod } from "../../types/types";
-import { requestOtp, verifyOtp, setMethod, setStep, authError } from "../auth/authSlice";
+import { requestOtp, verifyOtp, setMethod, setStep, authError, googleLogin } from "../auth/authSlice";
 
 /* ─── OTP Timer Hook ─── */
 const useOtpTimer = () => {
@@ -126,6 +127,17 @@ const Login: React.FC = () => {
   ];
 
   const selectedCountry = countries.find((c) => c.code === countryCode) || countries[0];
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: (response) => {
+      dispatch(googleLogin({
+        credential: response.access_token,
+      }));
+    },
+    onError: () => {
+      dispatch(authError("Google sign-in was cancelled or failed." as any));
+    },
+  });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -496,7 +508,10 @@ const Login: React.FC = () => {
             <div className="mt-4">
               <button
                 type="button"
-                className="w-full py-3 border border-zinc-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 hover:text-black hover:border-zinc-200 transition-all flex items-center justify-center gap-3"
+                onClick={() => handleGoogleLogin()}
+                disabled={isLoading}
+                className="w-full py-3 border border-zinc-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 hover:text-black hover:border-zinc-200 transition-all flex items-center justify-center gap-3
+                           disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

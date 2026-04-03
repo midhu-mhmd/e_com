@@ -50,6 +50,11 @@ const authSlice = createSlice({
       state.email = action.payload.email ?? null;
     },
 
+    googleLogin: (state, _action: PayloadAction<{ credential: string; referral_code?: string }>) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+
     verifyOtp: (state, _action: PayloadAction<VerifyOtpRequest>) => {
       state.isLoading = true;
       state.error = null;
@@ -122,6 +127,7 @@ const authSlice = createSlice({
 export const {
   requestOtp,
   verifyOtp,
+  googleLogin,
   setStep,
   setMethod,
   setUser,
