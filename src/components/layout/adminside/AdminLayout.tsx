@@ -18,7 +18,8 @@ import {
   LogOut,
   ScanLine,
   Tag,
-  Image as BannersIcon
+  Image as BannersIcon,
+  Settings
 } from 'lucide-react';
 
 import ScannerModal from './ScannerModal';
@@ -69,6 +70,7 @@ const AdminLayout: React.FC = () => {
     { label: 'Banners', path: '/admin/banners', icon: <BannersIcon size={18} strokeWidth={1.5} /> },
     { label: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} strokeWidth={1.5} /> },
     { label: 'Support', path: '/admin/support', icon: <Headphones size={18} strokeWidth={1.5} /> },
+    { label: 'Settings', path: '/admin/settings', icon: <Settings size={18} strokeWidth={1.5} /> },
   ];
 
   return (

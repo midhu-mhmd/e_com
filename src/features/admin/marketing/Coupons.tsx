@@ -25,7 +25,6 @@ import {
 } from "./couponsSlice";
 import type { Coupon } from "./couponsSlice";
 import { CouponFormModal, CouponFormData } from "./CouponFormModal";
-import { RewardSettings } from "./RewardSettings";
 import { formatDate } from "../../../utils/date";
 
 /* --- Column definitions --- */
@@ -75,7 +74,7 @@ const CouponManagement: React.FC = () => {
     const loading = useSelector(selectCouponsLoading);
     const error = useSelector(selectCouponsError);
 
-    const [activeTab, setActiveTab] = useState<"list" | "settings">("list");
+    const [activeTab, setActiveTab] = useState<"list">("list");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Inactive" | "Deleted">("All");
@@ -227,20 +226,6 @@ const CouponManagement: React.FC = () => {
                     <p className="text-[#71717A] text-sm mt-1">Manage discount codes and reward configurations.</p>
                 </div>
                 <div className="flex gap-3">
-                    <div className="flex bg-stone-100 p-1 rounded-xl">
-                        <button
-                            onClick={() => setActiveTab("list")}
-                            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${activeTab === "list" ? "bg-white text-black shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
-                        >
-                            Coupons List
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("settings")}
-                            className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${activeTab === "settings" ? "bg-white text-black shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
-                        >
-                            Reward Settings
-                        </button>
-                    </div>
                     {activeTab === "list" && (
                         <button
                             onClick={handleAddCoupon}
@@ -252,7 +237,7 @@ const CouponManagement: React.FC = () => {
                 </div>
             </div>
 
-            {activeTab === "list" ? (
+            {activeTab === "list" && (
                 <>
                     {/* --- STATS OVERVIEW --- */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -585,8 +570,6 @@ const CouponManagement: React.FC = () => {
                         )}
                     </div>
                 </>
-            ) : (
-                <RewardSettings />
             )}
 
             <CouponFormModal
