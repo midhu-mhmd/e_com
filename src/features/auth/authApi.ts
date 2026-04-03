@@ -9,7 +9,7 @@ export const authApi = {
     api.post("/auth/otp/login/", data),
 
   googleCallback: (data: { code: string; referral_code?: string }) =>
-    api.post("/users/google/callback/", data),
+    api.post("/auth/google/callback/", data),
 
   me: () => api.get("/users/me/"),
 
