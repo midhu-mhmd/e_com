@@ -220,7 +220,7 @@ export const ordersApi = {
 
     checkout: async (data: {
         address_id: number;
-        payment_method: "COD" | "TELR";
+        payment_method: "COD" | "ZIINA";
         preferred_delivery_date?: string;
         preferred_delivery_slot?: string;
         delivery_notes?: string;

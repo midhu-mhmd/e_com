@@ -6,7 +6,7 @@ import { selectCartItems, selectCartTotal, clearCart } from "../admin/cart/cartS
 import { ordersApi, type CheckoutSummaryResponse } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
-  CheckCircle, MapPin, CreditCard, Truck, ArrowLeft, Loader2,
+  MapPin, CreditCard, Truck, ArrowLeft, Loader2,
   Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info, Check, Tag, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -163,11 +163,9 @@ const CheckoutPage: React.FC = () => {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryUnsupported, setSummaryUnsupported] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "TELR">("COD");
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "ZIINA">("COD");
 
   const [submitting, setSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState(false);
-  const [successOrderId, setSuccessOrderId] = useState<number | null>(null);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   // ─── Phone Verification Gate ───
@@ -562,17 +560,15 @@ const CheckoutPage: React.FC = () => {
 
       const res = await ordersApi.checkout(payload);
 
-      if (res.payment_method === "TELR" && res.payment_url) {
-        // Redirect to Telr payment gateway
+      if (res.payment_method === "ZIINA" && res.payment_url) {
+        // Redirect to Ziina payment gateway
         window.location.href = res.payment_url;
         return;
       }
 
       // COD success
       dispatch(clearCart());
-      setSuccessOrderId(res.order_id);
-      setOrderSuccess(true);
-      setTimeout(() => navigate("/"), 4000);
+      navigate(`/payment/success?order_id=${res.order_id}`);
     } catch (error: any) {
       const msg = error?.response?.data?.error || t("alerts.placeOrderFailed");
       toast.show(msg, "error");
@@ -582,7 +578,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   // ─── Empty Cart ───
-  if (cartItems.length === 0 && !orderSuccess) {
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4">
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
@@ -595,30 +591,6 @@ const CheckoutPage: React.FC = () => {
         >
           {t("emptyCart.cta")}
         </button>
-      </div>
-    );
-  }
-
-  // ─── Success ───
-  if (orderSuccess) {
-    return (
-      <div className="min-h-screen bg-linear-to-b from-emerald-50 to-white flex flex-col items-center justify-center p-4 text-center">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200 }}
-          className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6"
-        >
-          <CheckCircle size={48} />
-        </motion.div>
-        <h2 className="text-3xl font-black text-slate-900 mb-2">{t("success.title")}</h2>
-        {successOrderId && (
-          <p className="text-lg font-bold text-emerald-600 mb-2">
-            {t("success.orderId", { id: successOrderId })}
-          </p>
-        )}
-        <p className="text-slate-500 mb-6">{t("success.subtitle")}</p>
-        <p className="text-sm text-slate-400">{t("success.redirecting")}</p>
       </div>
     );
   }
@@ -1107,9 +1079,9 @@ const CheckoutPage: React.FC = () => {
                 <Truck size={20} className="text-slate-400" />
               </label>
 
-              {/* TELR */}
+              {/* ZIINA */}
               <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === "TELR"
+                className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === "ZIINA"
                   ? "border-cyan-500 bg-cyan-50/50 ring-2 ring-cyan-500/20"
                   : "border-slate-100 hover:border-slate-200"
                   }`}
@@ -1117,14 +1089,14 @@ const CheckoutPage: React.FC = () => {
                 <input
                   type="radio"
                   name="paymentMethod"
-                  value="TELR"
-                  checked={paymentMethod === "TELR"}
-                  onChange={() => setPaymentMethod("TELR")}
+                  value="ZIINA"
+                  checked={paymentMethod === "ZIINA"}
+                  onChange={() => setPaymentMethod("ZIINA")}
                   className="w-5 h-5 text-cyan-600 focus:ring-cyan-500"
                 />
                 <div className="flex-1">
-                  <p className="font-bold text-slate-900">{t("payment.telr.title")}</p>
-                  <p className="text-xs text-slate-500">{t("payment.telr.subtitle")}</p>
+                  <p className="font-bold text-slate-900">{t("payment.ziina.title")}</p>
+                  <p className="text-xs text-slate-500">{t("payment.ziina.subtitle")}</p>
                 </div>
                 <CreditCard size={20} className="text-slate-400" />
               </label>
