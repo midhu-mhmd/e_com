@@ -24,6 +24,7 @@ import {
     Trash2,
 } from "lucide-react";
 
+import { dashboardApi } from "../dashboard/dashboardApi";
 import {
     productsActions,
     selectCategories,
@@ -263,10 +264,29 @@ const ProductManagement: React.FC = () => {
         document.body.removeChild(link);
     };
 
-    // Compute stats from current page data
-    const activeCount = displayedProducts.filter((p: Product) => p.status === "Active").length;
-    const outOfStockCount = displayedProducts.filter((p: Product) => p.status === "Out of Stock").length;
-    const lowStockCount = displayedProducts.filter((p: Product) => p.stock > 0 && p.stock <= 20).length;
+    const [productCounts, setProductCounts] = useState({
+        total_products: 0,
+        active: 0,
+        out_of_stock: 0,
+        low_stock: 0,
+    });
+
+    useEffect(() => {
+        let mounted = true;
+        dashboardApi.fetchProductsCount()
+            .then((res: any) => {
+                if (mounted) {
+                    setProductCounts(res.data || res);
+                }
+            })
+            .catch(() => { /* silent */ });
+        return () => { mounted = false; };
+    }, []);
+
+    // Compute stats from productCounts or fallback to current page data
+    const activeCount = productCounts.active || displayedProducts.filter((p: Product) => p.status === "Active").length;
+    const outOfStockCount = productCounts.out_of_stock || displayedProducts.filter((p: Product) => p.status === "Out of Stock").length;
+    const lowStockCount = productCounts.low_stock || displayedProducts.filter((p: Product) => p.stock > 0 && p.stock <= 20).length;
 
     return (
         <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
@@ -288,7 +308,7 @@ const ProductManagement: React.FC = () => {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <QuickStat
                     label="Total Products"
-                    value={`${totalCount}`}
+                    value={`${productCounts.total_products || totalCount}`}
                     sub="All products"
                     icon={<Package size={16} className="text-[#A1A1AA]" />}
                 />

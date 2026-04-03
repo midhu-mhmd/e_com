@@ -9,6 +9,7 @@ import { adminCartsSaga, userCartSaga } from "../../features/admin/cart/cartSaga
 import { paymentsSaga } from "../../features/admin/payments/paymentsSaga";
 import { settingsSaga } from "../../features/admin/settings/settingsSaga";
 import { authSaga } from "../../features/auth/authSaga";
+import { couponsSaga } from "../../features/admin/marketing/couponsSaga";
 
 export function* rootSaga() {
   yield all([
@@ -23,5 +24,6 @@ export function* rootSaga() {
     fork(settingsSaga),
     fork(authSaga),
     fork(dashboardCountsSaga),
+    fork(couponsSaga),
   ]);
 }

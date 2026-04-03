@@ -17,6 +17,7 @@ import {
   X,
   LogOut,
   ScanLine,
+  Tag,
   Image as BannersIcon
 } from 'lucide-react';
 
@@ -64,6 +65,7 @@ const AdminLayout: React.FC = () => {
     { label: 'Users', path: '/admin/users', icon: <Users size={18} strokeWidth={1.5} /> },
     { label: 'Reviews', path: '/admin/reviews', icon: <Star size={18} strokeWidth={1.5} /> },
     { label: 'Payments', path: '/admin/payments', icon: <CreditCard size={18} strokeWidth={1.5} /> },
+    { label: 'Coupons', path: '/admin/marketing/coupons', icon: <Tag size={18} strokeWidth={1.5} /> },
     { label: 'Banners', path: '/admin/banners', icon: <BannersIcon size={18} strokeWidth={1.5} /> },
     { label: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} strokeWidth={1.5} /> },
     { label: 'Support', path: '/admin/support', icon: <Headphones size={18} strokeWidth={1.5} /> },

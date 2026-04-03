@@ -664,8 +664,15 @@ const OrderList: React.FC = () => {
                                             )}
 
                                             <div className="flex justify-between items-end mt-8 pt-6 border-t border-slate-100">
-                                                <div className="text-2xl font-black text-slate-900">
-                                                    AED {parseFloat(order.total_amount).toFixed(2)}
+                                                <div className="flex flex-col">
+                                                    {Number(order.discount_amount || 0) > 0 && (
+                                                        <span className="text-[10px] font-black uppercase text-emerald-600 mb-1 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md self-start">
+                                                            {order.coupon_code || "OFF"} - AED {parseFloat(order.discount_amount || "0").toFixed(0)} SAVED
+                                                        </span>
+                                                    )}
+                                                    <div className="text-2xl font-black text-slate-900">
+                                                        AED {parseFloat(order.total_amount).toFixed(2)}
+                                                    </div>
                                                 </div>
                                                 <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-colors text-slate-400">
                                                     <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
@@ -759,6 +766,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const subtotal = order.items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
     const isPaymentSuccess = ["SUCCESS", "PAID", "COMPLETED"].includes((payment?.status || "").toUpperCase());
     const tipAmount = Number(((order as any)?.tip_amount) || 0);
+    const discountAmount = Number(((order as any)?.discount_amount) || 0);
+    const deliveryCharge = Number(((order as any)?.delivery_charge) || 0);
+    const couponCode = (order as any)?.coupon_code;
 
     const canDownloadReceipt =
         !!payment &&
@@ -1144,6 +1154,25 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 <div className="flex justify-between items-center">
                                     <span>{t("detail.subtotal")}</span>
                                     <span className="text-white text-base">AED {subtotal.toFixed(2)}</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between items-center text-emerald-400">
+                                        <div className="flex flex-col">
+                                            <span>{t("summary.discount", { defaultValue: "Discount" })}</span>
+                                            {couponCode && (
+                                                <span className="text-[10px] font-mono uppercase tracking-wider opacity-75">
+                                                    Code: {couponCode}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-base">-AED {discountAmount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                    <span>{t("summary.shipping", { defaultValue: "Shipping" })}</span>
+                                    <span className="text-white text-base">
+                                        {deliveryCharge > 0 ? `AED ${deliveryCharge.toFixed(2)}` : t("summary.free", { defaultValue: "Free" })}
+                                    </span>
                                 </div>
                                 {tipAmount > 0 && (
                                     <div className="flex justify-between items-center">

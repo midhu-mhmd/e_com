@@ -285,6 +285,21 @@ const CheckoutPage: React.FC = () => {
             : [];
 
         const normalizedCoupons = rawCoupons
+          .filter((coupon: any) => {
+            // Only show active coupons
+            if (coupon.is_active !== true) return false;
+
+            // Only show coupons that haven't reached their usage limit
+            if (
+              coupon.usage_limit !== null &&
+              coupon.usage_limit !== undefined &&
+              coupon.used_count >= coupon.usage_limit
+            ) {
+              return false;
+            }
+
+            return true;
+          })
           .map((coupon: any, index: number) => normalizeAvailableCoupon(coupon, index))
           .filter(Boolean) as AvailableCoupon[];
 

@@ -12,6 +12,7 @@ import paymentsReducer from "../features/admin/payments/paymentsSlice";
 import settingsReducer from "../features/admin/settings/settingsSlice";
 import authReducer from "../features/auth/authSlice";
 import bannersReducer from "../features/admin/banners/bannerSlice";
+import couponsReducer from "../features/admin/marketing/couponsSlice";
 import { rootSaga } from "../store/sagas/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
@@ -29,6 +30,7 @@ export const store = configureStore({
     settings: settingsReducer,
     auth: authReducer,
     banners: bannersReducer,
+    coupons: couponsReducer,
     dashboardCounts: dashboardCountsReducer,
   },
   middleware: (getDefault) =>

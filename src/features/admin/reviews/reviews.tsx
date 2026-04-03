@@ -20,6 +20,7 @@ import {
   Package,
 } from "lucide-react";
 
+import { dashboardApi } from "../dashboard/dashboardApi";
 import {
   reviewsActions,
   selectReviews,
@@ -211,13 +212,34 @@ const ReviewsManagement: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Stats from current data
-  const avgRating =
-    displayedReviews.length > 0
+  const [reviewCounts, setReviewCounts] = useState({
+    total_reviews: 0,
+    avg_rating: 0,
+    visible: 0,
+    hidden: 0,
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    dashboardApi.fetchReviewsCount()
+      .then((res: any) => {
+        if (mounted) {
+          setReviewCounts(res.data || res);
+        }
+      })
+      .catch(() => { /* silent */ });
+    return () => { mounted = false; };
+  }, []);
+
+  // Stats from reviewCounts or fallback to current data
+  const totalReviewsCount = reviewCounts.total_reviews || totalCount;
+  const avgRatingDisplay = reviewCounts.avg_rating > 0
+    ? reviewCounts.avg_rating.toFixed(1)
+    : (displayedReviews.length > 0
       ? (displayedReviews.reduce((sum, r) => sum + r.rating, 0) / displayedReviews.length).toFixed(1)
-      : "0.0";
-  const visibleCount = displayedReviews.filter((r) => r.isVisible).length;
-  const hiddenCount = displayedReviews.length - visibleCount;
+      : "0.0");
+  const visibleCount = reviewCounts.visible || displayedReviews.filter((r) => r.isVisible).length;
+  const hiddenCount = reviewCounts.hidden || (displayedReviews.length - visibleCount);
 
   return (
     <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
@@ -231,13 +253,13 @@ const ReviewsManagement: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat
           label="Total Reviews"
-          value={`${totalCount}`}
+          value={`${totalReviewsCount}`}
           sub="All time"
           icon={<MessageSquare size={16} className="text-[#A1A1AA]" />}
         />
         <QuickStat
           label="Avg Rating"
-          value={avgRating}
+          value={avgRatingDisplay}
           sub="Out of 5.0"
           icon={<Star size={16} className="text-amber-400" />}
         />

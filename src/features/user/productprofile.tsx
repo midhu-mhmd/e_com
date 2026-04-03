@@ -430,7 +430,7 @@ const ProductProfile: React.FC = () => {
           </div>
 
           {/* Bulk Order Section */}
-          <div
+          {/* <div
             className="bg-cyan-50 border border-cyan-100 rounded-3xl p-5 cursor-pointer hover:bg-cyan-100/50 transition-colors"
             onClick={() => setShowBulkOrder(!showBulkOrder)}
           >
@@ -462,7 +462,6 @@ const ProductProfile: React.FC = () => {
                         {t("details.bulkOrder.minOrder", { count: 50 })}
                       </span>
                     </div>
-                    {/* Using a generic WhatsApp link structure; this can be customized with exact number later */}
                     <a
                       href={`https://wa.me/971500000000?text=${encodeURIComponent(`Hello, I am interested in bulk ordering "${product.name}"`)}`}
                       target="_blank"
@@ -476,7 +475,7 @@ const ProductProfile: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </div> */}
 
           {/* Meta Info */}
           <div className="grid grid-cols-2 gap-4 text-sm">

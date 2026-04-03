@@ -13,6 +13,9 @@ interface Toast {
 
 interface ToastContextValue {
     show: (message: string, type?: ToastType) => void;
+    success: (message: string) => void;
+    error: (message: string) => void;
+    cart: (message: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -49,11 +52,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }, 3500);
     }, []);
 
+    const success = useCallback((message: string) => show(message, "success"), [show]);
+    const error = useCallback((message: string) => show(message, "error"), [show]);
+    const cart = useCallback((message: string) => show(message, "cart"), [show]);
+
     const dismiss = useCallback((id: number) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
-
-
 
     React.useEffect(() => {
         const handler = (e: Event) => {
@@ -67,7 +72,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [show]);
 
     return (
-        <ToastContext.Provider value={{ show }}>
+        <ToastContext.Provider value={{ show, success, error, cart }}>
             {children}
 
             {/* Toast container — top center, tightly spaced */}

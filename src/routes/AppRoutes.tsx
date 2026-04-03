@@ -40,6 +40,7 @@ import CategoriesPage from '../features/admin/products/Categories';
 import BannersManagement from '../features/admin/banners/banner';
 import AdminNotificationsPage from '../features/admin/notifications/AdminNotificationsPage';
 import ContactMessagesPage from '../features/admin/support/ContactMessages';
+import CouponManagement from '../features/admin/marketing/Coupons';
 
 // Error Pages
 import BadRequest400 from '../pages/errors/BadRequest400';
@@ -143,6 +144,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="reviews" element={<ReviewsManagement />} />
           <Route path="payments" element={<PaymentManagement />} />
+          <Route path="marketing/coupons" element={<CouponManagement />} />
           <Route path="banners" element={<BannersManagement />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="support" element={<ContactMessagesPage />} />
