@@ -10,11 +10,9 @@ import type { RootState } from "../../../app/store";
 function normalizePaymentStatus(raw?: string): PaymentStatus {
     if (!raw) return "Pending";
     const map: Record<string, PaymentStatus> = {
-        paid: "Success",
-        success: "Success",
-        completed: "Success",
-        failed: "Failed",
         pending: "Pending",
+        success: "Success",
+        failed: "Failed",
         refunded: "Refunded",
     };
     return map[raw.toLowerCase()] ?? "Pending";
@@ -23,14 +21,8 @@ function normalizePaymentStatus(raw?: string): PaymentStatus {
 function normalizePaymentMethod(raw?: string): PaymentMethod {
     if (!raw) return "N/A";
     const map: Record<string, PaymentMethod> = {
-        upi: "UPI",
+        ziina: "Card",
         card: "Card",
-        credit_card: "Card",
-        debit_card: "Card",
-        netbanking: "NetBanking",
-        net_banking: "NetBanking",
-        nb: "NetBanking",
-        wallet: "Wallet",
         cod: "COD",
         cash_on_delivery: "COD",
     };
@@ -40,19 +32,19 @@ function normalizePaymentMethod(raw?: string): PaymentMethod {
 /* ── Map DTO → Payment ── */
 function mapPaymentDto(dto: PaymentDto): Payment {
     return {
-        id: dto.id,
-        paymentId: `PAY-${dto.id}`,
-        orderNumber: dto.order_number ?? `ORD-${dto.id}`,
-        customerId: dto.user,
-        customerName: dto.user_name ?? `User #${dto.user}`,
-        customerEmail: dto.user_email ?? "",
-        customerPhone: dto.user_phone ?? "",
-        amount: parseFloat(dto.total) || 0,
-        paymentStatus: normalizePaymentStatus(dto.payment_status),
+        id: dto.payment_id,
+        paymentId: `PAY-${dto.payment_id}`,
+        orderNumber: `ORD-${dto.order_id}`,
+        customerId: dto.customer_id,
+        customerName: dto.customer_name ?? `Customer #${dto.customer_id}`,
+        customerEmail: dto.customer_email ?? "",
+        customerPhone: dto.customer_phone ?? "",
+        amount: parseFloat(dto.amount) || 0,
+        paymentStatus: normalizePaymentStatus(dto.status),
         paymentMethod: normalizePaymentMethod(dto.payment_method),
-        orderStatus: dto.status ?? "",
-        date: dto.created_at,
-        updatedAt: dto.updated_at,
+        orderStatus: dto.order_status ?? "",
+        date: dto.transaction_date,
+        updatedAt: dto.updated_date,
     };
 }
 
@@ -76,9 +68,12 @@ function* fetchPaymentsWorker(
         }
 
         const raw: any = yield call(paymentsApi.list, action.payload);
+        console.log("API response:", raw);
         const totalCount = raw?.count || 0;
         const items = normalizePayments(raw);
         const page = action.payload?.page || 1;
+
+        console.log("Normalized payments:", items.length, "Total count:", totalCount);
 
         yield put(
             paymentsActions.fetchPaymentsSuccess({

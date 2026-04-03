@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  CreditCard, Wallet, Banknote, Landmark, RefreshCcw,
+  CreditCard, Wallet, Banknote, RefreshCcw,
   Search, Filter, Download, ChevronRight, X, CheckCircle2,
-  AlertCircle, Clock, ArrowUpRight, ArrowDownRight,
-  Receipt, User, ShieldCheck,
+  AlertCircle, Clock,
+  Receipt, User,
   LayoutDashboard, ListOrdered, Undo2, HandCoins, BarChart3,
   ChevronLeft, Columns3, Eye,
 } from "lucide-react";
@@ -14,6 +14,7 @@ import {
   selectPayments,
   selectPaymentsStatus,
   selectPaymentsError,
+  selectPaymentsTotal,
 } from "./paymentsSlice";
 import type { Payment, PaymentStatus, PaymentMethod } from "./paymentsSlice";
 
@@ -39,18 +40,7 @@ const COLUMNS: ColumnDef[] = [
 ];
 
 /* --- TYPES --- */
-type ViewType = "dashboard" | "payments" | "refunds" | "settlements" | "cod" | "disputes";
-const FETCH_ALL_PAYMENTS_LIMIT = 1000;
-
-// Debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-}
+type ViewType = "dashboard" | "payments" | "refunds" | "cod";
 
 /* --- MAIN COMPONENT --- */
 const PaymentManagement: React.FC = () => {
@@ -72,7 +62,6 @@ const PaymentManagement: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
-  const debouncedSearch = useDebounce(searchTerm, 500);
 
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
@@ -102,14 +91,38 @@ const PaymentManagement: React.FC = () => {
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
   useEffect(() => {
-    dispatch(
-      paymentsActions.fetchPaymentsRequest({
-        page: 1,
-        limit: FETCH_ALL_PAYMENTS_LIMIT,
-        offset: 0,
-      })
-    );
-  }, [dispatch]);
+    const params: any = {
+      page: page,
+      limit: limit,
+      offset: (page - 1) * limit,
+    };
+    
+    if (searchTerm) params.search = searchTerm;
+    if (statusFilter !== "All") {
+      const statusMap: Record<PaymentStatus, string> = {
+        "Pending": "PENDING",
+        "Success": "SUCCESS",
+        "Failed": "FAILED",
+        "Refunded": "REFUNDED"
+      };
+      params.status = statusMap[statusFilter];
+    }
+    if (methodFilter !== "All") {
+      const methodMap: Record<PaymentMethod, string> = {
+        "UPI": "UPI",
+        "Card": "ZIINA",
+        "NetBanking": "NETBANKING",
+        "Wallet": "WALLET",
+        "COD": "COD",
+        "N/A": ""
+      };
+      const mappedMethod = methodMap[methodFilter];
+      if (mappedMethod) params.payment_method = mappedMethod;
+    }
+    
+    console.log("Fetching payments with params:", params);
+    dispatch(paymentsActions.fetchPaymentsRequest(params));
+  }, [dispatch, page, limit, searchTerm, statusFilter, methodFilter]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -124,55 +137,16 @@ const PaymentManagement: React.FC = () => {
 
   const hasActiveFilters = !!(searchTerm || statusFilter !== "All" || methodFilter !== "All" || orderFilter || customerFilter || amountMin || amountMax);
 
-  // Filter from the full loaded dataset, then paginate the filtered rows locally.
-  const filteredPayments = useMemo(() => {
-    let result = payments;
-    if (debouncedSearch) {
-      const query = debouncedSearch.toLowerCase();
-      result = result.filter((p) =>
-        p.paymentId.toLowerCase().includes(query) ||
-        p.orderNumber.toLowerCase().includes(query) ||
-        p.customerName.toLowerCase().includes(query) ||
-        p.customerEmail.toLowerCase().includes(query)
-      );
-    }
-    if (statusFilter !== "All") {
-      result = result.filter((p) => p.paymentStatus === statusFilter);
-    }
-    if (methodFilter !== "All") {
-      result = result.filter((p) => p.paymentMethod === methodFilter);
-    }
-    if (orderFilter) {
-      result = result.filter((p) =>
-        p.orderNumber.toLowerCase().includes(orderFilter.toLowerCase())
-      );
-    }
-    if (customerFilter) {
-      result = result.filter((p) =>
-        p.customerName.toLowerCase().includes(customerFilter.toLowerCase())
-      );
-    }
-    if (amountMin) {
-      const min = parseFloat(amountMin);
-      if (!isNaN(min)) result = result.filter((p) => p.amount >= min);
-    }
-    if (amountMax) {
-      const max = parseFloat(amountMax);
-      if (!isNaN(max)) result = result.filter((p) => p.amount <= max);
-    }
-    return result;
-  }, [payments, debouncedSearch, statusFilter, methodFilter, orderFilter, customerFilter, amountMin, amountMax]);
-
-  const totalFilteredCount = filteredPayments.length;
-  const paginatedPayments = useMemo(
-    () => filteredPayments.slice((page - 1) * limit, page * limit),
-    [filteredPayments, page, limit]
-  );
+  // Get total count from API
+  const totalCount = useSelector(selectPaymentsTotal);
+  
+  // Use payments directly (already paginated from API)
+  const paginatedPayments = payments;
 
   // Export handler
   const handleExport = () => {
     const headers = ["Payment ID", "Order", "Customer", "Amount", "Method", "Status", "Date"];
-    const rows = filteredPayments.map(p => [
+    const rows = paginatedPayments.map(p => [
       p.paymentId,
       p.orderNumber,
       p.customerName,
@@ -199,17 +173,17 @@ const PaymentManagement: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Stats computed from loaded data
-  const totalCollected = filteredPayments
+  // Stats computed from current page
+  const totalCollected = paginatedPayments
     .filter((p) => p.paymentStatus === "Success")
     .reduce((sum, p) => sum + p.amount, 0);
-  const successRate = filteredPayments.length > 0
-    ? ((filteredPayments.filter((p) => p.paymentStatus === "Success").length / filteredPayments.length) * 100).toFixed(1)
+  const successRate = paginatedPayments.length > 0
+    ? ((paginatedPayments.filter((p) => p.paymentStatus === "Success").length / paginatedPayments.length) * 100).toFixed(1)
     : "0";
-  const pendingCod = filteredPayments
+  const pendingCod = paginatedPayments
     .filter((p) => p.paymentMethod === "COD" && p.paymentStatus === "Pending")
     .reduce((sum, p) => sum + p.amount, 0);
-  const refundedAmount = filteredPayments
+  const refundedAmount = paginatedPayments
     .filter((p) => p.paymentStatus === "Refunded")
     .reduce((sum, p) => sum + p.amount, 0);
 
@@ -227,12 +201,10 @@ const PaymentManagement: React.FC = () => {
 
       {/* --- TOP NAVIGATION --- */}
       <nav className="flex items-center gap-1 bg-white p-1.5 border border-[#EEEEEE] rounded-2xl w-fit shadow-sm overflow-x-auto no-scrollbar">
-        <NavTab id="dashboard" active={currentView} label="Overview" icon={<LayoutDashboard size={14} />} onClick={setCurrentView} />
-        <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={setCurrentView} />
-        <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={setCurrentView} />
-        <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={setCurrentView} />
-        <NavTab id="settlements" active={currentView} label="Settlements" icon={<Landmark size={14} />} onClick={setCurrentView} />
-        <NavTab id="disputes" active={currentView} label="Disputes" icon={<ShieldCheck size={14} />} onClick={setCurrentView} />
+        <NavTab id="dashboard" active={currentView} label="Overview" icon={<LayoutDashboard size={14} />} onClick={() => { setCurrentView("dashboard" as ViewType); }} />
+        <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={() => { setCurrentView("payments" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("All"); setPage(1); }} />
+        <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={() => { setCurrentView("refunds" as ViewType); setSearchTerm(""); setStatusFilter("Refunded"); setMethodFilter("All"); setPage(1); }} />
+        <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
       </nav>
 
       {/* --- RENDER VIEWS --- */}
@@ -243,14 +215,14 @@ const PaymentManagement: React.FC = () => {
             successRate={successRate}
             pendingCod={pendingCod}
             refundedAmount={refundedAmount}
-            payments={filteredPayments}
+            payments={paginatedPayments}
           />
         )}
 
         {currentView === "payments" && (
           <PaymentsListView
             payments={paginatedPayments}
-            totalCount={totalFilteredCount}
+            totalCount={totalCount}
             page={page}
             limit={limit}
             onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
@@ -286,10 +258,8 @@ const PaymentManagement: React.FC = () => {
           />
         )}
 
-        {currentView === "refunds" && <RefundsView payments={filteredPayments} />}
-        {currentView === "cod" && <CODView payments={filteredPayments} />}
-        {currentView === "settlements" && <SettlementsView totalCollected={totalCollected} />}
-        {currentView === "disputes" && <DisputesView />}
+        {currentView === "refunds" && <RefundsView payments={paginatedPayments} />}
+        {currentView === "cod" && <CODView payments={paginatedPayments} />}
       </main>
 
       {/* --- PAYMENT DETAIL DRAWER --- */}
