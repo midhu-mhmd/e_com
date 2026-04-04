@@ -1,7 +1,7 @@
 import React from "react";
 import { productsApi, type CategoryDto } from "./productApi";
 import { useToast } from "../../../components/ui/Toast";
-import { Search, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Loader2, ImagePlus, X } from "lucide-react";
 
 const slugify = (s: string) =>
   s
@@ -34,6 +34,9 @@ const CategoriesPage: React.FC = () => {
   const [saving, setSaving] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<number | null>(null);
   const [form, setForm] = React.useState<FormState>(emptyForm);
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -64,6 +67,8 @@ const CategoriesPage: React.FC = () => {
 
   const startCreate = () => {
     setForm(emptyForm);
+    setImageFile(null);
+    setImagePreview(null);
     setShowForm(true);
   };
 
@@ -75,6 +80,8 @@ const CategoriesPage: React.FC = () => {
       description: c.description || "",
       parent: c.parent ?? null,
     });
+    setImageFile(null);
+    setImagePreview(c.image || null);
     setShowForm(true);
   };
 
@@ -102,18 +109,19 @@ const CategoriesPage: React.FC = () => {
     }
     setSaving(true);
     try {
-      const payload = {
-        name: form.name.trim(),
-        slug: form.slug.trim() || slugify(form.name),
-        description: form.description.trim(),
-        parent: form.parent,
-      };
+      const fd = new FormData();
+      fd.append("name", form.name.trim());
+      fd.append("slug", form.slug.trim() || slugify(form.name));
+      fd.append("description", form.description.trim());
+      if (form.parent !== null) fd.append("parent", String(form.parent));
+      if (imageFile) fd.append("image", imageFile);
+
       if (form.id) {
-        const updated = await productsApi.updateCategory(form.id, payload);
+        const updated = await productsApi.updateCategory(form.id, fd);
         setItems((prev) => prev.map((c) => (c.id === form.id ? updated : c)));
         toast.show("Category updated", "success");
       } else {
-        const created = await productsApi.createCategory(payload);
+        const created = await productsApi.createCategory(fd);
         setItems((prev) => [created, ...prev]);
         toast.show("Category created", "success");
       }
@@ -155,7 +163,7 @@ const CategoriesPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-2xl border border-[#EEEEEE] p-4 flex items-center gap-3">
-        <div className="relative w-80 max-w-full">
+        <div className="relative w-full sm:w-80">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
           <input
             value={q}
@@ -171,6 +179,7 @@ const CategoriesPage: React.FC = () => {
           <table className="w-full text-left">
             <thead className="bg-[#FAFAFA]">
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
+                <th className="px-5 py-3">Image</th>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Slug</th>
                 <th className="px-5 py-3">Parent</th>
@@ -182,6 +191,7 @@ const CategoriesPage: React.FC = () => {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
+                    <td className="px-5 py-4"><div className="h-10 w-10 bg-gray-100 rounded-lg" /></td>
                     <td className="px-5 py-4"><div className="h-4 w-32 bg-gray-100 rounded" /></td>
                     <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
                     <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
@@ -202,13 +212,22 @@ const CategoriesPage: React.FC = () => {
                   return (
                     <tr key={c.id} className="hover:bg-[#FBFBFA] transition-colors">
                       <td className="px-5 py-4">
+                        {c.image ? (
+                          <img src={c.image} alt={c.name} className="w-10 h-10 rounded-lg object-cover border border-[#EEEEEE]" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-[#F4F4F5] flex items-center justify-center">
+                            <ImagePlus size={16} className="text-[#A1A1AA]" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-5 py-4">
                         <div className="font-bold text-sm">{c.name}</div>
                         <div className="text-[11px] text-[#A1A1AA]">ID: {c.id}</div>
                       </td>
                       <td className="px-5 py-4 text-sm">{c.slug}</td>
                       <td className="px-5 py-4 text-sm">{parentName}</td>
                       <td className="px-5 py-4">
-                        <div className="text-sm text-[#52525B] truncate max-w-[500px]">
+                        <div className="text-sm text-[#52525B] truncate max-w-[200px] sm:max-w-[350px] lg:max-w-[500px]">
                           {c.description || <span className="italic text-[#A1A1AA]">—</span>}
                         </div>
                       </td>
@@ -306,7 +325,43 @@ const CategoriesPage: React.FC = () => {
                   placeholder="Optional description"
                 />
               </div>
-              
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 block">Image</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImageFile(file);
+                      setImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+                {imagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={imagePreview} alt="Preview" className="w-32 h-32 rounded-xl object-cover border border-[#EEEEEE]" />
+                    <button
+                      type="button"
+                      onClick={() => { setImageFile(null); setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                      className="absolute -top-2 -right-2 p-1 bg-white border border-[#EEEEEE] rounded-full shadow-sm hover:bg-rose-50 text-rose-500"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-32 h-32 rounded-xl border-2 border-dashed border-[#D4D4D8] bg-[#FAFAFA] flex flex-col items-center justify-center gap-2 hover:border-[#A1A1AA] transition-colors"
+                  >
+                    <ImagePlus size={24} className="text-[#A1A1AA]" />
+                    <span className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider">Upload</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">

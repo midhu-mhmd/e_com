@@ -74,26 +74,40 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
                     </motion.div>
 
                     {/* Shrimp orbiting top-right */}
-                    <motion.span
-                        className="absolute -top-2 -right-2 text-xs select-none"
-                        role="img"
-                        aria-label="shrimp"
+                    <motion.img
+                        src="/shrimp.svg"
+                        alt="shrimp"
+                        className="absolute -top-3 -right-3 w-7 h-7 select-none"
                         animate={{ y: [0, -3, 0], rotate: [0, -10, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                        🦐
-                    </motion.span>
+                    />
 
                     {/* Crab orbiting bottom-left */}
-                    <motion.span
-                        className="absolute -bottom-2 -left-2 text-xs select-none"
-                        role="img"
-                        aria-label="crab"
+                    <motion.img
+                        src="/crab.svg"
+                        alt="crab"
+                        className="absolute -bottom-3 -left-3 w-7 h-7 select-none"
                         animate={{ y: [0, 3, 0], rotate: [0, 10, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                    >
-                        🦀
-                    </motion.span>
+                    />
+
+                    {/* Hamour orbiting top-left */}
+                    <motion.img
+                        src="/hamour.svg"
+                        alt="hamour"
+                        className="absolute -top-3 -left-3 w-7 h-7 select-none"
+                        animate={{ y: [0, -3, 0], rotate: [0, 10, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+                    />
+
+                    {/* Sea bream orbiting bottom-right */}
+                    <motion.img
+                        src="/seabream.svg"
+                        alt="sea bream"
+                        className="absolute -bottom-3 -right-3 w-7 h-7 select-none"
+                        animate={{ y: [0, 3, 0], rotate: [0, -10, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
+                    />
                 </motion.div>
 
                 {/* Animated brand text, one at a time */}

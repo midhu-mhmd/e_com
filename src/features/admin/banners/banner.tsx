@@ -351,7 +351,7 @@ const BannersManagement: React.FC = () => {
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Tag</label>
                                                 <input
@@ -372,7 +372,7 @@ const BannersManagement: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">CTA</label>
                                                 <input
@@ -399,7 +399,7 @@ const BannersManagement: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Sort Order</label>
                                                 <input
@@ -425,7 +425,7 @@ const BannersManagement: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Start At</label>
                                                 <input
@@ -486,7 +486,7 @@ const BannersManagement: React.FC = () => {
                                                 <Smartphone size={14} /> Mobile Image (Optional - 600x600)
                                             </label>
                                             <div
-                                                className="relative aspect-square max-w-[200px] mx-auto bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden group cursor-pointer"
+                                                className="relative aspect-square max-w-[140px] sm:max-w-[170px] md:max-w-[200px] mx-auto bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 overflow-hidden group cursor-pointer"
                                                 onClick={() => document.getElementById('mobile-input')?.click()}
                                             >
                                                 {mobilePreview ? (

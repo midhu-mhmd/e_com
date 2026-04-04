@@ -484,7 +484,7 @@ const ReviewsManagement: React.FC = () => {
 
                     {isVisible("product") && (
                       <td className="px-5 py-4">
-                        <p className="text-xs font-bold truncate max-w-[180px]">{r.productName}</p>
+                        <p className="text-xs font-bold truncate max-w-[120px] sm:max-w-[180px]">{r.productName}</p>
                         <p className="text-[10px] text-[#A1A1AA]">ID: {r.productId}</p>
                       </td>
                     )}
@@ -518,7 +518,7 @@ const ReviewsManagement: React.FC = () => {
 
                     {isVisible("comment") && (
                       <td className="px-5 py-4">
-                        <p className="text-xs text-[#52525B] truncate max-w-[240px]">
+                        <p className="text-xs text-[#52525B] truncate max-w-[150px] sm:max-w-[240px]">
                           {r.comment || <span className="italic text-[#A1A1AA]">No comment</span>}
                         </p>
                       </td>
@@ -615,7 +615,7 @@ const ReviewsManagement: React.FC = () => {
         </div>
 
         {/* --- PAGINATION CONTROLS --- */}
-        <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
               Showing {visibleStart}-{visibleEnd} of {totalCount} reviews
@@ -767,7 +767,7 @@ const ReviewDetailPanel = ({
         </div>
 
         {/* Product & Customer */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Product</p>
             <p className="text-sm font-bold">{review.productName}</p>
@@ -801,7 +801,7 @@ const ReviewDetailPanel = ({
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-3">
             Activity
           </h4>
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Created</p>
               <p className="text-sm font-bold">

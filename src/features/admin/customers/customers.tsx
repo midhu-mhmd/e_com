@@ -566,7 +566,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
           </div>
 
           {/* Contact Info */}
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <InfoField label="Email" value={customer.email || "—"} icon={<Mail size={12} />} />
             <InfoField label="Phone" value={customer.phone || "—"} icon={<Phone size={12} />} />
             <InfoField label="Email Verified" icon={<ShieldCheck size={12} />}>
@@ -592,7 +592,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-4">
               Profile Details
             </h4>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <InfoField
                 label="Date of Birth"
                 value={
@@ -623,7 +623,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-4">
               Preferences
             </h4>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <InfoField label="Newsletter">
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${customer.newsletterSubscribed ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-[#A1A1AA]"
@@ -648,7 +648,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-4">
               Activity
             </h4>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <InfoField
                 label="Last Login"
                 value={
@@ -1497,7 +1497,7 @@ const CustomerManagement: React.FC = () => {
         </div>
 
         {/* --- PAGINATION --- */}
-        <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
               Showing {visibleStart}-{visibleEnd} of {totalCount} users

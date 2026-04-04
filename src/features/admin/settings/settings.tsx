@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import {
   ChevronRight,
   Gift,
+  Truck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RewardSettings } from "../marketing/RewardSettings";
+import { DeliveryChargeSettings } from "./DeliveryChargeSettings";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("rewards");
@@ -15,6 +17,7 @@ const SettingsPage: React.FC = () => {
       <aside className="w-64 border-r border-[#EEEEEE] hidden md:flex flex-col p-6 space-y-1">
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A1A1AA] mb-4 px-3">Storefront Settings</h2>
         <TabButton icon={<Gift size={16} />} label="Rewards" active={activeTab === 'rewards'} onClick={() => setActiveTab('rewards')} />
+        <TabButton icon={<Truck size={16} />} label="Delivery" active={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
       </aside>
 
       {/* --- MAIN CONTENT --- */}
@@ -27,11 +30,22 @@ const SettingsPage: React.FC = () => {
         <AnimatePresence mode="wait">
           {activeTab === "rewards" && (
             <motion.div
+              key="rewards"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
               <RewardSettings />
+            </motion.div>
+          )}
+          {activeTab === "delivery" && (
+            <motion.div
+              key="delivery"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <DeliveryChargeSettings />
             </motion.div>
           )}
         </AnimatePresence>

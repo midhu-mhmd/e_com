@@ -178,7 +178,7 @@ const ContactMessagesPage: React.FC = () => {
                       <div className="font-bold text-sm">{m.subject}</div>
                     </td>
                     <td className="px-5 py-4">
-                      <div className="text-sm text-[#52525B] truncate max-w-[380px]">{m.message}</div>
+                      <div className="text-sm text-[#52525B] truncate max-w-[200px] sm:max-w-[300px] lg:max-w-[380px]">{m.message}</div>
                     </td>
                     <td className="px-5 py-4">
                       {m.is_resolved ? (
@@ -232,7 +232,7 @@ const ContactMessagesPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="p-4 flex items-center justify-between border-t border-[#EEEEEE]">
+          <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#EEEEEE]">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}

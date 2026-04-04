@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="cb" cx="0.5" cy="0.4" r="0.55">
+      <stop offset="0%" stop-color="#E85548"/>
+      <stop offset="60%" stop-color="#C43830"/>
+      <stop offset="100%" stop-color="#8C2018"/>
+    </radialGradient>
+    <linearGradient id="cc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E86050"/>
+      <stop offset="100%" stop-color="#A02820"/>
+    </linearGradient>
+    <radialGradient id="ce" cx="0.4" cy="0.3" r="0.5">
+      <stop offset="0%" stop-color="#222"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+  </defs>
+  <!-- Shadow -->
+  <ellipse cx="50" cy="88" rx="28" ry="4" fill="#000" opacity="0.08"/>
+  <!-- Back legs -->
+  <path d="M22 58 L10 70 Q8 72 10 74 L14 72" stroke="#B83028" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 62 L16 76 Q14 78 16 80 L20 78" stroke="#B83028" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 64 L22 80 Q21 82 23 83 L27 80" stroke="#B83028" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M78 58 L90 70 Q92 72 90 74 L86 72" stroke="#B83028" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M74 62 L84 76 Q86 78 84 80 L80 78" stroke="#B83028" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M70 64 L78 80 Q79 82 77 83 L73 80" stroke="#B83028" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Left claw arm -->
+  <path d="M20 46 Q12 40 6 36 Q2 34 4 30" stroke="url(#cc)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M20 46 Q12 40 6 36 Q2 34 4 30" stroke="#E86050" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Left claw pincers -->
+  <path d="M4 30 Q-2 24 2 20 Q6 18 8 22 L6 28Z" fill="#D44038" stroke="#A02820" stroke-width="0.8"/>
+  <path d="M4 30 Q-2 36 2 38 Q6 38 8 34 L6 30Z" fill="#D44038" stroke="#A02820" stroke-width="0.8"/>
+  <ellipse cx="5" cy="30" rx="2" ry="1.5" fill="#E88070" opacity="0.4"/>
+  <!-- Right claw arm -->
+  <path d="M80 46 Q88 40 94 36 Q98 34 96 30" stroke="url(#cc)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M80 46 Q88 40 94 36 Q98 34 96 30" stroke="#E86050" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Right claw pincers -->
+  <path d="M96 30 Q102 24 98 20 Q94 18 92 22 L94 28Z" fill="#D44038" stroke="#A02820" stroke-width="0.8"/>
+  <path d="M96 30 Q102 36 98 38 Q94 38 92 34 L94 30Z" fill="#D44038" stroke="#A02820" stroke-width="0.8"/>
+  <ellipse cx="95" cy="30" rx="2" ry="1.5" fill="#E88070" opacity="0.4"/>
+  <!-- Body shell -->
+  <ellipse cx="50" cy="52" rx="24" ry="18" fill="url(#cb)"/>
+  <!-- Shell texture -->
+  <ellipse cx="50" cy="48" rx="16" ry="10" fill="#C83828" opacity="0.3"/>
+  <path d="M38 44 Q44 42 50 44 Q56 42 62 44" stroke="#A82820" stroke-width="0.6" fill="none" opacity="0.4"/>
+  <path d="M36 50 Q42 48 50 50 Q58 48 64 50" stroke="#A82820" stroke-width="0.6" fill="none" opacity="0.3"/>
+  <ellipse cx="46" cy="44" rx="3" ry="2" fill="white" opacity="0.08"/>
+  <ellipse cx="56" cy="46" rx="2.5" ry="1.5" fill="white" opacity="0.06"/>
+  <!-- Shell highlight -->
+  <ellipse cx="44" cy="42" rx="8" ry="5" fill="white" opacity="0.1"/>
+  <!-- Eye stalks -->
+  <path d="M38 40 L34 28" stroke="#D44038" stroke-width="3" stroke-linecap="round"/>
+  <path d="M62 40 L66 28" stroke="#D44038" stroke-width="3" stroke-linecap="round"/>
+  <!-- Eye stalk highlight -->
+  <path d="M37 38 L34 30" stroke="#E88070" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+  <path d="M63 38 L66 30" stroke="#E88070" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+  <!-- Eyes -->
+  <circle cx="33" cy="26" r="4.5" fill="#1a1a1a" stroke="#D44038" stroke-width="1"/>
+  <circle cx="67" cy="26" r="4.5" fill="#1a1a1a" stroke="#D44038" stroke-width="1"/>
+  <circle cx="34.5" cy="24.5" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="68.5" cy="24.5" r="1.5" fill="white" opacity="0.8"/>
+  <circle cx="32" cy="27.5" r="0.6" fill="white" opacity="0.3"/>
+  <circle cx="66" cy="27.5" r="0.6" fill="white" opacity="0.3"/>
+  <!-- Mouth -->
+  <path d="M46 60 Q50 62 54 60" stroke="#8C2018" stroke-width="0.8" fill="none" opacity="0.5"/>
+</svg>

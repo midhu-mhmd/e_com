@@ -141,7 +141,7 @@ const CustomerDetailsPage: React.FC = () => {
         {customer && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6 grid grid-cols-2 gap-5">
+              <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoField label="Name" value={customer.name} />
                 <InfoField label="Email" value={customer.email || "—"} />
                 <InfoField label="Phone" value={customer.phone || "—"} />

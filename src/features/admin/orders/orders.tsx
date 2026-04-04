@@ -829,7 +829,7 @@ const OrderManagement: React.FC = () => {
         </div>
 
         {/* --- PAGINATION --- */}
-        <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
               Showing {visibleStart}-{visibleEnd} of {totalCount} orders
@@ -1088,7 +1088,7 @@ const OrderDetailsPanel = ({
           </div>
 
           {/* Customer & Shipping Info */}
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <InfoField label="Customer" value={order.shippingAddress.fullName || "—"} />
             <InfoField label="Phone" value={order.shippingAddress.phoneNumber || "—"} />
             <InfoField label="City" value={order.shippingAddress.city || "—"} />

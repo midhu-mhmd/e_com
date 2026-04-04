@@ -42,9 +42,9 @@ export const RewardSettings: React.FC = () => {
         control,
         handleSubmit,
         reset,
-        formState: { isDirty, errors },
+        formState: { isDirty },
     } = useForm<RewardConfigFormData>({
-        resolver: zodResolver(rewardConfigSchema),
+        resolver: zodResolver(rewardConfigSchema) as any,
     });
 
     useEffect(() => {

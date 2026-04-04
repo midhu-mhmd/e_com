@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, ChevronDown, X, MapPin } from "lucide-react";
+import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
 import { addToCart } from "../admin/cart/cartSlice";
 import { useTranslation } from "react-i18next";
@@ -92,7 +92,6 @@ const ProductProfile: React.FC = () => {
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showBulkOrder, setShowBulkOrder] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
   // Build media list and set initial selection
@@ -478,7 +477,7 @@ const ProductProfile: React.FC = () => {
           </div> */}
 
           {/* Meta Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-stone-100">
               <div className="p-2 bg-yellow-50 rounded-xl text-yellow-600">
                 <Truck size={20} />

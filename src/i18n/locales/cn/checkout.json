@@ -61,9 +61,9 @@
       "title": "货到付款",
       "subtitle": "收到商品后再付款"
     },
-    "online": {
-      "title": "在线支付（即将上线）",
-      "subtitle": "信用卡、UPI、网银"
+    "ziina": {
+      "title": "在线支付",
+      "subtitle": "信用卡、借记卡"
     }
   },
   "summary": {

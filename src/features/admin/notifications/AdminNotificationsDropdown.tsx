@@ -124,7 +124,7 @@ const AdminNotificationsDropdown: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col max-h-[85vh]"
+                        className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-96 rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col max-h-[85vh]"
                     >
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 bg-gray-50/50">
                             <div>

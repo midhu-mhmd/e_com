@@ -99,9 +99,55 @@ function* fetchPaymentsWorker(
     }
 }
 
+/* ── Update payment status ── */
+function* updatePaymentStatusWorker(
+    action: ReturnType<typeof paymentsActions.updatePaymentStatusRequest>
+): SagaIterator {
+    try {
+        const { id, status } = action.payload;
+        const raw: any = yield call(paymentsApi.updateStatus, id, status);
+
+        const normalizedStatus = (() => {
+            const map: Record<string, PaymentStatus> = {
+                pending: "Pending",
+                success: "Success",
+                failed: "Failed",
+                refunded: "Refunded",
+            };
+            return map[(raw?.status || status).toLowerCase()] ?? "Pending";
+        })();
+
+        yield put(
+            paymentsActions.updatePaymentStatusSuccess({
+                id,
+                status: normalizedStatus,
+            })
+        );
+
+        // Re-fetch payments to get fresh data
+        const lastQuery: any = yield select(
+            (state: RootState) => state.payments.lastQuery
+        );
+        if (lastQuery) {
+            yield put(paymentsActions.fetchPaymentsRequest(lastQuery));
+        }
+    } catch (e: any) {
+        const errMsg =
+            e?.response?.data?.detail ||
+            e?.response?.data?.message ||
+            e?.message ||
+            "Failed to update payment status";
+        yield put(paymentsActions.updatePaymentStatusFailure(errMsg));
+    }
+}
+
 export function* paymentsSaga(): SagaIterator {
     yield takeLatest(
         paymentsActions.fetchPaymentsRequest.type,
         fetchPaymentsWorker
+    );
+    yield takeLatest(
+        paymentsActions.updatePaymentStatusRequest.type,
+        updatePaymentStatusWorker
     );
 }

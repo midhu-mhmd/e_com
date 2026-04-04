@@ -563,7 +563,7 @@ const CartManagement: React.FC = () => {
         )}
 
         {/* Pagination */}
-        <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
           <div className="flex items-center gap-4">
             <div className="text-[11px] text-[#A1A1AA] font-medium">
               {viewMode === "carts"
@@ -656,7 +656,7 @@ const CartDetailDrawer = ({
         </div>
 
         {/* Summary row */}
-        <div className="grid grid-cols-3 divide-x divide-[#EEEEEE] border-b border-[#EEEEEE]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#EEEEEE] border-b border-[#EEEEEE]">
           {[
             { label: "Items", value: `${cart.totalItems}` },
             { label: "Total", value: formatCurrency(cart.totalPrice) },

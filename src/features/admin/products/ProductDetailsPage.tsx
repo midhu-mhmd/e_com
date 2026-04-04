@@ -128,7 +128,7 @@ const ProductDetailsPage: React.FC = () => {
                       <Package size={28} className="text-[#A1A1AA]" />
                     )}
                   </div>
-                    <div className="grid grid-cols-2 gap-4 flex-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                     <div>
                       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Name</p>
                       <p className="text-sm font-bold">{product.name}</p>
@@ -161,7 +161,7 @@ const ProductDetailsPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6 grid grid-cols-3 gap-4">
+              <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Price</p>
                   <p className="text-lg font-black">AED {product.finalPrice.toLocaleString()}</p>

@@ -564,7 +564,7 @@ const OrderDetailsPage: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 grid grid-cols-2 gap-5">
+              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoField label="Customer">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold">{order.shippingAddress.fullName || "—"}</span>

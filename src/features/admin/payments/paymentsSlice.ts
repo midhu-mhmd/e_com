@@ -76,6 +76,29 @@ const paymentsSlice = createSlice({
         setSelectedPaymentId: (state, action: PayloadAction<number | null>) => {
             state.selectedId = action.payload;
         },
+
+        /* ── Update Payment Status ── */
+        updatePaymentStatusRequest: (
+            state,
+            _action: PayloadAction<{ id: number; status: string }>
+        ) => {
+            state.status = "loading";
+            state.error = null;
+        },
+        updatePaymentStatusSuccess: (
+            state,
+            action: PayloadAction<{ id: number; status: PaymentStatus }>
+        ) => {
+            state.status = "succeeded";
+            const item = state.items.find((p) => p.id === action.payload.id);
+            if (item) {
+                item.paymentStatus = action.payload.status;
+            }
+        },
+        updatePaymentStatusFailure: (state, action: PayloadAction<string>) => {
+            state.status = "failed";
+            state.error = action.payload;
+        },
     },
 });
 

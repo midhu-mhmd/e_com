@@ -56,4 +56,17 @@ export const paymentsApi = {
         const res = await api.get<PaymentDto>(`/orders/payments/${id}/`);
         return res.data;
     },
+
+    /**
+     * Update COD payment status (e.g. mark as collected/failed)
+     */
+    updateStatus: async (
+        id: number,
+        status: string
+    ): Promise<PaymentDto> => {
+        const res = await api.patch<PaymentDto>(`/orders/payments/${id}/`, {
+            status: status.toUpperCase(),
+        });
+        return res.data;
+    },
 };

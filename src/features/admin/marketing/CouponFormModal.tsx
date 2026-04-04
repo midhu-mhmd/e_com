@@ -54,7 +54,7 @@ export const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, onClos
         watch,
         formState: { errors },
     } = useForm<CouponFormData>({
-        resolver: zodResolver(couponSchema),
+        resolver: zodResolver(couponSchema) as any,
         defaultValues: coupon ? {
             code: coupon.code,
             description: coupon.description || "",
@@ -195,7 +195,7 @@ export const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, onClos
                     </div>
 
                     {/* Discount Type and Value */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="discount_type" className="block text-sm font-medium text-gray-700">
                                 Discount Type
@@ -238,7 +238,7 @@ export const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, onClos
                     </div>
 
                     {/* Min Order Amount and Max Discount Amount */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="min_order_amount" className="block text-sm font-medium text-gray-700">
                                 Minimum Order Amount (AED)
@@ -283,7 +283,7 @@ export const CouponFormModal: React.FC<CouponFormModalProps> = ({ isOpen, onClos
                     </div>
 
                     {/* Validity Dates */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="valid_from" className="block text-sm font-medium text-gray-700">
                                 Valid From

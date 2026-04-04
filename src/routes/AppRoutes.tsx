@@ -83,7 +83,6 @@ const UserLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <ScrollToTop />
       <Navbar />
       <div className="flex-1">
         <Outlet />
@@ -99,7 +98,9 @@ export const AppRoutes: React.FC = () => {
     setNavigator((to, options) => navigate(to, options));
   }, [navigate]);
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* --- ERROR ROUTES (Outside Layouts to be full screen) --- */}
       <Route path="/400" element={<BadRequest400 />} />
       <Route path="/401" element={<Unauthorized401 />} />
@@ -166,5 +167,6 @@ export const AppRoutes: React.FC = () => {
       {/* Fallback for 404 - Render the NotFound404 page */}
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
+    </>
   );
 };

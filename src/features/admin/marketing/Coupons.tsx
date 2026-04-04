@@ -24,7 +24,7 @@ import {
     deleteCouponRequest,
 } from "./couponsSlice";
 import type { Coupon } from "./couponsSlice";
-import { CouponFormModal, CouponFormData } from "./CouponFormModal";
+import { CouponFormModal } from "./CouponFormModal";
 import { formatDate } from "../../../utils/date";
 
 /* --- Column definitions --- */
@@ -74,7 +74,7 @@ const CouponManagement: React.FC = () => {
     const loading = useSelector(selectCouponsLoading);
     const error = useSelector(selectCouponsError);
 
-    const [activeTab, setActiveTab] = useState<"list">("list");
+    const [activeTab, _setActiveTab] = useState<"list">("list");
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Inactive" | "Deleted">("All");

@@ -148,12 +148,12 @@ export const productsApi = {
     return Array.isArray(data) ? data : (data?.results ?? []);
   },
 
-  createCategory: async (payload: Partial<CategoryDto>): Promise<CategoryDto> => {
+  createCategory: async (payload: Partial<CategoryDto> | FormData): Promise<CategoryDto> => {
     const res = await api.post<CategoryDto>("/products/categories/", payload);
     return res.data;
   },
   
-  updateCategory: async (id: number, payload: Partial<CategoryDto>): Promise<CategoryDto> => {
+  updateCategory: async (id: number, payload: Partial<CategoryDto> | FormData): Promise<CategoryDto> => {
     const res = await api.patch<CategoryDto>(`/products/categories/${id}/`, payload);
     return res.data;
   },

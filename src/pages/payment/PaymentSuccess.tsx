@@ -9,7 +9,7 @@ const PaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id");
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
   const [countdown, setCountdown] = useState(8);
 
   useEffect(() => {

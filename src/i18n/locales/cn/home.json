@@ -32,6 +32,10 @@
       }
     ]
   },
+  "shopByCategory": {
+    "kicker": "浏览",
+    "title": "按类别购物"
+  },
   "trust": {
     "kicker": "为什么选择我们",
     "title": "新鲜海鲜，",

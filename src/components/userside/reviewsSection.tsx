@@ -65,8 +65,8 @@ const ReviewsSection: React.FC = () => {
     return (
         <section className="relative bg-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
             {/* Background deco */}
-            <div className="pointer-events-none absolute -top-40 right-0 w-[500px] h-[500px] bg-cyan-50/40 rounded-full blur-3xl opacity-60" />
-            <div className="pointer-events-none absolute -bottom-40 left-0 w-[400px] h-[400px] bg-yellow-50/40 rounded-full blur-3xl opacity-50" />
+            <div className="pointer-events-none absolute -top-40 right-0 w-[280px] sm:w-[400px] lg:w-[500px] h-[280px] sm:h-[400px] lg:h-[500px] bg-cyan-50/40 rounded-full blur-3xl opacity-60" />
+            <div className="pointer-events-none absolute -bottom-40 left-0 w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px] bg-yellow-50/40 rounded-full blur-3xl opacity-50" />
 
             <div className="relative mx-auto max-w-7xl">
                 {/* Header */}

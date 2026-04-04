@@ -163,7 +163,7 @@ const CheckoutPage: React.FC = () => {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [summaryUnsupported, setSummaryUnsupported] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "ZIINA">("COD");
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "ZIINA">("ZIINA");
 
   const [submitting, setSubmitting] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
@@ -561,6 +561,8 @@ const CheckoutPage: React.FC = () => {
       const res = await ordersApi.checkout(payload);
 
       if (res.payment_method === "ZIINA" && res.payment_url) {
+        // Store order_id so payment result pages can always access it
+        sessionStorage.setItem("pending_order_id", String(res.order_id));
         // Redirect to Ziina payment gateway
         window.location.href = res.payment_url;
         return;
@@ -1057,28 +1059,6 @@ const CheckoutPage: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              {/* COD */}
-              <label
-                className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === "COD"
-                  ? "border-cyan-500 bg-cyan-50/50 ring-2 ring-cyan-500/20"
-                  : "border-slate-100 hover:border-slate-200"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="COD"
-                  checked={paymentMethod === "COD"}
-                  onChange={() => setPaymentMethod("COD")}
-                  className="w-5 h-5 text-cyan-600 focus:ring-cyan-500"
-                />
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">{t("payment.cod.title")}</p>
-                  <p className="text-xs text-slate-500">{t("payment.cod.subtitle")}</p>
-                </div>
-                <Truck size={20} className="text-slate-400" />
-              </label>
-
               {/* ZIINA */}
               <label
                 className={`flex items-center gap-4 p-4 border-2 rounded-2xl cursor-pointer transition-all ${paymentMethod === "ZIINA"
@@ -1100,6 +1080,27 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <CreditCard size={20} className="text-slate-400" />
               </label>
+
+              {/* COD - Disabled / Coming Soon */}
+              <div
+                className="relative flex items-center gap-4 p-4 border-2 rounded-2xl border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed select-none"
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  disabled
+                  className="w-5 h-5 text-slate-300"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-slate-400">{t("payment.cod.title")}</p>
+                  <p className="text-xs text-slate-400">{t("payment.cod.subtitle")}</p>
+                </div>
+                <Truck size={20} className="text-slate-300" />
+                <span className="absolute top-2 right-3 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
             </div>
           </section>
         </div>

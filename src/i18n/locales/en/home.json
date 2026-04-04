@@ -32,6 +32,10 @@
       }
     ]
   },
+  "shopByCategory": {
+    "kicker": "Browse",
+    "title": "Shop by Category"
+  },
   "trust": {
     "kicker": "Why Choose Us",
     "title": "Fresh Seafood, ",

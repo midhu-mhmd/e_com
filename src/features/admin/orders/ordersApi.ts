@@ -143,6 +143,12 @@ export interface CheckoutSummaryRequest {
     preferred_delivery_slot?: string;
 }
 
+/* ── Delivery Charge Settings DTO ── */
+export interface DeliveryChargeSettingsDto {
+    min_order_for_free_delivery: number;
+    delivery_charge_amount: number;
+}
+
 export interface CheckoutSummaryResponse {
     success: boolean;
     cart_total_before_discount: string;
@@ -260,6 +266,25 @@ export const ordersApi = {
     /* ── Delivery Estimation ── */
     estimateDelivery: async (): Promise<DeliveryEstimationDto> => {
         const res = await api.get<DeliveryEstimationDto>("/orders/estimate_delivery/");
+        return res.data;
+    },
+
+    /* ── Delivery Charge Settings (Admin) ── */
+    getDeliveryChargeSettings: async (): Promise<DeliveryChargeSettingsDto> => {
+        const res = await api.get<DeliveryChargeSettingsDto>("/orders/delivery_charge_settings/");
+        return res.data;
+    },
+
+    updateDeliveryChargeSettings: async (
+        data: DeliveryChargeSettingsDto
+    ): Promise<DeliveryChargeSettingsDto> => {
+        const res = await api.post<DeliveryChargeSettingsDto>("/orders/delivery_charge_settings/", data);
+        return res.data;
+    },
+
+    /* ── Retry Payment ── */
+    retryPayment: async (orderId: number): Promise<{ payment_url: string }> => {
+        const res = await api.post<{ payment_url: string }>(`/orders/${orderId}/retry_payment/`);
         return res.data;
     },
 };

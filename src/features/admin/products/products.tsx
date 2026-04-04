@@ -759,7 +759,7 @@ const ProductManagement: React.FC = () => {
                 </div>
 
                 {/* --- PAGINATION CONTROLS --- */}
-                <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+                <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
                     <div className="flex items-center gap-4">
                         <div className="text-[11px] text-[#A1A1AA] font-medium">
                             Showing {visibleStart}-{visibleEnd} of {totalCount} products
@@ -851,7 +851,7 @@ const ProductDetailPanel = ({
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     {/* Status & Category */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoBox
                             label="Status"
                             value={product.status}
@@ -872,7 +872,7 @@ const ProductDetailPanel = ({
                     {/* Pricing */}
                     <div className="space-y-3">
                         <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Pricing</h4>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="p-4 border border-[#EEEEEE] rounded-xl bg-[#FDFDFD]">
                                 <div className="flex items-center gap-1.5 text-[#A1A1AA] mb-1">
                                     <IndianRupee size={12} />
@@ -902,7 +902,7 @@ const ProductDetailPanel = ({
                     {/* Inventory & Delivery */}
                     <div className="space-y-3">
                         <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Inventory & Delivery</h4>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InfoBox label="Stock" value={`${product.stock} units`} icon={<Box size={14} />} />
                             <InfoBox label="Available" value={product.isAvailable ? "Yes" : "No"} icon={<Package size={14} />} />
                             <InfoBox label="Delivery Time" value={product.expectedDeliveryTime || "—"} icon={<Clock size={14} />} />
@@ -918,7 +918,7 @@ const ProductDetailPanel = ({
                     {product.images?.length > 0 && (
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Gallery</h4>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 {product.images.map((img) => (
                                     <div key={img.id} className="aspect-square rounded-lg overflow-hidden border border-[#EEEEEE] relative">
                                         <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -945,7 +945,7 @@ const ProductDetailPanel = ({
                     {product.videos && product.videos.length > 0 && (
                         <div className="space-y-3">
                             <h4 className="text-[10px] font-bold uppercase text-[#A1A1AA] tracking-widest">Videos</h4>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {product.videos.map((vid) => (
                                     <div key={vid.id} className="aspect-video rounded-lg overflow-hidden border border-[#EEEEEE] relative bg-slate-100 flex items-center justify-center">
                                         <video src={vid.url} controls className="max-w-full max-h-full" />

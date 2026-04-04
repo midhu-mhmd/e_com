@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   CreditCard, Wallet, Banknote, RefreshCcw,
   Search, Filter, Download, ChevronRight, X, CheckCircle2,
-  AlertCircle, Clock,
-  Receipt, User,
+  AlertCircle, Clock, ArrowUpRight, ArrowDownRight,
+  Receipt, User, ShieldCheck, Landmark,
   LayoutDashboard, ListOrdered, Undo2, HandCoins, BarChart3,
   ChevronLeft, Columns3, Eye,
 } from "lucide-react";
@@ -258,8 +258,26 @@ const PaymentManagement: React.FC = () => {
           />
         )}
 
-        {currentView === "refunds" && <RefundsView payments={paginatedPayments} />}
-        {currentView === "cod" && <CODView payments={paginatedPayments} />}
+        {currentView === "refunds" && (
+          <RefundsView
+            payments={paginatedPayments}
+            totalCount={totalCount}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+          />
+        )}
+        {currentView === "cod" && (
+          <CODView
+            payments={paginatedPayments}
+            totalCount={totalCount}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+          />
+        )}
       </main>
 
       {/* --- PAYMENT DETAIL DRAWER --- */}
@@ -676,7 +694,7 @@ const PaymentsListView = ({
       </div>
 
       {/* Pagination */}
-      <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+      <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
         <div className="flex items-center gap-4">
           <div className="text-[11px] text-[#A1A1AA] font-medium">
             Showing {visibleStart}-{visibleEnd} of {totalCount} transactions
@@ -771,7 +789,7 @@ const PaymentDetailDrawer = ({
         <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
           {activeTab === "summary" && (
             <div className="space-y-8 animate-in fade-in duration-300">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <DetailBox label="Order Total" value={`AED ${payment.amount.toLocaleString("en-IN")}`} icon={<Receipt size={14} />} />
                 <DetailBox label="Payment Method" value={payment.paymentMethod} icon={<Wallet size={14} />} />
                 <DetailBox label="Order" value={payment.orderNumber} icon={<Landmark size={14} />} />
@@ -842,8 +860,42 @@ const PaymentDetailDrawer = ({
 };
 
 /* ── SUB-VIEWS ── */
-const CODView = ({ payments }: { payments: Payment[] }) => {
-  const codPayments = payments.filter((p) => p.paymentMethod === "COD");
+const CODView = ({
+  payments,
+  totalCount,
+  page,
+  limit,
+  onPageChange,
+  onLimitChange,
+}: {
+  payments: Payment[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  onPageChange: (p: number) => void;
+  onLimitChange: (limit: number) => void;
+}) => {
+  const dispatch = useDispatch();
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+
+  const codStatuses = [
+    { value: "PENDING", label: "Pending" },
+    { value: "SUCCESS", label: "Collected" },
+    { value: "FAILED", label: "Failed" },
+  ];
+
+  const handleStatusSave = (paymentId: number) => {
+    if (!selectedStatus) return;
+    dispatch(paymentsActions.updatePaymentStatusRequest({ id: paymentId, status: selectedStatus }));
+    setEditingId(null);
+    setSelectedStatus("");
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden animate-in fade-in">
       <table className="w-full text-left">
@@ -857,15 +909,48 @@ const CODView = ({ payments }: { payments: Payment[] }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#EEEEEE]">
-          {codPayments.length > 0 ? (
-            codPayments.map((p) => (
+          {payments.length > 0 ? (
+            payments.map((p) => (
               <tr key={p.id} className="text-sm group hover:bg-[#FAFAFA] transition-colors">
                 <td className="px-6 py-4 font-mono text-xs font-bold">{p.orderNumber}</td>
                 <td className="px-6 py-4 text-xs">{p.customerName}</td>
                 <td className="px-6 py-4 font-mono font-bold">AED {p.amount.toLocaleString("en-IN")}</td>
                 <td className="px-6 py-4"><PaymentStatusBadge status={p.paymentStatus} /></td>
                 <td className="px-6 py-4 text-right">
-                  <button className="px-4 py-1.5 bg-black text-white rounded-lg text-[10px] font-bold shadow-sm">Mark Collected</button>
+                  {editingId === p.id ? (
+                    <div className="flex items-center justify-end gap-2">
+                      <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="px-2 py-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-[11px] font-medium outline-none focus:border-[#D4D4D8]"
+                      >
+                        <option value="">Select status</option>
+                        {codStatuses.map((s) => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleStatusSave(p.id)}
+                        disabled={!selectedStatus}
+                        className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => { setEditingId(null); setSelectedStatus(""); }}
+                        className="px-3 py-1.5 bg-[#F4F4F5] text-[#71717A] rounded-lg text-[10px] font-bold hover:bg-[#E4E4E7] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setEditingId(p.id); setSelectedStatus(""); }}
+                      className="px-4 py-1.5 bg-black text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-[#333] transition-colors"
+                    >
+                      Update Status
+                    </button>
+                  )}
                 </td>
               </tr>
             ))
@@ -876,12 +961,65 @@ const CODView = ({ payments }: { payments: Payment[] }) => {
           )}
         </tbody>
       </table>
+
+      {/* Pagination */}
+      <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
+        <div className="flex items-center gap-4">
+          <div className="text-[11px] text-[#A1A1AA] font-medium">
+            Showing {visibleStart}-{visibleEnd} of {totalCount} COD orders
+          </div>
+          <select
+            value={limit}
+            onChange={(e) => onLimitChange(Number(e.target.value))}
+            className="p-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-xs outline-none focus:border-[#D4D4D8]"
+          >
+            <option value={5}>5 / page</option>
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
+          <button
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page >= totalPages}
+            className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
-const RefundsView = ({ payments }: { payments: Payment[] }) => {
-  const refunded = payments.filter((p) => p.paymentStatus === "Refunded");
+const RefundsView = ({
+  payments,
+  totalCount,
+  page,
+  limit,
+  onPageChange,
+  onLimitChange,
+}: {
+  payments: Payment[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  onPageChange: (p: number) => void;
+  onLimitChange: (limit: number) => void;
+}) => {
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
+
   return (
     <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden animate-in fade-in">
       <table className="w-full text-left">
@@ -894,8 +1032,8 @@ const RefundsView = ({ payments }: { payments: Payment[] }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#EEEEEE]">
-          {refunded.length > 0 ? (
-            refunded.map((p) => (
+          {payments.length > 0 ? (
+            payments.map((p) => (
               <tr key={p.id} className="text-sm group hover:bg-[#FAFAFA] transition-colors">
                 <td className="px-6 py-4 font-mono text-xs font-bold">{p.paymentId}</td>
                 <td className="px-6 py-4 font-mono text-xs text-blue-600 font-bold">{p.orderNumber}</td>
@@ -910,11 +1048,48 @@ const RefundsView = ({ payments }: { payments: Payment[] }) => {
           )}
         </tbody>
       </table>
+
+      {/* Pagination */}
+      <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
+        <div className="flex items-center gap-4">
+          <div className="text-[11px] text-[#A1A1AA] font-medium">
+            Showing {visibleStart}-{visibleEnd} of {totalCount} refunds
+          </div>
+          <select
+            value={limit}
+            onChange={(e) => onLimitChange(Number(e.target.value))}
+            className="p-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-xs outline-none focus:border-[#D4D4D8]"
+          >
+            <option value={5}>5 / page</option>
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onPageChange(Math.max(1, page - 1))}
+            disabled={page === 1}
+            className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
+          <button
+            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+            disabled={page >= totalPages}
+            className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
-const SettlementsView = ({ totalCollected }: { totalCollected: number }) => (
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const SettlementsView = ({ totalCollected }: { totalCollected: number }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in">
     <div className="p-6 bg-white border border-[#EEEEEE] rounded-2xl shadow-sm">
       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Next Payout</p>
@@ -934,7 +1109,8 @@ const SettlementsView = ({ totalCollected }: { totalCollected: number }) => (
   </div>
 );
 
-const DisputesView = () => (
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const DisputesView = () => (
   <div className="bg-white p-12 border border-[#EEEEEE] rounded-2xl shadow-sm text-center space-y-4 animate-in fade-in">
     <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
       <ShieldCheck size={40} />

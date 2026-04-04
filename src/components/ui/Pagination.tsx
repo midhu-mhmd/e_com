@@ -23,7 +23,7 @@ export const Pagination: React.FC<PaginationProps> = ({
     totalItems,
 }) => {
     return (
-        <div className="p-4 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
             <div className="flex items-center gap-4">
                 <div className="text-[11px] text-[#A1A1AA] font-medium">
                     Showing {visibleStart}-{visibleEnd} of {totalItems} items

@@ -711,6 +711,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [reviewOpen, setReviewOpen] = useState(false);
+    const [retryingPayment, setRetryingPayment] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -765,6 +766,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const payment = order.payment;
     const subtotal = order.items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
     const isPaymentSuccess = ["SUCCESS", "PAID", "COMPLETED"].includes((payment?.status || "").toUpperCase());
+    const isPaymentPending = ["PENDING", "AWAITING", "INITIATED"].includes((payment?.status || "").toUpperCase());
     const tipAmount = Number(((order as any)?.tip_amount) || 0);
     const discountAmount = Number(((order as any)?.discount_amount) || 0);
     const deliveryCharge = Number(((order as any)?.delivery_charge) || 0);
@@ -806,6 +808,22 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
         }
     };
 
+    const handleRetryPayment = async () => {
+        setRetryingPayment(true);
+        try {
+            const res = await ordersApi.retryPayment(order.id);
+            if (res.payment_url) {
+                sessionStorage.setItem("pending_order_id", String(order.id));
+                window.location.href = res.payment_url;
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.error || err?.response?.data?.detail || "Failed to retry payment. Please try again.";
+            toast.show(msg, "error");
+        } finally {
+            setRetryingPayment(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#F0F2F5] font-sans pb-24 pt-8">
 
@@ -833,6 +851,19 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <div className="text-right">
                                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{t("detail.orderTotal")}</p>
                                 <p className="text-4xl font-black text-slate-900">AED {parseFloat(order.total_amount).toFixed(2)}</p>
+                                {(isPaymentPending || (!payment && order.status.toLowerCase() === "pending")) && (
+                                    <button
+                                        onClick={handleRetryPayment}
+                                        disabled={retryingPayment}
+                                        className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {retryingPayment ? (
+                                            <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                        ) : (
+                                            <><CreditCard size={16} /> Retry Payment</>
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -1051,19 +1082,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     <span className="text-sm text-slate-400">{t("detail.phone")}</span>
                                     {addr.phone_number}
                                 </div>
-                                <div className="mt-3 flex justify-end">
-                                    <a
-                                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                                            [addr.flat_villa_number, addr.building_name, addr.street_address, addr.area, addr.city, addr.emirate]
-                                                .filter(Boolean).join(", ")
-                                        )}${addr.latitude && addr.longitude ? `&destination_place_id=&travelmode=driving` : ""}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold border border-slate-200 hover:bg-slate-50"
-                                    >
-                                        {t("detail.directions")}
-                                    </a>
-                                </div>
+
                             </div>
                         </section>
                     ) : (
@@ -1130,6 +1149,47 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     )}
                                 </div>
                             )}
+                            {isPaymentPending && (
+                                <div className="mt-6 pt-6 border-t border-slate-100">
+                                    <button
+                                        onClick={handleRetryPayment}
+                                        disabled={retryingPayment}
+                                        className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {retryingPayment ? (
+                                            <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                        ) : (
+                                            <><CreditCard size={16} /> Retry Payment</>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </section>
+                    ) : order.status.toLowerCase() === "pending" ? (
+                        <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><CreditCard size={20} /></div>
+                                    <h2 className="text-xl font-bold text-slate-900">{t("detail.payment")}</h2>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.status")}</p>
+                                    <p className="capitalize font-black text-lg text-amber-500">Pending</p>
+                                </div>
+                            </div>
+                            <div className="mt-6 pt-6 border-t border-slate-100">
+                                <button
+                                    onClick={handleRetryPayment}
+                                    disabled={retryingPayment}
+                                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {retryingPayment ? (
+                                        <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                    ) : (
+                                        <><CreditCard size={16} /> Retry Payment</>
+                                    )}
+                                </button>
+                            </div>
                         </section>
                     ) : (
                         <div className="md:col-span-4 bg-white rounded-[2rem]" />

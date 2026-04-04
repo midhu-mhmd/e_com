@@ -1,12 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { AlertTriangle, RefreshCcw, ShoppingCart, ArrowLeft, Headphones } from "lucide-react";
+import { AlertTriangle, RefreshCcw, ArrowLeft, Headphones, Loader2 } from "lucide-react";
+import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentFailed: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id");
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState("");
+
+  const handleRetryPayment = async () => {
+    if (!orderId) {
+      navigate("/checkout");
+      return;
+    }
+    setRetrying(true);
+    setRetryError("");
+    try {
+      const res = await ordersApi.retryPayment(Number(orderId));
+      if (res.payment_url) {
+        sessionStorage.setItem("pending_order_id", String(orderId));
+        window.location.href = res.payment_url;
+      }
+    } catch (err: any) {
+      setRetryError(err?.response?.data?.error || err?.response?.data?.detail || "Failed to retry payment. Please try again.");
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-red-50 via-white to-rose-50 flex items-center justify-center p-4">
@@ -83,21 +106,29 @@ const PaymentFailed: React.FC = () => {
           </ul>
         </motion.div>
 
+        {/* Retry Error */}
+        {retryError && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-sm text-red-600 font-semibold mb-4"
+          >
+            {retryError}
+          </motion.p>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
           <button
-            onClick={() => navigate("/checkout")}
-            className="group flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-all"
+            onClick={handleRetryPayment}
+            disabled={retrying}
+            className="group flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCcw size={16} />
-            Try Again
-          </button>
-          <button
-            onClick={() => navigate("/cart")}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-50 transition-all"
-          >
-            <ShoppingCart size={16} />
-            View Cart
+            {retrying ? (
+              <><Loader2 size={16} className="animate-spin" /> Processing...</>
+            ) : (
+              <><RefreshCcw size={16} /> Try Again</>
+            )}
           </button>
         </div>
 
