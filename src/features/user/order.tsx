@@ -814,6 +814,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
             const res = await ordersApi.retryPayment(order.id);
             if (res.payment_url) {
                 sessionStorage.setItem("pending_order_id", String(order.id));
+                localStorage.setItem("pending_order_id", String(order.id));
                 window.location.href = res.payment_url;
             }
         } catch (err: any) {

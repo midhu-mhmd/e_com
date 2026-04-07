@@ -2,11 +2,20 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, Package } from "lucide-react";
+import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentCancelled: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
+
+  React.useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
+    if (id) {
+      ordersApi.verifyPayment(Number(id)).catch(() => {});
+    }
+    localStorage.removeItem("pending_order_id");
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center px-4 py-10 sm:p-6">

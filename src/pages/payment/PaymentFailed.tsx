@@ -5,9 +5,17 @@ import { AlertTriangle, RefreshCcw, ArrowLeft, Headphones, Loader2 } from "lucid
 import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentFailed: React.FC = () => {
+  React.useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
+    if (id) {
+      ordersApi.verifyPayment(Number(id)).catch(() => {});
+    }
+    localStorage.removeItem("pending_order_id");
+  }, []);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState("");
 

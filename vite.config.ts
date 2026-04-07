@@ -11,7 +11,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://187.77.189.139/',
+        target: 'https://simakfresh.ae/',
         changeOrigin: true,
         secure: false,
         configure: (proxy) => {

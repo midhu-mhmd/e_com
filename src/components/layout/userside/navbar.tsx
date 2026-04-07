@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 import useLanguageToggle from '../../../hooks/useLanguageToggle';
 
 // ✅ Logo
-import simakLogo from '../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png';
+import simakLogo from '../../../assets/SIMAK FRESH FINAL SVG-01.svg';
 
 const Navbar: React.FC = () => {
     const dispatch = useAppDispatch();

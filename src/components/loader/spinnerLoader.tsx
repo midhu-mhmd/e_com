@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import simakLogo from "../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
+import simakLogo from "../../assets/SIMAK FRESH FINAL SVG-01.svg";
 
 /**
  * SIMAK FRESH branded preloader.
@@ -75,7 +75,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
 
                     {/* Shrimp orbiting top-right */}
                     <motion.img
-                        src="/shrimp.svg"
+                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f990.png"
                         alt="shrimp"
                         className="absolute -top-3 -right-3 w-7 h-7 select-none"
                         animate={{ y: [0, -3, 0], rotate: [0, -10, 0] }}
@@ -84,7 +84,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
 
                     {/* Crab orbiting bottom-left */}
                     <motion.img
-                        src="/crab.svg"
+                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f980.png"
                         alt="crab"
                         className="absolute -bottom-3 -left-3 w-7 h-7 select-none"
                         animate={{ y: [0, 3, 0], rotate: [0, 10, 0] }}
@@ -93,7 +93,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
 
                     {/* Hamour orbiting top-left */}
                     <motion.img
-                        src="/hamour.svg"
+                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f41f.png"
                         alt="hamour"
                         className="absolute -top-3 -left-3 w-7 h-7 select-none"
                         animate={{ y: [0, -3, 0], rotate: [0, 10, 0] }}
@@ -102,7 +102,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
 
                     {/* Sea bream orbiting bottom-right */}
                     <motion.img
-                        src="/seabream.svg"
+                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f420.png"
                         alt="sea bream"
                         className="absolute -bottom-3 -right-3 w-7 h-7 select-none"
                         animate={{ y: [0, 3, 0], rotate: [0, -10, 0] }}

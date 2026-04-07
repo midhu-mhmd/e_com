@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { type BannerDto } from "../../features/admin/banners/bannerApi";
 import { useBanners } from "../../hooks/queries";
-import simakLogo from "../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
+import simakLogo from "../../assets/SIMAK FRESH FINAL SVG-01.svg";
 
 /* ── Component ── */
 const OffersSection: React.FC = () => {

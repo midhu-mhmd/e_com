@@ -287,4 +287,9 @@ export const ordersApi = {
         const res = await api.post<{ payment_url: string }>(`/orders/${orderId}/retry_payment/`);
         return res.data;
     },
+
+    /* ── Verify Payment ── */
+    verifyPayment: async (orderId: number): Promise<void> => {
+        await api.post(`/orders/${orderId}/verify_payment/`);
+    },
 };

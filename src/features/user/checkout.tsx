@@ -563,6 +563,7 @@ const CheckoutPage: React.FC = () => {
       if (res.payment_method === "ZIINA" && res.payment_url) {
         // Store order_id so payment result pages can always access it
         sessionStorage.setItem("pending_order_id", String(res.order_id));
+        localStorage.setItem("pending_order_id", String(res.order_id));
         // Redirect to Ziina payment gateway
         window.location.href = res.payment_url;
         return;

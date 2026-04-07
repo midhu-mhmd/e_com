@@ -4,17 +4,22 @@ import { motion } from "framer-motion";
 import { CheckCircle, Package, ArrowRight, Home, ShoppingBag } from "lucide-react";
 import { useAppDispatch } from "../../hooks";
 import { clearCart } from "../../features/admin/cart/cartSlice";
+import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentSuccess: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
   const [countdown, setCountdown] = useState(8);
 
   useEffect(() => {
     dispatch(clearCart());
-  }, [dispatch]);
+    if (orderId) {
+      ordersApi.verifyPayment(Number(orderId)).catch(() => {});
+    }
+    localStorage.removeItem("pending_order_id");
+  }, [dispatch, orderId]);
 
   useEffect(() => {
     const timer = setInterval(() => {
