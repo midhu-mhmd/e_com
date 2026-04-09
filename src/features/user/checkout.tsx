@@ -1342,7 +1342,7 @@ const CheckoutPage: React.FC = () => {
               {summaryDeliveryCharge === null && (
                 <p className="text-xs text-slate-400">
                   {t("summary.deliveryRule", {
-                    defaultValue: "Delivery is free for orders AED 40 or more after discount.",
+                    defaultValue: "Delivery is free for orders AED 40 above.",
                   })}
                 </p>
               )}

@@ -55,6 +55,7 @@ import NetworkError from '../pages/errors/NetworkError';
 import PaymentSuccess from '../pages/payment/PaymentSuccess';
 import PaymentCancelled from '../pages/payment/PaymentCancelled';
 import PaymentFailed from '../pages/payment/PaymentFailed';
+import { PaymentRoute } from './PaymentRoute';
 
 /* ✅ Layout wrapper that adds Navbar to user-facing pages
    ✅ applies language + RTL only on user side
@@ -109,10 +110,12 @@ export const AppRoutes: React.FC = () => {
       <Route path="/500" element={<ServerError500 />} />
       <Route path="/network-error" element={<NetworkError />} />
 
-      {/* --- PAYMENT RESULT ROUTES (Outside Layouts - returned from payment gateway) --- */}
-      <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route path="/payment/cancelled" element={<PaymentCancelled />} />
-      <Route path="/payment/failed" element={<PaymentFailed />} />
+      {/* --- PAYMENT RESULT ROUTES (Protected - requires auth + valid order context) --- */}
+      <Route path="/payment" element={<PaymentRoute />}>
+        <Route path="success" element={<PaymentSuccess />} />
+        <Route path="cancelled" element={<PaymentCancelled />} />
+        <Route path="failed" element={<PaymentFailed />} />
+      </Route>
 
       {/* --- USER ROUTES (with Navbar) --- */}
       <Route element={<UserLayout />}>

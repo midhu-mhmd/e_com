@@ -20,6 +20,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   checkingAuth: boolean; // optional: for app load /me check
+  referralMessage: string | null;
 }
 
 const initialState: AuthState = {
@@ -33,6 +34,7 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   checkingAuth: true,
+  referralMessage: null,
 };
 
 const authSlice = createSlice({
@@ -86,6 +88,10 @@ const authSlice = createSlice({
       state.error = null;
     },
 
+    setReferralMessage: (state, action: PayloadAction<string | null>) => {
+      state.referralMessage = action.payload;
+    },
+
     // ✅ optional: app load session check
     checkAuth: (state) => {
       state.checkingAuth = true;
@@ -131,6 +137,7 @@ export const {
   setStep,
   setMethod,
   setUser,
+  setReferralMessage,
   checkAuth,
   checkAuthDone,
   setUnauthenticated,

@@ -1,5 +1,60 @@
 @import "tailwindcss";
 
+/* ═══ Custom Fonts ═══ */
+
+/* SF Pro Display — English / Default */
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('./assets/SF-Pro-Display-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apple Garamond — Decorative / Signature */
+@font-face {
+  font-family: 'Apple Garamond';
+  src: url('./assets/APPLEGARAMOND-LIGHTITALIC.TTF') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Cairo — Arabic */
+@font-face {
+  font-family: 'Cairo';
+  src: url('./assets/Cairo ARABIC/Cairo-VariableFont_slnt,wght.ttf') format('truetype');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Noto Sans SC — Chinese */
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('./assets/Noto_Sans_SC. CHINESE/NotoSansSC-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ═══ Language-based font application ═══ */
+
+/* Default (English) */
+html {
+  font-family: 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Arabic */
+html[lang="ar"] {
+  font-family: 'Cairo', 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Chinese */
+html[lang="cn"], html[lang="zh"] {
+  font-family: 'Noto Sans SC', 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Hide scrollbar for horizontal scroll containers */
 .scrollbar-hide {
   -ms-overflow-style: none;

@@ -159,9 +159,9 @@ const ReviewModal: React.FC<{
 
     if (validItems.length === 0) {
         return (
-            <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-9998 flex items-center justify-center p-4 sm:p-6">
                 <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={onClose} />
-                <div className="relative bg-white rounded-[24px] p-8 max-w-sm w-full shadow-2xl z-10 text-center">
+                <div className="relative bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl z-10 text-center">
                     <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle size={32} />
                     </div>
@@ -274,7 +274,7 @@ const ReviewModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-9998 flex items-center justify-center p-4 sm:p-6">
             {/* Minimal Blur Backdrop */}
             <motion.div
                 initial={{ opacity: 0 }}
@@ -290,7 +290,7 @@ const ReviewModal: React.FC<{
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                className="relative w-full max-w-[420px] bg-white rounded-[24px] shadow-2xl overflow-hidden z-10 flex flex-col"
+                className="relative w-full max-w-96 bg-white rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col"
             >
                 {/* Absolute Close Button */}
                 <button
@@ -314,7 +314,7 @@ const ReviewModal: React.FC<{
                         >
                             {/* Product Header Context */}
                             <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                                <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
                                     {current.product_image ? (
                                         <img src={current.product_image} alt={current.product_name} className="w-full h-full object-cover" />
                                     ) : (
@@ -550,7 +550,7 @@ const OrderList: React.FC = () => {
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-white rounded-[2rem] p-8 h-72 animate-pulse flex flex-col justify-between">
+                            <div key={i} className="bg-white rounded-4xl p-8 h-72 animate-pulse flex flex-col justify-between">
                                 <div className="flex justify-between items-start">
                                     <div className="w-16 h-16 bg-slate-100 rounded-2xl" />
                                     <div className="w-24 h-8 bg-slate-100 rounded-full" />
@@ -563,7 +563,7 @@ const OrderList: React.FC = () => {
                         ))}
                     </div>
                 ) : error ? (
-                    <div className="bg-white rounded-[2rem] p-12 text-center max-w-2xl mx-auto shadow-sm">
+                    <div className="bg-white rounded-4xl p-12 text-center max-w-2xl mx-auto shadow-sm">
                         <AlertCircle className="mx-auto text-red-400 mb-6" size={48} />
                         <h3 className="text-2xl font-bold text-slate-900 mb-2">{t("list.errorTitle")}</h3>
                         <p className="text-slate-500 mb-8">{error}</p>
@@ -572,7 +572,7 @@ const OrderList: React.FC = () => {
                         </button>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="bg-white rounded-[2rem] p-16 text-center max-w-2xl mx-auto shadow-sm">
+                    <div className="bg-white rounded-4xl p-16 text-center max-w-2xl mx-auto shadow-sm">
                         <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-8">
                             <Package className="text-slate-400" size={40} />
                         </div>
@@ -613,7 +613,7 @@ const OrderList: React.FC = () => {
                                     >
                                         <Link
                                             to={`/orders/${order.id}`}
-                                            className="block h-full bg-white rounded-[2rem] p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                                            className="h-full bg-white rounded-4xl p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
                                         >
                                             <div className="flex justify-between items-start mb-8 border-b border-slate-100 pb-6">
                                                 <div className="flex -space-x-4">
@@ -706,6 +706,7 @@ const OrderList: React.FC = () => {
 const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     const { t } = useTranslation("orders");
     const navigate = useNavigate();
+    const toast = useToast();
     const { isArabic } = useLanguageToggle();
     const [order, setOrder] = useState<OrderDto | null>(null);
     const [loading, setLoading] = useState(true);
@@ -735,12 +736,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     <div className="h-10 bg-slate-200 rounded-xl w-32 animate-pulse" />
                 </div>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-6 animate-pulse">
-                    <div className="md:col-span-12 h-40 bg-white rounded-[2rem]" />
-                    <div className="md:col-span-8 h-96 bg-white rounded-[2rem]" />
-                    <div className="md:col-span-4 h-96 bg-white rounded-[2rem]" />
-                    <div className="md:col-span-4 h-48 bg-white rounded-[2rem]" />
-                    <div className="md:col-span-4 h-48 bg-white rounded-[2rem]" />
-                    <div className="md:col-span-4 h-48 bg-slate-900 rounded-[2rem]" />
+                    <div className="md:col-span-12 h-40 bg-white rounded-4xl" />
+                    <div className="md:col-span-8 h-96 bg-white rounded-4xl" />
+                    <div className="md:col-span-4 h-96 bg-white rounded-4xl" />
+                    <div className="md:col-span-4 h-48 bg-white rounded-4xl" />
+                    <div className="md:col-span-4 h-48 bg-white rounded-4xl" />
+                    <div className="md:col-span-4 h-48 bg-slate-900 rounded-4xl" />
                 </div>
             </div>
         );
@@ -749,7 +750,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     if (error || !order) {
         return (
             <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-6 text-center">
-                <div className="bg-white p-12 rounded-[2rem] max-w-lg w-full shadow-sm">
+                <div className="bg-white p-12 rounded-4xl max-w-lg w-full shadow-sm">
                     <AlertCircle className="mx-auto text-red-500 mb-6" size={48} />
                     <h3 className="text-2xl font-bold text-slate-900 mb-4">{t("detail.error")}</h3>
                     <p className="text-slate-500 mb-8">{error || t("detail.orderNotFound")}</p>
@@ -814,7 +815,6 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
             const res = await ordersApi.retryPayment(order.id);
             if (res.payment_url) {
                 sessionStorage.setItem("pending_order_id", String(order.id));
-                localStorage.setItem("pending_order_id", String(order.id));
                 window.location.href = res.payment_url;
             }
         } catch (err: any) {
@@ -840,7 +840,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
                     {/* Meta Bento */}
-                    <div className="md:col-span-12 bg-white rounded-[2rem] p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
+                    <div className="md:col-span-12 bg-white rounded-4xl p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
                         <div className="relative z-10">
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 ${st.bg} ${st.color}`}>
                                 {st.icon} {t(`status.${st.key}`)}
@@ -886,7 +886,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     </div>
 
                     {/* Items Bento */}
-                    <section className="md:col-span-8 bg-white rounded-[2rem] p-8 flex flex-col">
+                    <section className="md:col-span-8 bg-white rounded-4xl p-8 flex flex-col">
                         <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><Package size={20} /></div>
@@ -900,7 +900,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 const pid = (item as any).product?.id || item.product || (item as any).product_id;
                                 return (
                                 <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-4 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                                    <div className="w-24 h-24 bg-white rounded-[1.2rem] flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+                                    <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
                                         {item.product_image ? (
                                             <img
                                                 src={item.product_image}
@@ -932,7 +932,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     </section>
 
                     {/* Timeline Bento */}
-                    <section className="md:col-span-4 bg-white rounded-[2rem] p-8">
+                    <section className="md:col-span-4 bg-white rounded-4xl p-8">
                         <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-100">
                             <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><Clock size={20} /></div>
                             <h2 className="text-xl font-bold text-slate-900">{t("detail.timeline")}</h2>
@@ -1016,7 +1016,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                                 {/* Connector line */}
                                                 {!isLast && (
                                                     <div
-                                                        className={`absolute left-[11px] top-7 w-[2px] h-[calc(100%)] ${lineClass}`}
+                                                        className={`absolute left-2.75 top-7 w-0.5 h-[calc(100%)] ${lineClass}`}
                                                     />
                                                 )}
 
@@ -1066,7 +1066,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
 
                     {/* Address Bento */}
                     {addr ? (
-                        <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col justify-between">
+                        <section className="md:col-span-4 bg-white rounded-4xl p-8 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><MapPin size={20} /></div>
@@ -1087,12 +1087,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             </div>
                         </section>
                     ) : (
-                        <div className="md:col-span-4 bg-white rounded-[2rem]" />
+                        <div className="md:col-span-4 bg-white rounded-4xl" />
                     )}
 
                     {/* Payment Bento */}
                     {payment ? (
-                        <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col justify-between">
+                        <section className="md:col-span-4 bg-white rounded-4xl p-8 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><CreditCard size={20} /></div>
@@ -1167,7 +1167,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             )}
                         </section>
                     ) : order.status.toLowerCase() === "pending" ? (
-                        <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col justify-between">
+                        <section className="md:col-span-4 bg-white rounded-4xl p-8 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><CreditCard size={20} /></div>
@@ -1193,12 +1193,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             </div>
                         </section>
                     ) : (
-                        <div className="md:col-span-4 bg-white rounded-[2rem]" />
+                        <div className="md:col-span-4 bg-white rounded-4xl" />
                     )}
 
                     {/* Delivery Notes Bento */}
                     {order.delivery_notes && (
-                        <section className="md:col-span-4 bg-white rounded-[2rem] p-8 flex flex-col">
+                        <section className="md:col-span-4 bg-white rounded-4xl p-8 flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-slate-100 rounded-lg text-slate-500"><FileText size={20} /></div>
                                 <h2 className="text-xl font-bold text-slate-900">{t("detail.deliveryNotes")}</h2>
@@ -1208,7 +1208,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                     )}
 
                     {/* Total Summary Bento */}
-                    <section className="md:col-span-4 bg-slate-900 text-white rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden">
+                    <section className="md:col-span-4 bg-slate-900 text-white rounded-4xl p-8 flex flex-col justify-between relative overflow-hidden">
                         <div className="relative z-10">
                             <h2 className="text-xl font-bold text-white mb-6">{t("detail.summary")}</h2>
                             <div className="space-y-4 text-sm font-bold text-slate-400">

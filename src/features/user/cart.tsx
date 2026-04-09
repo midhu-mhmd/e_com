@@ -189,7 +189,7 @@ const CartPage: React.FC = () => {
                                 <span className="font-bold text-stone-500">Calculated at checkout</span>
                             </div>
                             <p className="text-xs text-stone-400 italic">
-                                Delivery is free for orders AED 40 or more after discount.
+                                Delivery is free for orders AED 40 above.
                             </p>
                         </div>
 

@@ -8,6 +8,7 @@ import {
   setStep,
   authError,
   setUser,
+  setReferralMessage,
   checkAuth,
   checkAuthDone,
   setUnauthenticated,
@@ -133,6 +134,12 @@ function* handleVerifyOtp(action: ReturnType<typeof verifyOtp>): Generator<any, 
 
     // ✅ store in redux (UI/guard will redirect)
     yield put(setUser(user));
+
+    // ✅ Capture referral success message if present
+    const referralMsg = verifyRes.data?.referral?.message || verifyRes.data?.referral_message || verifyRes.data?.referral_success;
+    if (referralMsg) {
+      yield put(setReferralMessage(referralMsg));
+    }
   } catch (err: any) {
     yield put(authError(getErrMsg(err, "Invalid OTP")));
   }
@@ -166,6 +173,12 @@ function* handleGoogleLogin(action: ReturnType<typeof googleLogin>): Generator<a
     });
 
     yield put(setUser(user));
+
+    // ✅ Capture referral success message if present
+    const referralMsg = res.data?.referral?.message || res.data?.referral_message || res.data?.referral_success;
+    if (referralMsg) {
+      yield put(setReferralMessage(referralMsg));
+    }
   } catch (err: any) {
     const msg = getErrMsg(err, "Google login failed");
     yield put(authError(msg));

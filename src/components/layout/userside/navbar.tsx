@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     ShoppingCart,
-    ShoppingBag,
     User,
     MapPin,
     Phone,
@@ -116,15 +115,15 @@ const Navbar: React.FC = () => {
                     <Link to="/" className="shrink-0 flex items-center gap-2 group">
                         <img
                             src={simakLogo}
-                            alt={t('brand.name')}
+                            alt="SIMAK FRESH"
                             className="h-10 w-auto object-contain"
                         />
                         <div className="flex flex-col justify-center">
                             <span className="text-xl font-black tracking-wider text-slate-800 uppercase leading-none">
-                                {t('brand.name')}
+                                SIMAK <span className="text-cyan-600">FRESH</span>
                             </span>
                             <span className="text-[9px] sm:text-[9.7px] font-semibold tracking-[0.2em] text-cyan-700/80 uppercase mt-1 leading-none">
-                                {t('brand.signature')}
+                                Signature of Quality
                             </span>
                         </div>
                     </Link>
@@ -145,7 +144,7 @@ const Navbar: React.FC = () => {
                             className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-500 hover:text-cyan-600 transition-colors"
                             aria-label={t('nav.allProducts')}
                         >
-                            <ShoppingBag size={20} />
+                            <Package size={20} />
                         </Link>
 
                         {/* ✅ Cart Icon - Hidden on Mobile, Visible on Desktop */}

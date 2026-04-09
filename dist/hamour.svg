@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="hb" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#7A9968"/>
+      <stop offset="35%" stop-color="#5E7E4A"/>
+      <stop offset="70%" stop-color="#4A6838"/>
+      <stop offset="100%" stop-color="#3A5428"/>
+    </linearGradient>
+    <linearGradient id="hbelly" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D8CCA8"/>
+      <stop offset="100%" stop-color="#E8DCC0"/>
+    </linearGradient>
+    <radialGradient id="he" cx="0.4" cy="0.35" r="0.5">
+      <stop offset="0%" stop-color="#333"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+  </defs>
+  <!-- Tail fin -->
+  <path d="M6 42 Q-2 34 2 28 Q4 26 6 30 L10 38Z" fill="#5E7E4A" stroke="#3A5428" stroke-width="0.6"/>
+  <path d="M6 58 Q-2 66 2 72 Q4 74 6 70 L10 62Z" fill="#5E7E4A" stroke="#3A5428" stroke-width="0.6"/>
+  <path d="M8 50 Q2 50 0 50 Q2 46 4 44 L8 48Z" fill="#6A8C54" stroke="#3A5428" stroke-width="0.5"/>
+  <path d="M8 50 Q2 50 0 50 Q2 54 4 56 L8 52Z" fill="#6A8C54" stroke="#3A5428" stroke-width="0.5"/>
+  <!-- Body -->
+  <path d="M10 50 Q10 30 30 22 Q50 14 70 20 Q86 26 90 42 Q92 50 90 58 Q86 74 70 80 Q50 86 30 78 Q10 70 10 50Z" fill="url(#hb)"/>
+  <!-- Belly -->
+  <path d="M14 56 Q14 66 28 74 Q44 82 64 78 Q80 72 86 60 Q82 68 68 74 Q50 80 32 74 Q18 68 14 56Z" fill="url(#hbelly)" opacity="0.5"/>
+  <!-- Lateral line -->
+  <path d="M14 52 Q30 48 50 46 Q70 44 86 48" stroke="#4A6838" stroke-width="1.2" fill="none" opacity="0.4" stroke-linecap="round"/>
+  <!-- Spots -->
+  <circle cx="30" cy="38" r="2.5" fill="#3A5428" opacity="0.3"/>
+  <circle cx="42" cy="32" r="2" fill="#3A5428" opacity="0.25"/>
+  <circle cx="54" cy="34" r="2.8" fill="#3A5428" opacity="0.3"/>
+  <circle cx="36" cy="48" r="1.8" fill="#3A5428" opacity="0.2"/>
+  <circle cx="48" cy="42" r="2.2" fill="#3A5428" opacity="0.25"/>
+  <circle cx="62" cy="38" r="2" fill="#3A5428" opacity="0.2"/>
+  <circle cx="24" cy="44" r="1.5" fill="#3A5428" opacity="0.2"/>
+  <circle cx="68" cy="30" r="1.8" fill="#3A5428" opacity="0.22"/>
+  <circle cx="44" cy="54" r="1.5" fill="#3A5428" opacity="0.15"/>
+  <circle cx="58" cy="48" r="1.6" fill="#3A5428" opacity="0.18"/>
+  <!-- Dorsal fin -->
+  <path d="M28 22 Q32 10 42 12 Q46 14 44 22" fill="#4A6838" stroke="#3A5428" stroke-width="0.6"/>
+  <path d="M44 22 Q48 8 58 12 Q62 16 58 24" fill="#4A6838" stroke="#3A5428" stroke-width="0.6"/>
+  <path d="M58 24 Q62 14 68 18 Q70 22 68 28" fill="#3A5428" stroke="#2A4418" stroke-width="0.5" opacity="0.8"/>
+  <!-- Dorsal fin rays -->
+  <path d="M34 18 L38 14" stroke="#5E7E4A" stroke-width="0.4" opacity="0.5"/>
+  <path d="M48 16 L52 12" stroke="#5E7E4A" stroke-width="0.4" opacity="0.5"/>
+  <path d="M60 20 L64 16" stroke="#5E7E4A" stroke-width="0.4" opacity="0.5"/>
+  <!-- Pectoral fin -->
+  <path d="M58 56 Q52 66 48 72 Q50 70 56 62 Q60 58 62 56" fill="#5E7E4A" stroke="#3A5428" stroke-width="0.5" opacity="0.7"/>
+  <!-- Anal fin -->
+  <path d="M24 74 Q30 82 40 80 Q36 78 28 74Z" fill="#4A6838" stroke="#3A5428" stroke-width="0.5"/>
+  <!-- Gill cover line -->
+  <path d="M72 32 Q74 42 74 52 Q74 60 72 68" stroke="#3A5428" stroke-width="1.2" fill="none" opacity="0.35" stroke-linecap="round"/>
+  <!-- Gill cover highlight -->
+  <path d="M74 34 Q76 44 76 50 Q76 58 74 66" stroke="#7A9968" stroke-width="0.6" fill="none" opacity="0.25" stroke-linecap="round"/>
+  <!-- Eye -->
+  <circle cx="82" cy="40" r="5" fill="#E8DCC0" stroke="#4A6838" stroke-width="0.8"/>
+  <circle cx="82" cy="40" r="3" fill="url(#he)"/>
+  <circle cx="83.5" cy="38.5" r="1" fill="white" opacity="0.85"/>
+  <circle cx="81" cy="41.5" r="0.4" fill="white" opacity="0.3"/>
+  <!-- Mouth -->
+  <path d="M90 52 Q94 54 96 56 Q94 58 90 58 Q92 56 92 54Z" fill="#4A6838" stroke="#3A5428" stroke-width="0.6"/>
+  <!-- Upper lip -->
+  <path d="M88 50 Q92 52 96 56" stroke="#5E7E4A" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <!-- Lower jaw -->
+  <path d="M88 60 Q92 58 96 56" stroke="#5E7E4A" stroke-width="0.8" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <!-- Dorsal highlight -->
+  <path d="M30 26 Q50 20 70 24" stroke="white" stroke-width="1" fill="none" opacity="0.1" stroke-linecap="round"/>
+</svg>

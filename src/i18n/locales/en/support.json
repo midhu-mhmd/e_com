@@ -2,11 +2,11 @@
   "hero": {
     "badge": "Support Center",
     "title": "How can we help you?",
-    "subtitle": "Our team is here to assist. Reach out and we’ll help."
+    "subtitle": "Our team is here to assist. Reach out and we'll help."
   },
   "form": {
     "title": "Send us a message",
-    "subtitle": "We’ll get back to you within 24 hours",
+    "subtitle": "We'll get back to you within 24 hours",
     "fields": {
       "name": "Full Name",
       "email": "Email Address",
@@ -23,23 +23,39 @@
     "sending": "Sending...",
     "success": {
       "title": "Message Sent!",
-      "subtitle": "Thank you for reaching out. We’ll respond as soon as possible.",
+      "subtitle": "Thank you for reaching out. We'll respond as soon as possible.",
       "again": "Send Another Message"
     },
     "loginBanner": "Please log in to send a message.",
+    "identity": {
+      "label": "Account Email",
+      "verifiedTitle": "Your verified account email will be used for support",
+      "unverifiedTitle": "Verify your account email before contacting support",
+      "unverifiedDescription": "Verification codes are sent only to your current account email. If this address is wrong, update it in your profile first.",
+      "missingTitle": "Add an email to your account before contacting support",
+      "missingDescription": "Support requests must come from a verified account email.",
+      "manageProfile": "Manage Profile",
+      "verifiedBadge": "Verified"
+    },
     "verify": {
       "openBtn": "Verify Email",
+      "closeBtn": "Hide Verification",
       "email": "Email",
       "send": "Send Code",
       "sending": "Sending...",
       "codePlaceholder": "Enter 6-digit code",
       "verify": "Verify",
       "verifying": "Verifying...",
+      "profileHint": "We only send codes to the email saved on your account.",
+      "addEmailFirst": "Add an email in your profile before requesting a verification code.",
       "sendError": "Failed to send code. Try again.",
-      "verifyError": "Invalid or expired code."
+      "verifyError": "Invalid or expired code.",
+      "success": "Email verified successfully!",
+      "cooldown": "You can request another code in {{seconds}}s."
     },
     "errors": {
       "unauthenticated": "Please log in to send a message.",
+      "emailMissing": "Add and verify an email in your profile before sending a message.",
       "emailNotVerified": "Your email must be verified to send a message.",
       "generic": "Something went wrong. Please try again."
     }
@@ -51,7 +67,7 @@
     },
     "hours": {
       "title": "Working Hours",
-      "value": "Sat – Thu: 9 AM – 9 PM"
+      "value": "Sat - Thu: 9 AM - 9 PM"
     },
     "email": {
       "title": "Email Us",
@@ -69,9 +85,9 @@
     "badge": "Frequently Asked",
     "title": "Common Questions",
     "items": [
-      { "q": "How do I track my order?", "a": "After shipping, you’ll receive a tracking link via email and SMS. You can also view it on your Orders page." },
-      { "q": "What is your return & refund policy?", "a": "Returns accepted within 7 days if unused and in original packaging. Refunds process in 3–5 business days." },
-      { "q": "How long does delivery take?", "a": "Standard delivery in the UAE takes 2–4 business days. Express options may be available in select areas." },
+      { "q": "How do I track my order?", "a": "After shipping, you'll receive a tracking link via email and SMS. You can also view it on your Orders page." },
+      { "q": "What is your return & refund policy?", "a": "Returns accepted within 7 days if unused and in original packaging. Refunds process in 3-5 business days." },
+      { "q": "How long does delivery take?", "a": "Standard delivery in the UAE takes 2-4 business days. Express options may be available in select areas." },
       { "q": "Can I change or cancel my order?", "a": "You can modify or cancel within 1 hour of placing the order. After that, it enters processing." },
       { "q": "What payment methods do you accept?", "a": "Visa, Mastercard, Apple Pay, Cash on Delivery, and bank transfers." }
     ]

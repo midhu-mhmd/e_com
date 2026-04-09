@@ -31,6 +31,29 @@ interface ContactForm {
 
 type Status = "idle" | "sending" | "success" | "error";
 
+/** Extract a human-readable message from any DRF error response */
+function extractApiError(e: any, fallback: string): string {
+    const d = e?.response?.data;
+    if (!d) return e?.message || fallback;
+    // flat string
+    if (typeof d === "string") return d;
+    if (typeof d.detail === "string") return d.detail;
+    if (typeof d.error === "string") return d.error;
+    if (typeof d.message === "string") return d.message;
+    // non_field_errors array
+    if (Array.isArray(d.non_field_errors) && d.non_field_errors.length) return d.non_field_errors[0];
+    // field-level errors — collect first error from each field
+    const fieldMsgs: string[] = [];
+    for (const key of Object.keys(d)) {
+        const val = d[key];
+        if (Array.isArray(val) && val.length && typeof val[0] === "string") {
+            fieldMsgs.push(val[0]);
+        }
+    }
+    if (fieldMsgs.length) return fieldMsgs.join(" ");
+    return fallback;
+}
+
 /* ─── FAQ Item ─── */
 const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
     const [open, setOpen] = useState(false);
@@ -81,6 +104,13 @@ const SupportPage: React.FC = () => {
     const [sendingOtp, setSendingOtp] = useState(false);
     const [verifyingOtp, setVerifyingOtp] = useState(false);
     const [verifyError, setVerifyError] = useState("");
+    const [verifySuccess, setVerifySuccess] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const resendRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+    React.useEffect(() => {
+        return () => { if (resendRef.current) clearInterval(resendRef.current); };
+    }, []);
 
     const onChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -133,9 +163,9 @@ const SupportPage: React.FC = () => {
             if (statusCode === 401) {
                 setErrorMsg(t("form.errors.unauthenticated"));
             } else if (statusCode === 403) {
-                setErrorMsg(err?.response?.data?.detail || t("form.errors.emailNotVerified"));
+                setErrorMsg(extractApiError(err, t("form.errors.emailNotVerified")));
             } else {
-                setErrorMsg(t("form.errors.generic"));
+                setErrorMsg(extractApiError(err, t("form.errors.generic")));
             }
         }
     };
@@ -342,16 +372,27 @@ const SupportPage: React.FC = () => {
                                                             setSendingOtp(true);
                                                             try {
                                                                 await profileApi.sendProfileOtp({ otp_type: "email", email: verifyEmail });
+                                                                setResendCooldown(30);
+                                                                if (resendRef.current) clearInterval(resendRef.current);
+                                                                resendRef.current = setInterval(() => {
+                                                                    setResendCooldown((prev) => {
+                                                                        if (prev <= 1) {
+                                                                            if (resendRef.current) clearInterval(resendRef.current);
+                                                                            return 0;
+                                                                        }
+                                                                        return prev - 1;
+                                                                    });
+                                                                }, 1000);
                                                             } catch (e: any) {
-                                                                setVerifyError(e?.response?.data?.detail || t("form.verify.sendError"));
+                                                                setVerifyError(extractApiError(e, t("form.verify.sendError")));
                                                             } finally {
                                                                 setSendingOtp(false);
                                                             }
                                                         }}
-                                                        disabled={sendingOtp || !verifyEmail}
+                                                        disabled={sendingOtp || !verifyEmail || resendCooldown > 0}
                                                         className="px-3 py-2 rounded-lg bg-slate-900 text-white text-[11px] font-bold disabled:opacity-50"
                                                     >
-                                                        {sendingOtp ? t("form.verify.sending") : t("form.verify.send")}
+                                                        {sendingOtp ? t("form.verify.sending") : resendCooldown > 0 ? `${resendCooldown}s` : t("form.verify.send")}
                                                     </button>
                                                     <input
                                                         type="text"
@@ -367,13 +408,25 @@ const SupportPage: React.FC = () => {
                                                             setVerifyingOtp(true);
                                                             try {
                                                                 await profileApi.verifyProfileOtp({ otp_type: "email", otp_code: otpCode, email: verifyEmail });
+                                                                // Update user email on profile if it changed
+                                                                try {
+                                                                    await profileApi.updateMe({ email: verifyEmail });
+                                                                } catch { /* email may already be set, ignore */ }
                                                                 const fresh = await profileApi.getMe();
                                                                 queryClient.setQueryData(["userProfile"], fresh);
                                                                 dispatch(setUser(fresh) as any);
-                                                                setVerifyOpen(false);
-                                                                setErrorMsg("");
+                                                                setForm((prev) => ({ ...prev, email: verifyEmail }));
+                                                                setVerifySuccess(true);
+                                                                setOtpCode("");
+                                                                // Auto-close after brief success display
+                                                                setTimeout(() => {
+                                                                    setVerifyOpen(false);
+                                                                    setVerifySuccess(false);
+                                                                    setErrorMsg("");
+                                                                    setStatus("idle");
+                                                                }, 1500);
                                                             } catch (e: any) {
-                                                                setVerifyError(e?.response?.data?.detail || t("form.verify.verifyError"));
+                                                                setVerifyError(extractApiError(e, t("form.verify.verifyError")));
                                                             } finally {
                                                                 setVerifyingOtp(false);
                                                             }
@@ -386,6 +439,12 @@ const SupportPage: React.FC = () => {
                                                 </div>
                                                 {verifyError && (
                                                     <p className="text-[11px] font-bold text-rose-600">{verifyError}</p>
+                                                )}
+                                                {verifySuccess && (
+                                                    <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-600">
+                                                        <CheckCircle2 size={14} />
+                                                        {t("form.verify.success", { defaultValue: "Email verified successfully!" })}
+                                                    </div>
                                                 )}
                                             </div>
                                         )}

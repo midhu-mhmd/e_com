@@ -2,7 +2,7 @@ import ShrimpLoader from "./components/loader/preloader";
 import { useEffect, useRef } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { checkAuth } from "./features/auth/authSlice";
+import { checkAuth, setReferralMessage } from "./features/auth/authSlice";
 import { AppRoutes } from "./routes/AppRoutes";
 import { useToast } from "./components/ui/Toast";
 import { useInitializeCart } from "./hooks/useInitializeCart";
@@ -11,7 +11,7 @@ import { rememberErrorReturnPath, reloadErrorReturnPath } from "./utils/errorRed
 
 function App() {
   const dispatch = useDispatch();
-  const { checkingAuth, isAuthenticated, user } = useSelector((state: any) => state.auth);
+  const { checkingAuth, isAuthenticated, user, referralMessage } = useSelector((state: any) => state.auth);
   const toast = useToast();
   const wasAuthenticated = useRef(false);
 
@@ -53,6 +53,14 @@ function App() {
     }
     wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated, checkingAuth]);
+
+  // Show referral code success toast
+  useEffect(() => {
+    if (referralMessage) {
+      toast.show(referralMessage, "success");
+      dispatch(setReferralMessage(null));
+    }
+  }, [referralMessage]);
 
   return (
     <>

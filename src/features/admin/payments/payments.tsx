@@ -199,16 +199,15 @@ const PaymentManagement: React.FC = () => {
         </p>
       </div>
 
-      {/* --- TOP NAVIGATION --- */}
-      <nav className="flex items-center gap-1 bg-white p-1.5 border border-[#EEEEEE] rounded-2xl w-fit shadow-sm overflow-x-auto no-scrollbar">
-        <NavTab id="dashboard" active={currentView} label="Overview" icon={<LayoutDashboard size={14} />} onClick={() => { setCurrentView("dashboard" as ViewType); }} />
-        <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={() => { setCurrentView("payments" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("All"); setPage(1); }} />
-        <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={() => { setCurrentView("refunds" as ViewType); setSearchTerm(""); setStatusFilter("Refunded"); setMethodFilter("All"); setPage(1); }} />
-        <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
-      </nav>
-
-      {/* --- RENDER VIEWS --- */}
-      <main className="min-h-[60vh]">
+      {/* --- COMBINED: TABS + CONTENT --- */}
+      <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
+        <nav className="flex items-center gap-1 p-3 border-b border-[#EEEEEE] overflow-x-auto no-scrollbar">
+          <NavTab id="dashboard" active={currentView} label="Overview" icon={<LayoutDashboard size={14} />} onClick={() => { setCurrentView("dashboard" as ViewType); }} />
+          <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={() => { setCurrentView("payments" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("All"); setPage(1); }} />
+          <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={() => { setCurrentView("refunds" as ViewType); setSearchTerm(""); setStatusFilter("Refunded"); setMethodFilter("All"); setPage(1); }} />
+          <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
+        </nav>
+        <main className="min-h-[60vh]">
         {currentView === "dashboard" && (
           <DashboardView
             totalCollected={totalCollected}
@@ -278,7 +277,8 @@ const PaymentManagement: React.FC = () => {
             onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
           />
         )}
-      </main>
+        </main>
+      </div>
 
       {/* --- PAYMENT DETAIL DRAWER --- */}
       {selectedPayment && (
@@ -320,7 +320,7 @@ const DashboardView = ({
   }, [payments]);
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500 p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Collected" value={`AED ${totalCollected.toLocaleString("en-IN")}`} trend="+12.5%" trendType="up" sub="This Month" />
         <StatCard label="Success Rate" value={`${successRate}%`} trend="+0.4%" trendType="up" sub="Gateway health" />
@@ -428,8 +428,7 @@ const PaymentsListView = ({
   const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
 
   return (
-  <div className="animate-in fade-in space-y-4">
-    <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
+  <div className="animate-in fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-white border-b border-[#EEEEEE]">
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -728,7 +727,6 @@ const PaymentsListView = ({
           </button>
         </div>
       </div>
-    </div>
   </div>
   );
 };
@@ -897,7 +895,7 @@ const CODView = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden animate-in fade-in">
+    <div className="animate-in fade-in">
       <table className="w-full text-left">
         <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE]">
           <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">
@@ -1021,7 +1019,7 @@ const RefundsView = ({
   const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden animate-in fade-in">
+    <div className="animate-in fade-in">
       <table className="w-full text-left">
         <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE]">
           <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">
