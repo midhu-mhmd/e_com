@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Download, Package, MessageSquare, Send } from "lucide-react";
+import { ChevronLeft, Download, Package, MessageSquare, Send, Navigation, Truck, UserCheck } from "lucide-react";
 import { ordersApi } from "./ordersApi";
 import type { OrderStatus, PaymentStatus } from "./ordersSlice";
 import { useDispatch } from "react-redux";
 import { ordersActions } from "./ordersSlice";
+import { deliveryApi } from "../../delivery/deliveryApi";
+import type { DeliveryBoyUser, DeliveryAssignment, CancellationRequest } from "../../delivery/deliveryApi";
 
 type OrderItem = {
   id: number;
   productId: number;
   productName: string;
+  productImage: string | null;
   quantity: number;
   price: number;
   subtotal: number;
@@ -25,6 +28,8 @@ type ShippingAddress = {
   city: string;
   emirate: string;
   country: string;
+  latitude: string | null;
+  longitude: string | null;
 };
 
 type Payment = {
@@ -49,6 +54,11 @@ type Order = {
   status: OrderStatus;
   shippingAddress: ShippingAddress;
   total: number;
+  subtotal: number;
+  discountAmount: number;
+  couponCode: string | null;
+  deliveryCharge: number;
+  tipAmount: number;
   deliveryDate: string | null;
   deliverySlot: string | null;
   deliveryNotes: string | null;
@@ -59,6 +69,8 @@ type Order = {
   paymentMethod: string;
   createdAt: string;
   updatedAt: string;
+  deliveryAssignment?: DeliveryAssignment | null;
+  cancellationRequest?: CancellationRequest | null;
 };
 
 function normalizeOrderStatus(raw: string): OrderStatus {
@@ -143,8 +155,10 @@ const OrderDetailsPage: React.FC = () => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "">("");
   const [statusNotes, setStatusNotes] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
-
+  const [isUpdating, setIsUpdating] = useState(false);  const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoyUser[]>([]);
+  const [selectedBoyId, setSelectedBoyId] = useState<number | "">("");
+  const [assigning, setAssigning] = useState(false);
+  const [assignMsg, setAssignMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   useEffect(() => {
     let active = true;
     const fetch = async () => {
@@ -164,6 +178,8 @@ const OrderDetailsPage: React.FC = () => {
               city: addr.city ?? "",
               emirate: addr.emirate ?? "",
               country: addr.country ?? "",
+              latitude: addr.latitude ?? null,
+              longitude: addr.longitude ?? null,
             }
           : {
               id: "",
@@ -175,6 +191,8 @@ const OrderDetailsPage: React.FC = () => {
               city: "",
               emirate: "",
               country: "",
+              latitude: null,
+              longitude: null,
             };
         const payment: Payment =
           raw.payment
@@ -203,6 +221,13 @@ const OrderDetailsPage: React.FC = () => {
           status: normalizeOrderStatus(raw.status ?? "pending"),
           shippingAddress,
           total: parseFloat(raw.total_amount) || 0,
+          subtotal: Array.isArray(raw.items)
+            ? raw.items.reduce((s: number, i: any) => s + (parseFloat(i.subtotal) || 0), 0)
+            : 0,
+          discountAmount: parseFloat(raw.discount_amount ?? "0") || 0,
+          couponCode: raw.coupon_code ?? null,
+          deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
+          tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
           deliveryDate: raw.preferred_delivery_date ?? null,
           deliverySlot: raw.preferred_delivery_slot ?? null,
           deliveryNotes: raw.delivery_notes ?? null,
@@ -211,6 +236,7 @@ const OrderDetailsPage: React.FC = () => {
                 id: dto.id,
                 productId: dto.product,
                 productName: dto.product_name ?? `Product #${dto.product}`,
+                productImage: dto.product_image ?? null,
                 quantity: dto.quantity,
                 price: parseFloat(dto.price) || 0,
                 subtotal: parseFloat(dto.subtotal) || 0,
@@ -222,6 +248,8 @@ const OrderDetailsPage: React.FC = () => {
           paymentMethod: payment?.paymentMethod ?? "N/A",
           createdAt: raw.created_at,
           updatedAt: raw.updated_at,
+          deliveryAssignment: raw.delivery_assignment ?? null,
+          cancellationRequest: raw.cancellation_request ?? null,
         };
         if (active) setOrder(shaped);
       } catch (e: any) {
@@ -235,6 +263,26 @@ const OrderDetailsPage: React.FC = () => {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    deliveryApi.adminListDeliveryBoys().then((res) => setDeliveryBoys(res.results ?? [])).catch(() => {});
+  }, []);
+
+  const handleAssign = async () => {
+    if (!order || !selectedBoyId) return;
+    setAssigning(true);
+    setAssignMsg(null);
+    try {
+      await deliveryApi.adminAssignDeliveryBoy(order.id, Number(selectedBoyId));
+      setAssignMsg({ type: "ok", text: "Delivery boy assigned successfully." });
+      const raw = await ordersApi.details(order.id);
+      setOrder((prev) => prev ? { ...prev, deliveryAssignment: raw.delivery_assignment ?? null, cancellationRequest: raw.cancellation_request ?? null } : prev);
+    } catch (e: any) {
+      setAssignMsg({ type: "err", text: e?.response?.data?.detail ?? e?.message ?? "Assignment failed." });
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const canDownloadReceipt = useMemo(
     () => order && (order.paymentStatus === "Paid" || order.paymentStatus === "Success"),
@@ -403,6 +451,8 @@ const OrderDetailsPage: React.FC = () => {
                                 city: addr.city ?? "",
                                 emirate: addr.emirate ?? "",
                                 country: addr.country ?? "",
+                                latitude: addr.latitude ?? null,
+                                longitude: addr.longitude ?? null,
                               }
                             : {
                                 id: "",
@@ -414,6 +464,8 @@ const OrderDetailsPage: React.FC = () => {
                                 city: "",
                                 emirate: "",
                                 country: "",
+                                latitude: null,
+                                longitude: null,
                               };
                           const payment: Payment =
                             raw.payment
@@ -442,6 +494,13 @@ const OrderDetailsPage: React.FC = () => {
                             status: normalizeOrderStatus(raw.status ?? "pending"),
                             shippingAddress,
                             total: parseFloat(raw.total_amount) || 0,
+                            subtotal: Array.isArray(raw.items)
+                              ? raw.items.reduce((s: number, i: any) => s + (parseFloat(i.subtotal) || 0), 0)
+                              : 0,
+                            discountAmount: parseFloat(raw.discount_amount ?? "0") || 0,
+                            couponCode: raw.coupon_code ?? null,
+                            deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
+                            tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
                             deliveryDate: raw.preferred_delivery_date ?? null,
                             deliverySlot: raw.preferred_delivery_slot ?? null,
                             deliveryNotes: raw.delivery_notes ?? null,
@@ -450,6 +509,7 @@ const OrderDetailsPage: React.FC = () => {
                                   id: dto.id,
                                   productId: dto.product,
                                   productName: dto.product_name ?? `Product #${dto.product}`,
+                                  productImage: dto.product_image ?? null,
                                   quantity: dto.quantity,
                                   price: parseFloat(dto.price) || 0,
                                   subtotal: parseFloat(dto.subtotal) || 0,
@@ -461,6 +521,8 @@ const OrderDetailsPage: React.FC = () => {
                             paymentMethod: payment?.paymentMethod ?? "N/A",
                             createdAt: raw.created_at,
                             updatedAt: raw.updated_at,
+                            deliveryAssignment: raw.delivery_assignment ?? null,
+                            cancellationRequest: raw.cancellation_request ?? null,
                           };
                           setOrder(shaped);
                           dispatch(ordersActions.updateStatusSuccess(shaped));
@@ -489,9 +551,17 @@ const OrderDetailsPage: React.FC = () => {
                   order.items.map((item) => (
                     <div key={item.id} className="flex justify-between items-center py-3 border-b border-dashed border-[#EEEEEE] last:border-0">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-[#F4F4F5] flex items-center justify-center">
-                          <Package size={16} className="text-[#A1A1AA]" />
-                        </div>
+                        <button
+                          onClick={() => navigate(`/admin/products/${item.productId}`)}
+                          className="w-10 h-10 rounded-lg overflow-hidden bg-[#F4F4F5] flex items-center justify-center shrink-0 hover:ring-2 hover:ring-black/10 transition-all"
+                          title="Open product"
+                        >
+                          {item.productImage ? (
+                            <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <Package size={16} className="text-[#A1A1AA]" />
+                          )}
+                        </button>
                         <div>
                           <p className="text-xs font-bold">
                             <button
@@ -516,7 +586,34 @@ const OrderDetailsPage: React.FC = () => {
                   <p className="text-xs text-[#A1A1AA] italic">No items in this order.</p>
                 )}
                 <div className="pt-4 space-y-2 border-t border-[#EEEEEE]">
-                  <div className="flex justify-between items-center pt-1">
+                  <div className="flex justify-between items-center text-xs text-[#A1A1AA]">
+                    <span>Subtotal</span>
+                    <span className="font-bold text-[#18181B]">AED {order.subtotal.toFixed(2)}</span>
+                  </div>
+                  {order.deliveryCharge > 0 && (
+                    <div className="flex justify-between items-center text-xs text-[#A1A1AA]">
+                      <span>Delivery Charge</span>
+                      <span className="font-bold text-[#18181B]">AED {order.deliveryCharge.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.discountAmount > 0 && (
+                    <div className="flex justify-between items-center text-xs text-emerald-600">
+                      <div className="flex flex-col">
+                        <span>Discount</span>
+                        {order.couponCode && (
+                          <span className="text-[9px] font-mono uppercase tracking-wide opacity-75">Code: {order.couponCode}</span>
+                        )}
+                      </div>
+                      <span className="font-bold">− AED {order.discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {order.tipAmount > 0 && (
+                    <div className="flex justify-between items-center text-xs text-[#A1A1AA]">
+                      <span>Tip</span>
+                      <span className="font-bold text-[#18181B]">AED {order.tipAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-dashed border-[#EEEEEE]">
                     <span className="text-sm font-bold">Total Amount</span>
                     <span className="text-xl font-black text-emerald-600">
                       AED {(order.total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
@@ -608,6 +705,104 @@ const OrderDetailsPage: React.FC = () => {
                 )}
                 {order.deliverySlot && <InfoField label="Delivery Slot" value={order.deliverySlot} />}
                 {order.payment?.transactionId && <InfoField label="Transaction ID" value={order.payment.transactionId} />}
+                {order.shippingAddress.latitude && order.shippingAddress.longitude && (
+                  <InfoField label="Location">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${order.shippingAddress.latitude},${order.shippingAddress.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-[11px] font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Navigation size={12} /> Get Directions
+                    </a>
+                  </InfoField>
+                )}
+              </div>
+
+              {/* Assign Delivery Boy */}
+              <div className="bg-white rounded-2xl border border-[#EEEEEE] p-6 space-y-4">
+                <div className="flex items-center gap-2 border-b border-[#EEEEEE] pb-2">
+                  <Truck size={14} className="text-[#A1A1AA]" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA]">
+                    Delivery Assignment
+                  </h4>
+                </div>
+
+                {/* Current assignment */}
+                {order.deliveryAssignment ? (
+                  <div className="flex items-start gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <UserCheck size={16} className="text-indigo-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-indigo-700">{order.deliveryAssignment.delivery_boy_name}</p>
+                      <p className="text-[10px] text-indigo-500 mt-0.5">
+                        Status: <span className="font-bold">{order.deliveryAssignment.status}</span>
+                        {order.deliveryAssignment.assigned_at && (
+                          <> · assigned {new Date(order.deliveryAssignment.assigned_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-[#A1A1AA] italic">No delivery boy assigned yet.</p>
+                )}
+
+                {/* Cancellation request banner */}
+                {order.cancellationRequest && (
+                  <div className={`p-3 rounded-xl border text-xs font-medium ${
+                    order.cancellationRequest.status === "PENDING"
+                      ? "bg-amber-50 border-amber-200 text-amber-700"
+                      : order.cancellationRequest.status === "APPROVED"
+                      ? "bg-rose-50 border-rose-200 text-rose-700"
+                      : "bg-gray-50 border-gray-200 text-gray-600"
+                  }`}>
+                    <p className="font-bold">
+                      Cancellation Request — {order.cancellationRequest.status}
+                    </p>
+                    <p className="text-[10px] mt-1 opacity-80">{order.cancellationRequest.reason}</p>
+                    {order.cancellationRequest.review_notes && (
+                      <p className="text-[10px] mt-0.5 opacity-70">Notes: {order.cancellationRequest.review_notes}</p>
+                    )}
+                    <a
+                      href="/admin/delivery/cancellations"
+                      onClick={(e) => { e.preventDefault(); navigate("/admin/delivery/cancellations"); }}
+                      className="inline-block mt-2 text-[10px] font-bold underline underline-offset-2"
+                    >
+                      View in Cancellations
+                    </a>
+                  </div>
+                )}
+
+                {/* Assign / Reassign */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide block">
+                    {order.deliveryAssignment ? "Reassign" : "Assign"} delivery boy
+                  </label>
+                  <select
+                    value={selectedBoyId}
+                    onChange={(e) => setSelectedBoyId(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="w-full text-xs border border-[#EEEEEE] rounded-lg px-3 py-2 bg-white outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-100"
+                  >
+                    <option value="">— Select a delivery boy —</option>
+                    {deliveryBoys.map((boy) => (
+                      <option key={boy.id} value={boy.id}>
+                        {boy.full_name} {boy.delivery_profile?.assigned_emirates_display?.length ? `(${boy.delivery_profile.assigned_emirates_display.join(", ")})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssign}
+                    disabled={!selectedBoyId || assigning}
+                    className="w-full py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    <Truck size={12} />
+                    {assigning ? "Assigning…" : "Assign"}
+                  </button>
+                  {assignMsg && (
+                    <p className={`text-[11px] font-medium ${assignMsg.type === "ok" ? "text-emerald-600" : "text-rose-600"}`}>
+                      {assignMsg.text}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

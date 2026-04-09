@@ -3,7 +3,7 @@ import { useAppSelector } from '../hooks';
 import { Loader2 } from 'lucide-react';
 
 interface Props {
-  roles?: ('admin' | 'user')[];
+  roles?: ('admin' | 'user' | 'delivery_boy')[];
 }
 
 export const PrivateRoute = ({ roles }: Props) => {

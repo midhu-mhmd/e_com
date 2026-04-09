@@ -19,6 +19,7 @@ import { API_BASE_URL } from "../../config/constants";
    ══════════════════════════════════════════════════ */
 const STATUS_MAP: Record<string, { color: string; bg: string; icon: React.ReactNode; key: string }> = {
     pending: { color: "text-amber-700", bg: "bg-amber-100", icon: <Clock size={16} />, key: "pending" },
+    paid: { color: "text-emerald-700", bg: "bg-emerald-100", icon: <CreditCard size={16} />, key: "paid" },
     confirmed: { color: "text-blue-700", bg: "bg-blue-100", icon: <CheckCircle size={16} />, key: "confirmed" },
     processing: { color: "text-indigo-700", bg: "bg-indigo-100", icon: <Package size={16} />, key: "processing" },
     shipped: { color: "text-cyan-700", bg: "bg-cyan-100", icon: <Truck size={16} />, key: "shipped" },
@@ -1110,7 +1111,11 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.method")}</p>
-                                        <p className="font-black text-lg text-slate-900 uppercase">{payment.payment_method}</p>
+                                        <p className="font-black text-lg text-slate-900">
+                                            {(payment.payment_method || "").toUpperCase() === "ZIINA"
+                                                ? t("detail.online", { defaultValue: "Online" })
+                                                : payment.payment_method}
+                                        </p>
                                     </div>
                                     {payment.transaction_id && (
                                         <div>

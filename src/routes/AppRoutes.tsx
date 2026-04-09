@@ -43,6 +43,18 @@ import ContactMessagesPage from '../features/admin/support/ContactMessages';
 import CouponManagement from '../features/admin/marketing/Coupons';
 import SettingsPage from '../features/admin/settings/settings';
 
+// Delivery components
+import DeliveryLayout from '../components/layout/deliveryside/DeliveryLayout';
+import DeliveryDashboard from '../features/delivery/DeliveryDashboard';
+import AvailableOrders from '../features/delivery/AvailableOrders';
+import MyOrders from '../features/delivery/MyOrders';
+import DeliveryOrderDetail from '../features/delivery/DeliveryOrderDetail';
+
+// Admin delivery components
+import DeliveryBoysList from '../features/admin/delivery/DeliveryBoysList';
+import AdminCancellationRequests from '../features/admin/delivery/AdminCancellationRequests';
+import DeliveryBoyDetailPage from '../features/admin/delivery/DeliveryBoyDetailPage';
+
 // Error Pages
 import BadRequest400 from '../pages/errors/BadRequest400';
 import Unauthorized401 from '../pages/errors/Unauthorized401';
@@ -75,10 +87,12 @@ const UserLayout: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAppSelector((s) => s.auth);
 
-  // If admin is browsing user routes (e.g., after refresh), redirect them to /admin
+  // If admin or delivery boy is browsing user routes, redirect them
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
       navigate('/admin', { replace: true });
+    } else if (isAuthenticated && user?.role === 'delivery_boy') {
+      navigate('/delivery', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -164,6 +178,21 @@ export const AppRoutes: React.FC = () => {
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="support" element={<ContactMessagesPage />} />
           <Route path="settings" element={<SettingsPage />} />
+
+          {/* Admin delivery routes */}
+          <Route path="delivery/boys" element={<DeliveryBoysList />} />
+          <Route path="delivery/boys/:id" element={<DeliveryBoyDetailPage />} />
+          <Route path="delivery/cancellations" element={<AdminCancellationRequests />} />
+        </Route>
+      </Route>
+
+      {/* ─── DELIVERY BOY ROUTES ─── */}
+      <Route path="/delivery" element={<PrivateRoute roles={['delivery_boy']} />}>
+        <Route element={<DeliveryLayout />}>
+          <Route index element={<DeliveryDashboard />} />
+          <Route path="available" element={<AvailableOrders />} />
+          <Route path="my-orders" element={<MyOrders />} />
+          <Route path="orders/:id" element={<DeliveryOrderDetail />} />
         </Route>
       </Route>
 

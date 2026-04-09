@@ -108,6 +108,8 @@ export interface OrderDto {
     payment: PaymentDto | null;
     created_at: string;
     updated_at: string;
+    delivery_assignment?: any | null;
+    cancellation_request?: any | null;
 }
 
 export type OrdersQuery = {
@@ -147,6 +149,7 @@ export interface CheckoutSummaryRequest {
 export interface DeliveryChargeSettingsDto {
     min_order_for_free_delivery: number;
     delivery_charge_amount: number;
+    is_active: boolean;
 }
 
 export interface CheckoutSummaryResponse {
@@ -271,15 +274,29 @@ export const ordersApi = {
 
     /* ── Delivery Charge Settings (Admin) ── */
     getDeliveryChargeSettings: async (): Promise<DeliveryChargeSettingsDto> => {
-        const res = await api.get<DeliveryChargeSettingsDto>("/orders/delivery_charge_settings/");
-        return res.data;
+        const res = await api.get<any>("/orders/delivery_charge_settings/");
+        const raw = res.data;
+        return {
+            min_order_for_free_delivery: parseFloat(raw.min_free_shipping_amount ?? raw.min_order_for_free_delivery ?? 0),
+            delivery_charge_amount: parseFloat(raw.delivery_charge ?? raw.delivery_charge_amount ?? 0),
+            is_active: raw.is_active ?? true,
+        };
     },
 
     updateDeliveryChargeSettings: async (
         data: DeliveryChargeSettingsDto
     ): Promise<DeliveryChargeSettingsDto> => {
-        const res = await api.post<DeliveryChargeSettingsDto>("/orders/delivery_charge_settings/", data);
-        return res.data;
+        const res = await api.post<any>("/orders/delivery_charge_settings/", {
+            min_free_shipping_amount: data.min_order_for_free_delivery,
+            delivery_charge: data.delivery_charge_amount,
+            is_active: data.is_active,
+        });
+        const raw = res.data;
+        return {
+            min_order_for_free_delivery: parseFloat(raw.min_free_shipping_amount ?? raw.min_order_for_free_delivery ?? 0),
+            delivery_charge_amount: parseFloat(raw.delivery_charge ?? raw.delivery_charge_amount ?? 0),
+            is_active: raw.is_active ?? true,
+        };
     },
 
     /* ── Retry Payment ── */

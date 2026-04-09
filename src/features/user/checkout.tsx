@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../components/ui/Toast";
+import GoogleMapPicker, { type MapPickerResult } from "../../components/ui/GoogleMapPicker";
 import { MdDeliveryDining } from "react-icons/md";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
 import { profileApi } from "./profileApi";
@@ -185,7 +186,8 @@ const CheckoutPage: React.FC = () => {
   const [addressForm, setAddressForm] = useState({
     label: "home", full_name: "", phone_number: "", building_name: "",
     flat_villa_number: "", street_address: "", area: "", city: "",
-    emirate: "", country: "AE", address_type: "home"
+    emirate: "", country: "AE", address_type: "home",
+    latitude: null as number | null, longitude: null as number | null,
   });
   const [addrCountryCode, setAddrCountryCode] = useState("+971");
   const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
@@ -493,7 +495,8 @@ const CheckoutPage: React.FC = () => {
       setAddressForm({
         label: "home", full_name: "", phone_number: "", building_name: "",
         flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE", address_type: "home"
+        emirate: "", country: "AE", address_type: "home",
+        latitude: null, longitude: null,
       });
       setAddressErrors({});
     } catch (err: any) {
@@ -708,6 +711,25 @@ const CheckoutPage: React.FC = () => {
                   className="overflow-hidden"
                 >
                   <div className="border border-slate-100 rounded-2xl p-5 space-y-4 mt-3 bg-slate-50/50">
+                    {/* Google Maps picker */}
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pin Your Location</p>
+                      <GoogleMapPicker
+                        onSelect={(result: MapPickerResult) => {
+                          setAddressForm((prev) => ({
+                            ...prev,
+                            latitude: result.lat,
+                            longitude: result.lng,
+                            ...(result.street ? { street_address: result.street } : {}),
+                            ...(result.area ? { area: result.area } : {}),
+                            ...(result.city ? { city: result.city } : {}),
+                            ...(result.emirate
+                              ? { emirate: result.emirate.toLowerCase().replace(/\s+/g, "_") }
+                              : {}),
+                          }));
+                        }}
+                      />
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Address Type */}
                       <div className="space-y-1">
@@ -1082,9 +1104,9 @@ const CheckoutPage: React.FC = () => {
                 <CreditCard size={20} className="text-slate-400" />
               </label>
 
-              {/* COD - Disabled / Coming Soon */}
+              {/* COD - Disabled / Not available for this order */}
               <div
-                className="relative flex items-center gap-4 p-4 border-2 rounded-2xl border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed select-none"
+                className="flex items-center gap-4 p-4 border-2 rounded-2xl border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed select-none"
               >
                 <input
                   type="radio"
@@ -1096,11 +1118,13 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex-1">
                   <p className="font-bold text-slate-400">{t("payment.cod.title")}</p>
                   <p className="text-xs text-slate-400">{t("payment.cod.subtitle")}</p>
+                  <p className="text-[11px] font-semibold text-rose-500 mt-1">
+                    {t("payment.cod.unavailableForOrder", {
+                      defaultValue: "Not available for this order now.",
+                    })}
+                  </p>
                 </div>
                 <Truck size={20} className="text-slate-300" />
-                <span className="absolute top-2 right-3 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                  Coming Soon
-                </span>
               </div>
             </div>
           </section>
@@ -1134,7 +1158,7 @@ const CheckoutPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={couponInput}
@@ -1146,13 +1170,13 @@ const CheckoutPage: React.FC = () => {
                     }
                   }}
                   placeholder={t("coupon.placeholder", { defaultValue: "Enter coupon code" })}
-                  className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm uppercase tracking-wide focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
+                  className="w-full sm:flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm uppercase tracking-wide focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
                 />
                 <button
                   type="button"
                   onClick={appliedCouponCode ? handleRemoveCoupon : () => void handleApplyCoupon()}
                   disabled={validatingCoupon}
-                  className={`px-4 py-3 rounded-xl text-sm font-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${appliedCouponCode
+                  className={`w-full sm:w-auto sm:min-w-24 px-4 py-3 rounded-xl text-sm font-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center whitespace-nowrap ${appliedCouponCode
                     ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
                     : "bg-cyan-600 text-white hover:bg-cyan-700"
                     }`}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Save, Loader2, Truck, Info } from "lucide-react";
+import { Save, Loader2, Truck, Info, Power } from "lucide-react";
 import { ordersApi, type DeliveryChargeSettingsDto } from "../orders/ordersApi";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -10,6 +10,7 @@ export const DeliveryChargeSettings: React.FC = () => {
   const [form, setForm] = useState<DeliveryChargeSettingsDto>({
     min_order_for_free_delivery: 40,
     delivery_charge_amount: 10,
+    is_active: true,
   });
   const [original, setOriginal] = useState<DeliveryChargeSettingsDto | null>(null);
 
@@ -27,7 +28,8 @@ export const DeliveryChargeSettings: React.FC = () => {
   const isDirty =
     original !== null &&
     (form.min_order_for_free_delivery !== original.min_order_for_free_delivery ||
-      form.delivery_charge_amount !== original.delivery_charge_amount);
+      form.delivery_charge_amount !== original.delivery_charge_amount ||
+      form.is_active !== original.is_active);
 
   const handleSave = async () => {
     if (form.min_order_for_free_delivery < 0 || form.delivery_charge_amount < 0) {
@@ -71,14 +73,28 @@ export const DeliveryChargeSettings: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving || !isDirty}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black text-white hover:bg-stone-800 disabled:opacity-40 transition-all"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Changes
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setForm((f) => ({ ...f, is_active: !f.is_active }))}
+              title={form.is_active ? "Disable delivery charges" : "Enable delivery charges"}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                form.is_active
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                  : "bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
+              }`}
+            >
+              <Power className="w-3.5 h-3.5" />
+              {form.is_active ? "Active" : "Inactive"}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !isDirty}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black text-white hover:bg-stone-800 disabled:opacity-40 transition-all"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Changes
+            </button>
+          </div>
         </div>
 
         {/* Body */}

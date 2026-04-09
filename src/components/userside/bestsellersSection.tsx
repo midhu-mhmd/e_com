@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { Star, ShoppingCart, Flame, Eye, Sparkles, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
-import { addToCart } from "../../features/admin/cart/cartSlice";
+import { fetchCartRequest } from "../../features/admin/cart/cartSlice";
+import { cartsApi } from "../../features/admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
 import { type ProductDto } from "../../features/admin/products/productApi";
 import { useBestsellers } from "../../hooks/queries";
+import { useToast } from "../ui/Toast";
 
 /* ── Product Card ── */
 const ProductCard: React.FC<{
@@ -64,13 +66,25 @@ const ProductCard: React.FC<{
           </div>
         )}
 
-        {discount > 0 && (
-          <div className="absolute top-3 left-3 px-2.5 py-1 bg-cyan-600 text-white rounded-lg text-[10px] font-bold shadow-md">
-            {discount}% {t("bestsellers.off", "OFF")}
-          </div>
-        )}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+          {discount > 0 && (
+            <div className="px-2.5 py-1 bg-cyan-600 text-white rounded-lg text-[10px] font-bold shadow-md">
+              {discount}% {t("bestsellers.off", "OFF")}
+            </div>
+          )}
+          {product.is_available && product.stock > 0 && product.stock < 7 && (
+            <div className="px-2.5 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-bold shadow-md">
+              Only {product.stock} left
+            </div>
+          )}
+          {product.is_available && product.stock >= 7 && product.stock < 10 && (
+            <div className="px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-bold shadow-md">
+              Low Stock
+            </div>
+          )}
+        </div>
 
-        {!product.is_available && (
+        {(!product.is_available || product.stock === 0) && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
             <span className="px-4 py-1.5 bg-white/90 rounded-full text-xs font-bold text-zinc-700">
               {t("bestsellers.outOfStock")}
@@ -128,7 +142,7 @@ const ProductCard: React.FC<{
         </h3>
 
         {/* Price + Actions - mt-auto keeps this locked to the bottom */}
-        <div className="mt-auto pt-3 flex flex-col gap-3">
+          <div className="mt-auto pt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-extrabold text-zinc-900">
@@ -145,7 +159,7 @@ const ProductCard: React.FC<{
                 e.stopPropagation();
                 onAddToCart();
               }}
-              disabled={!product.is_available}
+              disabled={!product.is_available || product.stock === 0}
               aria-label={t("bestsellers.addToCartAria", "Add to cart")}
               className="p-2.5 rounded-xl bg-zinc-100 text-zinc-600 hover:bg-zinc-200 disabled:bg-zinc-50 disabled:text-zinc-300 disabled:cursor-not-allowed transition-all duration-300 active:scale-95"
             >
@@ -153,12 +167,17 @@ const ProductCard: React.FC<{
             </button>
           </div>
 
+          {/* Stock count — always reserve height to keep card size consistent */}
+          <p className="text-[10px] text-zinc-400 font-medium h-4">
+            {product.is_available && product.stock > 0 ? `${product.stock} in stock` : ""}
+          </p>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDirectBuy();
             }}
-            disabled={!product.is_available}
+            disabled={!product.is_available || product.stock === 0}
             className="w-full py-2.5 rounded-xl bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 text-xs font-bold flex items-center justify-center gap-2"
           >
             <Zap size={14} className="fill-current" />
@@ -196,27 +215,40 @@ const BestsellersSection: React.FC = () => {
     return Math.round(((price - final) / price) * 100);
   };
 
+  const toast = useToast();
+
   const handleAddToCart = (product: ProductDto) => {
-    requireAuth(() => {
-      dispatch(
-        addToCart({
-          id: product.id,
-          name: product.name,
-          price: parseFloat(product.price),
-          finalPrice: parseFloat(product.final_price),
-          image: getProductImage(product) || product.image,
-          sku: product.sku || product.slug,
-          stock: product.stock,
-          quantity: 1,
-        })
-      );
+    requireAuth(async () => {
+      try {
+        const result = await cartsApi.addItem(product.id, 1);
+        if (result?.error) {
+          toast.show(result.error, "error");
+          return;
+        }
+        dispatch(fetchCartRequest());
+        toast.show(`${product.name} added to cart`, "cart");
+      } catch (err: any) {
+        const msg = err?.response?.data?.error || "Failed to add item to cart";
+        toast.show(msg, "error");
+      }
     })();
   };
 
   const handleDirectBuy = (product: ProductDto) => {
-    requireAuth(() => {
-      handleAddToCart(product);
-      navigate("/checkout");
+    requireAuth(async () => {
+      try {
+        const result = await cartsApi.addItem(product.id, 1);
+        if (result?.error) {
+          toast.show(result.error, "error");
+          return;
+        }
+        dispatch(fetchCartRequest());
+        toast.show(`${product.name} added to cart`, "cart");
+        navigate("/checkout");
+      } catch (err: any) {
+        const msg = err?.response?.data?.error || "Failed to add item to cart";
+        toast.show(msg, "error");
+      }
     })();
   };
 

@@ -15,7 +15,7 @@ const ShopByCategorySection: React.FC = () => {
   });
 
   return (
-    <section className="relative overflow-hidden bg-[#f8f9fa] py-8 px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[#f8f9fa] py-3 px-4 sm:px-6 lg:px-8">
       <div className="relative mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-5">
@@ -32,16 +32,16 @@ const ShopByCategorySection: React.FC = () => {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 lg:grid-cols-5 sm:gap-4 scrollbar-hide">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse">
+              <div key={i} className="animate-pulse shrink-0 w-36 sm:w-auto">
                 <div className="aspect-square bg-zinc-200 rounded-[22%]" />
                 <div className="mt-2 h-3 bg-zinc-200 rounded-full w-2/3 mx-auto" />
               </div>
             ))}
           </div>
         ) : categories.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 lg:grid-cols-5 sm:gap-4 scrollbar-hide">
             {categories.map((cat, i) => (
               <CategoryCard key={cat.id} category={cat} index={i} />
             ))}
@@ -76,7 +76,7 @@ const CategoryCard: React.FC<{ category: CategoryDto; index: number }> = ({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-500 ${
+      className={`shrink-0 w-20 sm:w-auto transition-all duration-500 ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       }`}
       style={{ transitionDelay: `${index * 80}ms` }}
@@ -99,7 +99,7 @@ const CategoryCard: React.FC<{ category: CategoryDto; index: number }> = ({
             </div>
           )}
         </div>
-        <h3 className="mt-3 text-sm sm:text-sm font-bold text-zinc-900 group-hover:text-cyan-600 transition-colors">
+        <h3 className="mt-1.5 text-[11px] sm:text-sm font-bold text-zinc-900 group-hover:text-cyan-600 transition-colors">
           {category.name}
         </h3>
       </Link>

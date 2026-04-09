@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   Star,
   Search,
@@ -770,12 +771,22 @@ const ReviewDetailPanel = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Product</p>
-            <p className="text-sm font-bold">{review.productName}</p>
+            <Link
+              to={`/admin/products/${review.productId}`}
+              className="text-sm font-bold hover:text-cyan-600 transition-colors"
+            >
+              {review.productName}
+            </Link>
             <p className="text-[10px] text-[#A1A1AA]">ID: {review.productId}</p>
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Customer</p>
-            <p className="text-sm font-bold">{review.userName}</p>
+            <Link
+              to={`/admin/users/${review.userId}`}
+              className="text-sm font-bold hover:text-cyan-600 transition-colors"
+            >
+              {review.userName}
+            </Link>
             <p className="text-[10px] text-[#A1A1AA]">ID: {review.userId}</p>
           </div>
         </div>
@@ -801,21 +812,11 @@ const ReviewDetailPanel = ({
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-3">
             Activity
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             <div className="space-y-1.5">
               <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Created</p>
               <p className="text-sm font-bold">
                 {new Date(review.createdAt).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Updated</p>
-              <p className="text-sm font-bold">
-                {new Date(review.updatedAt).toLocaleDateString("en-IN", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",

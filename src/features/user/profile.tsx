@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { logout, setUser } from "../auth/authSlice";
 import { profileApi, type ProfileUpdatePayload } from "./profileApi";
 import { customersApi, type AddressDto, type UserDto } from "../admin/customers/customersApi";
+import GoogleMapPicker, { type MapPickerResult } from "../../components/ui/GoogleMapPicker";
 import { AddressDeleteIcon } from "../admin/customers/addressDeleteIcon";
 import { ordersApi, type OrderDto } from "../admin/orders/ordersApi";
 import { reviewsApi, type ReviewDto } from "../admin/reviews/reviewsApi";
@@ -1315,7 +1316,8 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
     const [form, setForm] = useState({
         label: "home", full_name: "", phone_number: "", building_name: "",
         flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE"
+        emirate: "", country: "AE",
+        latitude: null as number | null, longitude: null as number | null,
     });
     const [addrCountryCode, setAddrCountryCode] = useState("+971");
     const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
@@ -1356,7 +1358,8 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
     const resetForm = () => setForm({
         label: "home", full_name: "", phone_number: "", building_name: "",
         flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE"
+        emirate: "", country: "AE",
+        latitude: null, longitude: null,
     });
 
     const handleSave = async () => {
@@ -1449,6 +1452,25 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                         className="overflow-hidden mb-6"
                     >
                         <div className="border border-slate-100 rounded-2xl p-4 sm:p-5 space-y-4 bg-slate-50/50">
+                            {/* Google Maps picker */}
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pin Your Location</p>
+                                <GoogleMapPicker
+                                    onSelect={(result: MapPickerResult) => {
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            latitude: result.lat,
+                                            longitude: result.lng,
+                                            ...(result.street ? { street_address: result.street } : {}),
+                                            ...(result.area ? { area: result.area } : {}),
+                                            ...(result.city ? { city: result.city } : {}),
+                                            ...(result.emirate
+                                                ? { emirate: result.emirate.toLowerCase().replace(/\s+/g, "_") }
+                                                : {}),
+                                        }));
+                                    }}
+                                />
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
                                 {/* Address Type */}
                                 <div className="space-y-1">

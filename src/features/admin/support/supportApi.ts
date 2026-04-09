@@ -7,12 +7,13 @@ export interface ContactMessageDto {
   subject: string;
   message: string;
   is_resolved: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
 export type ContactQuery = {
   q?: string;
-  resolved?: boolean;
+  is_resolved?: boolean;
   page?: number;
   limit?: number;
   offset?: number;
@@ -31,6 +32,11 @@ export const supportApi = {
 
   resolve: async (id: number, is_resolved: boolean): Promise<ContactMessageDto> => {
     const res = await api.patch<ContactMessageDto>(`/notifications/contact/${id}/`, { is_resolved });
+    return res.data;
+  },
+
+  toggleActive: async (id: number, is_active: boolean): Promise<ContactMessageDto> => {
+    const res = await api.patch<ContactMessageDto>(`/notifications/contact/${id}/`, { is_active });
     return res.data;
   },
 

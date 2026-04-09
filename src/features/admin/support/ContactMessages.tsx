@@ -24,7 +24,7 @@ const ContactMessagesPage: React.FC = () => {
       const offset = (page - 1) * limit;
       const data = await supportApi.list({
         q: q || undefined,
-        resolved: resolved === "all" ? undefined : resolved === "closed",
+        is_resolved: resolved === "all" ? undefined : resolved === "closed",
         page,
         limit,
         offset,

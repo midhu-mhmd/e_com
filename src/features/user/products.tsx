@@ -4,7 +4,8 @@ import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, Star, Filter, ArrowRight, Zap, Loader2 } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
-import { addToCart } from "../admin/cart/cartSlice";
+import { fetchCartRequest } from "../admin/cart/cartSlice";
+import { cartsApi } from "../admin/cart/cartApi";
 import { useNavigate } from "react-router-dom";
 import ShrimpLoader from "../../components/loader/preloader";
 import { useTranslation } from "react-i18next";
@@ -73,13 +74,23 @@ const ProductCard = memo(({
                                 <Star size={10} fill="black" /> {t("card.topRated")}
                             </span>
                         )}
+                        {product.is_available && product.stock > 0 && product.stock < 7 && (
+                            <span className="px-2.5 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
+                                Only {product.stock} left
+                            </span>
+                        )}
+                        {product.is_available && product.stock >= 7 && product.stock < 10 && (
+                            <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
+                                Low Stock
+                            </span>
+                        )}
                     </div>
 
                     {/* Quick Action Buttons */}
                     <div className="absolute bottom-3 right-3 flex flex-col gap-2 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
                         <button
                             onClick={(e) => onAddToCart(e, product)}
-                            disabled={!product.is_available}
+                            disabled={!product.is_available || product.stock === 0}
                             className="w-10 h-10 bg-white shadow-xl text-slate-900 rounded-full flex items-center justify-center hover:bg-cyan-600 hover:text-white transition-all duration-300 disabled:opacity-50"
                             title={t("card.addToCart")}
                         >
@@ -89,7 +100,7 @@ const ProductCard = memo(({
                     </div>
 
                     {/* Out of Stock Overlay */}
-                    {!product.is_available && (
+                    {(!product.is_available || product.stock === 0) && (
                         <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[1px] flex items-center justify-center z-10">
                             <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-xl">
                                 <span className="text-slate-900 text-xs font-black uppercase tracking-widest">{t("card.outOfStock")}</span>
@@ -136,10 +147,15 @@ const ProductCard = memo(({
                             </div>
                         </div>
 
+                        {/* Stock info — always reserve height to keep card size consistent */}
+                        <p className="text-[10px] text-slate-400 font-medium h-4">
+                            {product.is_available && product.stock > 0 ? `${product.stock} in stock` : ""}
+                        </p>
+
                         {/* Buy Now Button */}
                         <button
                             onClick={(e) => onBuyNow(e, product)}
-                            disabled={!product.is_available}
+                            disabled={!product.is_available || product.stock === 0}
                             className="w-full py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Zap size={14} />
@@ -209,23 +225,19 @@ const UserProductsPage: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
 
-        requireAuth(() => {
-            const price = parseFloat(product.price);
-            const discountPrice = product.discount_price ? parseFloat(product.discount_price) : undefined;
-            const finalPrice = discountPrice || price;
-
-            dispatch(addToCart({
-                id: product.id,
-                name: product.name,
-                price: price,
-                discountPrice: discountPrice,
-                finalPrice: finalPrice,
-                image: getProductImage(product),
-                sku: product.sku,
-                stock: product.stock,
-                quantity: 1
-            }));
-            toast.show(`${product.name} added to cart`, "cart");
+        requireAuth(async () => {
+            try {
+                const result = await cartsApi.addItem(product.id, 1);
+                if (result?.error) {
+                    toast.show(result.error, "error");
+                    return;
+                }
+                dispatch(fetchCartRequest());
+                toast.show(`${product.name} added to cart`, "cart");
+            } catch (err: any) {
+                const msg = err?.response?.data?.error || "Failed to add item to cart";
+                toast.show(msg, "error");
+            }
         })();
     }, [dispatch, requireAuth, toast]);
 
@@ -233,24 +245,20 @@ const UserProductsPage: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
 
-        requireAuth(() => {
-            const price = parseFloat(product.price);
-            const discountPrice = product.discount_price ? parseFloat(product.discount_price) : undefined;
-            const finalPrice = discountPrice || price;
-
-            dispatch(addToCart({
-                id: product.id,
-                name: product.name,
-                price: price,
-                discountPrice: discountPrice,
-                finalPrice: finalPrice,
-                image: getProductImage(product),
-                sku: product.sku,
-                stock: product.stock,
-                quantity: 1
-            }));
-            toast.show(`${product.name} added to cart`, "cart");
-            navigate('/checkout');
+        requireAuth(async () => {
+            try {
+                const result = await cartsApi.addItem(product.id, 1);
+                if (result?.error) {
+                    toast.show(result.error, "error");
+                    return;
+                }
+                dispatch(fetchCartRequest());
+                toast.show(`${product.name} added to cart`, "cart");
+                navigate('/checkout');
+            } catch (err: any) {
+                const msg = err?.response?.data?.error || "Failed to add item to cart";
+                toast.show(msg, "error");
+            }
         })();
     }, [dispatch, navigate, requireAuth, toast]);
 

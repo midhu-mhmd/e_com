@@ -19,7 +19,9 @@ import {
   ScanLine,
   Tag,
   Image as BannersIcon,
-  Settings
+  Settings,
+  Truck,
+  AlertOctagon
 } from 'lucide-react';
 
 import ScannerModal from './ScannerModal';
@@ -70,6 +72,8 @@ const AdminLayout: React.FC = () => {
     { label: 'Banners', path: '/admin/banners', icon: <BannersIcon size={18} strokeWidth={1.5} /> },
     { label: 'Notifications', path: '/admin/notifications', icon: <Bell size={18} strokeWidth={1.5} /> },
     { label: 'Support', path: '/admin/support', icon: <Headphones size={18} strokeWidth={1.5} /> },
+    { label: 'Delivery Boys', path: '/admin/delivery/boys', icon: <Truck size={18} strokeWidth={1.5} /> },
+    { label: 'Cancellations', path: '/admin/delivery/cancellations', icon: <AlertOctagon size={18} strokeWidth={1.5} /> },
     { label: 'Settings', path: '/admin/settings', icon: <Settings size={18} strokeWidth={1.5} /> },
   ];
 
@@ -117,7 +121,7 @@ const AdminLayout: React.FC = () => {
           </button>
         </div>
 
-        <nav className="flex-1 mt-2 px-3 space-y-0.5">
+        <nav className="flex-1 mt-2 px-3 space-y-0.5 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = location.pathname === item.path;
             return (

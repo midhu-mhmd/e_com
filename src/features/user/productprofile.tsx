@@ -4,7 +4,8 @@ import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin } from "lucide-react";
 import { useAppDispatch, useRequireAuth } from "../../hooks";
-import { addToCart } from "../admin/cart/cartSlice";
+import { fetchCartRequest } from "../admin/cart/cartSlice";
+import { cartsApi } from "../admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
 import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
@@ -18,14 +19,6 @@ import {
 type MediaItem =
   | { type: "image"; id: number; src: string }
   | { type: "video"; id: number; src: string; title: string };
-
-/** Get the best available image: featured → first gallery → main image field */
-const getProductImage = (p: ProductDto): string => {
-  const featured = p.images?.find((img) => img.is_feature);
-  if (featured) return featured.image;
-  if (p.images?.[0]) return p.images[0].image;
-  return p.image || "";
-};
 
 /** Build unified media list from product data */
 const buildMediaList = (product: ProductDto): MediaItem[] => {
@@ -195,23 +188,20 @@ const ProductProfile: React.FC = () => {
     : null;
 
   const addItemToCart = (goTo: "cart" | "checkout") => {
-    requireAuth(() => {
-      dispatch(
-        addToCart({
-          id: product.id,
-          name: product.name,
-          price: parseFloat(product.price),
-          discountPrice: product.discount_price ? parseFloat(product.discount_price) : undefined,
-          finalPrice: product.discount_price ? parseFloat(product.discount_price) : parseFloat(product.price),
-          image: getProductImage(product),
-          quantity,
-          stock: product.stock,
-          sku: product.sku,
-          category: product.category_name
-        })
-      );
-      toast.show(`${product.name} added to cart`, "cart");
-      navigate(goTo === "cart" ? "/cart" : "/checkout");
+    requireAuth(async () => {
+      try {
+        const result = await cartsApi.addItem(product.id, quantity);
+        if (result?.error) {
+          toast.show(result.error, "error");
+          return;
+        }
+        dispatch(fetchCartRequest());
+        toast.show(`${product.name} added to cart`, "cart");
+        navigate(goTo === "cart" ? "/cart" : "/checkout");
+      } catch (e: any) {
+        const errorMsg = e?.response?.data?.error || "Failed to add item to cart";
+        toast.show(errorMsg, "error");
+      }
     })();
   };
 
@@ -264,7 +254,7 @@ const ProductProfile: React.FC = () => {
                   {t("details.off", { value: discountPercentage })}
                 </span>
               )}
-              {!product.is_available && (
+              {(!product.is_available || product.stock === 0) && (
                 <span className="px-3 py-1.5 bg-cyan-900 text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg">
                   {t("details.outOfStock")}
                 </span>
@@ -390,6 +380,13 @@ const ProductProfile: React.FC = () => {
                   <Plus size={18} />
                 </button>
               </div>
+
+              {/* Stock count */}
+              {product.is_available && product.stock > 0 && (
+                <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
+                  {product.stock} {product.stock === 1 ? "item" : "items"} in stock
+                </p>
+              )}
             </div>
           </div>
 
@@ -397,16 +394,16 @@ const ProductProfile: React.FC = () => {
           <div className="flex gap-3">
             <button
               onClick={() => addItemToCart("cart")}
-              disabled={!product.is_available}
+              disabled={!product.is_available || product.stock === 0}
               className="flex-1 py-4 bg-stone-900 text-white text-base font-black rounded-2xl hover:bg-stone-800 shadow-xl shadow-stone-900/10 hover:shadow-stone-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
             >
               <ShoppingCart size={22} />
-              {product.is_available ? t("details.addToCart") : t("details.outOfStock")}
+              {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
             </button>
 
             <button
               onClick={() => addItemToCart("checkout")}
-              disabled={!product.is_available}
+              disabled={!product.is_available || product.stock === 0}
               className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
             >
               <Zap size={22} />

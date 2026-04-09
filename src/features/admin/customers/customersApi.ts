@@ -47,6 +47,8 @@ export interface AddressDto {
   emirate: string;
   country: string;
   is_default: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /* ── Frontend Customer type ── */

@@ -15,7 +15,7 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
   const [tiers, setTiers] = useState<DeliveryTierDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newTier, setNewTier] = useState({ min_quantity: 1, delivery_days: 0 });
+  const [newTier, setNewTier] = useState({ min_quantity: 1, delivery_days: 1 });
 
   // Fetch tiers on mount
   useEffect(() => {
@@ -61,7 +61,7 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
       const updated = [...tiers, newLocalTier];
       setTiers(updated);
       onTiersChange?.(updated);
-      setNewTier({ min_quantity: 1, delivery_days: 0 });
+      setNewTier({ min_quantity: 1, delivery_days: 1 });
       setError(null);
       return;
     }
@@ -72,7 +72,7 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
         min_quantity: newTier.min_quantity,
         delivery_days: newTier.delivery_days,
       });
-      setNewTier({ min_quantity: 1, delivery_days: 0 });
+      setNewTier({ min_quantity: 1, delivery_days: 1 });
       setError(null);
       // Refetch to get the updated list from server
       await fetchTiers();
@@ -195,6 +195,7 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
           </div>
           <div className="flex items-end">
             <button
+              type="button"
               onClick={handleAddTier}
               disabled={loading}
               className="w-full bg-cyan-600 text-white font-semibold py-2 rounded-lg hover:bg-cyan-700 transition disabled:opacity-50 flex items-center justify-center gap-2"

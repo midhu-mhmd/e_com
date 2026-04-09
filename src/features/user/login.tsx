@@ -149,8 +149,11 @@ const Login: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     const isAdmin = user.role === "admin" || user.is_admin === true;
+    const isDeliveryBoy = user.role === "delivery_boy";
     if (isAdmin) {
       navigate("/admin/dashboard", { replace: true });
+    } else if (isDeliveryBoy) {
+      navigate("/delivery", { replace: true });
     } else {
       navigate("/", { replace: true });
     }
