@@ -422,11 +422,17 @@ const OrderManagement: React.FC = () => {
       )}
 
       {/* --- STATS --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <QuickStat
+          label="Total Revenue"
+          value={countsLoading ? "..." : `AED ${Number(orderCounts.total_revenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+          sub={countsError ? countsError : "Total earnings"}
+          icon={<DollarSign size={16} className="text-emerald-500" />}
+        />
         <QuickStat
           label="Total Orders"
           value={countsLoading ? "..." : `${orderCounts.total_orders}`}
-          sub={countsError ? countsError : `AED ${Number(orderCounts.total_revenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+          sub={countsError ? countsError : "All received"}
           icon={<ShoppingBag size={16} className="text-[#A1A1AA]" />}
         />
         <QuickStat

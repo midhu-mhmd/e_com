@@ -97,7 +97,7 @@ const TemplatesSection: React.FC = () => {
                 setTemplates((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
             } else {
                 const created = await adminNotificationApi.createTemplate(form);
-                setTemplates((prev) => [...prev, created]);
+                setTemplates((prev) => [created, ...prev]);
             }
             setModalOpen(false);
         } catch { /* 400 modal will handle */ }
@@ -266,7 +266,7 @@ const BroadcastsSection: React.FC = () => {
                 setBroadcasts((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
             } else {
                 const created = await adminNotificationApi.createBroadcast(payload);
-                setBroadcasts((prev) => [...prev, created]);
+                setBroadcasts((prev) => [created, ...prev]);
             }
             setModalOpen(false);
         } catch { /* 400 modal will handle */ }

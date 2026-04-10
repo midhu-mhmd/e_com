@@ -47,7 +47,6 @@ import {
   selectCustomersError,
   selectSelectedCustomerId,
   selectCustomersTotal,
-  selectShowDeleted,
   selectActionStatus,
   selectActionError,
 } from "./customersSlice";
@@ -839,7 +838,6 @@ const CustomerManagement: React.FC = () => {
   const status = useSelector(selectCustomersStatus);
   const error = useSelector(selectCustomersError);
   const selectedCustomerId = useSelector(selectSelectedCustomerId);
-  const showDeleted = useSelector(selectShowDeleted);
   const actionStatus = useSelector(selectActionStatus);
   const actionError = useSelector(selectActionError);
 
@@ -938,7 +936,7 @@ const CustomerManagement: React.FC = () => {
         offset,
       })
     );
-  }, [dispatch, deferredSearchTerm, statusFilter, roleQueryValue, page, limit, showDeleted]);
+  }, [dispatch, deferredSearchTerm, statusFilter, roleQueryValue, page, limit]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
@@ -1119,11 +1117,6 @@ const CustomerManagement: React.FC = () => {
     [dispatch]
   );
 
-  const toggleShowDeleted = useCallback(() => {
-    dispatch(customersActions.toggleShowDeleted());
-    setPage(1);
-  }, [dispatch]);
-
   return (
     <div className="min-h-screen w-full space-y-6 text-[#18181B] bg-[#FDFDFD]">
       {/* --- TOAST --- */}
@@ -1154,16 +1147,6 @@ const CustomerManagement: React.FC = () => {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Customers</h1>
           <p className="text-[#71717A] text-sm mt-1">Manage users and their accounts.</p>
         </div>
-        <button
-          onClick={toggleShowDeleted}
-          className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold transition-all ${showDeleted
-            ? "bg-rose-600 text-white border-rose-600 hover:bg-rose-700"
-            : "bg-white text-[#52525B] border-[#EEEEEE] hover:bg-[#FAFAFA]"
-            }`}
-        >
-          <Trash2 size={14} />
-          {showDeleted ? "Showing All (incl. Deleted)" : "Show Deleted"}
-        </button>
       </div>
 
       {/* --- STATS --- */}
