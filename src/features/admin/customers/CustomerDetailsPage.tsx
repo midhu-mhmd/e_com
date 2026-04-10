@@ -223,7 +223,7 @@ const CustomerDetailsPage: React.FC = () => {
                   </button>
                   {roleOpen && (
                     <div className="absolute right-0 mt-2 w-full bg-white border border-[#EEEEEE] rounded-xl shadow-xl p-2">
-                      {(["admin", "staff", "user"] as const).map((r) => (
+                      {(["admin", "user"] as const).map((r) => (
                         <button
                           key={r}
                           disabled={actionBusy || customer.role === r}

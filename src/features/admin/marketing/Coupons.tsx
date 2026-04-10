@@ -240,7 +240,7 @@ const CouponManagement: React.FC = () => {
             {activeTab === "list" && (
                 <>
                     {/* --- STATS OVERVIEW --- */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                         <QuickStat
                             label="Total Coupons"
                             value={`${stats?.total_coupons || totalCount}`}
@@ -254,16 +254,22 @@ const CouponManagement: React.FC = () => {
                             icon={<Eye size={16} className="text-emerald-500" />}
                         />
                         <QuickStat
+                            label="Referral Coupons"
+                            value={`${stats?.referral_coupons || 0}`}
+                            sub="Referral rewards"
+                            icon={<Gift size={16} className="text-amber-500" />}
+                        />
+                        <QuickStat
+                            label="First Order"
+                            value={`${stats?.first_order_coupons || 0}`}
+                            sub="First order rewards"
+                            icon={<Gift size={16} className="text-amber-500" />}
+                        />
+                        <QuickStat
                             label="Total Redeemed"
                             value={`${stats?.total_redeemed || 0}`}
                             sub="Successful redemptions"
                             icon={<TrendingUp size={16} className="text-blue-500" />}
-                        />
-                        <QuickStat
-                            label="Reward Coupons"
-                            value={`${(stats?.referral_coupons || 0) + (stats?.first_order_coupons || 0)}`}
-                            sub="Referral & First Order"
-                            icon={<Gift size={16} className="text-amber-500" />}
                         />
                     </div>
 

@@ -7,6 +7,7 @@ import {
     productsActions,
     selectProductsStatus,
     selectProductsError,
+    selectProducts,
 } from "./productsSlice";
 import type { ProductDto } from "./productApi";
 import { productsApi } from "./productApi";
@@ -92,6 +93,28 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
     const status = useSelector(selectProductsStatus);
     const backendError = useSelector(selectProductsError);
+    const products = useSelector(selectProducts);
+
+    /* ── Categories extracted from existing products ── */
+    const uniqueCategories = React.useMemo(() => {
+        const map = new Map<number, string>();
+        if (dto?.category && dto?.categoryName) {
+            map.set(dto.category, dto.categoryName);
+        }
+        products.forEach((p) => {
+            if (p.categoryId && p.categoryName) {
+                map.set(p.categoryId, p.categoryName);
+            }
+        });
+        return Array.from(map.entries()); // [[id, name], ...]
+    }, [products, dto]);
+
+    /* ── Fetch products once so categories dropdown is populated ── */
+    useEffect(() => {
+        if (products.length === 0) {
+            dispatch(productsActions.fetchProductsRequest({ limit: 100 }));
+        }
+    }, [dispatch, products.length]);
 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
@@ -342,12 +365,21 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                     <h2 className="text-lg font-bold">Organization</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase text-[#A1A1AA]">Category ID</label>
-                            <input
-                                type="number"
-                                {...register("category", { required: "Category ID is required" })}
+                            <label className="text-xs font-bold uppercase text-[#A1A1AA]">Category</label>
+                            <select
+                                {...register("category", { required: "Category is required" })}
                                 className={`w-full px-4 py-3 bg-[#FAFAFA] border-2 rounded-xl text-sm font-medium focus:ring-2 outline-none transition-all ${errors.category ? 'border-rose-200 focus:border-rose-400 focus:ring-rose-100' : 'border-transparent focus:border-black focus:ring-black/5'}`}
-                            />
+                            >
+                                <option value="">— Select category —</option>
+                                {uniqueCategories.map(([id, name]) => (
+                                    <option key={id} value={id}>
+                                        {name}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-[#A1A1AA] mt-1">
+                                Categories are derived from existing products. You can also type an ID directly in the Django admin.
+                            </p>
                             {errors.category && <p className="text-rose-500 text-[10px] font-bold">{errors.category.message}</p>}
                         </div>
                         <div className="space-y-2">
@@ -374,7 +406,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                         <input
                             type="checkbox"
                             {...register("is_available")}
-                            className="w-5 h-5 accent-black rounded cursor-pointer"
+                            className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
                         />
                         <label className="text-sm font-medium cursor-pointer">Available for purchase</label>
                     </div>

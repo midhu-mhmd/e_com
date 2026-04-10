@@ -223,7 +223,7 @@ const ActionDropdown = memo(function ActionDropdown({
             </button>
             {roleOpen && (
               <div className="absolute left-full top-0 ml-1 w-40 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-1.5">
-                {(["admin", "customer", "staff"] as const).map((r) => (
+                {(["admin", "user"] as const).map((r) => (
                   <button
                     key={r}
                     onClick={() => {
@@ -781,7 +781,7 @@ const CustomerDetailPanel = memo(function CustomerDetailPanel({
               </button>
               {showRolePicker && (
                 <div className="absolute bottom-full mb-1 left-0 w-40 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-1.5">
-                  {(["admin", "customer", "staff"] as const).map((r) => (
+                  {(["admin", "user"] as const).map((r) => (
                     <button
                       key={r}
                       onClick={() => {
