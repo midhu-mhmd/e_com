@@ -42,6 +42,7 @@ function mapDto(dto: ProductDto) {
     })),
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
+    availableEmirates: dto.available_emirates || [],
   };
 }
 
@@ -151,6 +152,18 @@ const ProductDetailsPage: React.FC = () => {
                         {product.unit === "kg" ? "Kg" : product.unit === "piece" ? "Piece" : product.unit === "Gram" ? "100g" : (product.unit || "—")}
                       </p>
                     </div>
+                    {product.availableEmirates && product.availableEmirates.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest mb-1.5">Available Emirates</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {product.availableEmirates.map(emirate => (
+                            <span key={emirate} className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-semibold">
+                              {emirate}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {product.description && (

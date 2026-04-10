@@ -96,7 +96,7 @@ const PaymentManagement: React.FC = () => {
       limit: limit,
       offset: (page - 1) * limit,
     };
-    
+
     if (searchTerm) params.search = searchTerm;
     if (statusFilter !== "All") {
       const statusMap: Record<PaymentStatus, string> = {
@@ -119,7 +119,7 @@ const PaymentManagement: React.FC = () => {
       const mappedMethod = methodMap[methodFilter];
       if (mappedMethod) params.payment_method = mappedMethod;
     }
-    
+
     console.log("Fetching payments with params:", params);
     dispatch(paymentsActions.fetchPaymentsRequest(params));
   }, [dispatch, page, limit, searchTerm, statusFilter, methodFilter]);
@@ -139,7 +139,7 @@ const PaymentManagement: React.FC = () => {
 
   // Get total count from API
   const totalCount = useSelector(selectPaymentsTotal);
-  
+
   // Use payments directly (already paginated from API)
   const paginatedPayments = payments;
 
@@ -208,75 +208,95 @@ const PaymentManagement: React.FC = () => {
           <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
         </nav>
         <main className="min-h-[60vh]">
-        {currentView === "dashboard" && (
-          <DashboardView
-            totalCollected={totalCollected}
-            successRate={successRate}
-            pendingCod={pendingCod}
-            refundedAmount={refundedAmount}
-            payments={paginatedPayments}
-          />
-        )}
+          {currentView === "dashboard" && (
+            <DashboardView
+              totalCollected={totalCollected}
+              successRate={successRate}
+              pendingCod={pendingCod}
+              refundedAmount={refundedAmount}
+              payments={paginatedPayments}
+            />
+          )}
 
-        {currentView === "payments" && (
-          <PaymentsListView
-            payments={paginatedPayments}
-            totalCount={totalCount}
-            page={page}
-            limit={limit}
-            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
-            status={status}
-            error={error}
-            searchTerm={searchTerm}
-            statusFilter={statusFilter}
-            methodFilter={methodFilter}
-            orderFilter={orderFilter}
-            customerFilter={customerFilter}
-            amountMin={amountMin}
-            amountMax={amountMax}
-            showFilters={showFilters}
-            hasActiveFilters={hasActiveFilters}
-            isVisible={isVisible}
-            isColumnsOpen={isColumnsOpen}
-            visibleColumns={visibleColumns}
-            columnsRef={columnsRef}
-            onSearchChange={(v) => { setSearchTerm(v); setPage(1); }}
-            onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
-            onMethodChange={(v) => { setMethodFilter(v); setPage(1); }}
-            onOrderFilterChange={(v) => { setOrderFilter(v); setPage(1); }}
-            onCustomerFilterChange={(v) => { setCustomerFilter(v); setPage(1); }}
-            onAmountMinChange={(v) => { setAmountMin(v); setPage(1); }}
-            onAmountMaxChange={(v) => { setAmountMax(v); setPage(1); }}
-            onToggleFilters={() => setShowFilters(!showFilters)}
-            onToggleColumns={() => setIsColumnsOpen(!isColumnsOpen)}
-            onToggleColumn={toggleColumn}
-            onClearFilters={clearFilters}
-            onPageChange={setPage}
-            onSelect={setSelectedPayment}
-            onExport={handleExport}
-          />
-        )}
+          {currentView === "payments" && (
+            <PaymentsListView
+              viewType="payments"
+              payments={paginatedPayments}
+              totalCount={totalCount}
+              page={page}
+              limit={limit}
+              onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              status={status}
+              error={error}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              methodFilter={methodFilter}
+              orderFilter={orderFilter}
+              customerFilter={customerFilter}
+              amountMin={amountMin}
+              amountMax={amountMax}
+              showFilters={showFilters}
+              hasActiveFilters={hasActiveFilters}
+              isVisible={isVisible}
+              isColumnsOpen={isColumnsOpen}
+              visibleColumns={visibleColumns}
+              columnsRef={columnsRef}
+              onSearchChange={(v) => { setSearchTerm(v); setPage(1); }}
+              onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+              onMethodChange={(v) => { setMethodFilter(v); setPage(1); }}
+              onOrderFilterChange={(v) => { setOrderFilter(v); setPage(1); }}
+              onCustomerFilterChange={(v) => { setCustomerFilter(v); setPage(1); }}
+              onAmountMinChange={(v) => { setAmountMin(v); setPage(1); }}
+              onAmountMaxChange={(v) => { setAmountMax(v); setPage(1); }}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              onToggleColumns={() => setIsColumnsOpen(!isColumnsOpen)}
+              onToggleColumn={toggleColumn}
+              onClearFilters={clearFilters}
+              onPageChange={setPage}
+              onSelect={setSelectedPayment}
+              onExport={handleExport}
+            />
+          )}
 
-        {currentView === "refunds" && (
-          <RefundsView
-            payments={paginatedPayments}
-            totalCount={totalCount}
-            page={page}
-            limit={limit}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
-          />
-        )}
-        {currentView === "cod" && (
-          <CODView
-            payments={paginatedPayments}
-            totalCount={totalCount}
-            page={page}
-            limit={limit}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
-          />
-        )}
+          {(currentView === "refunds" || currentView === "cod") && (
+            <PaymentsListView
+              viewType={currentView}
+              payments={paginatedPayments}
+              totalCount={totalCount}
+              page={page}
+              limit={limit}
+              onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              status={status}
+              error={error}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              methodFilter={methodFilter}
+              orderFilter={orderFilter}
+              customerFilter={customerFilter}
+              amountMin={amountMin}
+              amountMax={amountMax}
+              showFilters={showFilters}
+              hasActiveFilters={hasActiveFilters}
+              isVisible={isVisible}
+              isColumnsOpen={isColumnsOpen}
+              visibleColumns={visibleColumns}
+              columnsRef={columnsRef}
+              onSearchChange={(v) => { setSearchTerm(v); setPage(1); }}
+              onStatusChange={(v) => { setStatusFilter(v); setPage(1); }}
+              onMethodChange={(v) => { setMethodFilter(v); setPage(1); }}
+              onOrderFilterChange={(v) => { setOrderFilter(v); setPage(1); }}
+              onCustomerFilterChange={(v) => { setCustomerFilter(v); setPage(1); }}
+              onAmountMinChange={(v) => { setAmountMin(v); setPage(1); }}
+              onAmountMaxChange={(v) => { setAmountMax(v); setPage(1); }}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              onToggleColumns={() => setIsColumnsOpen(!isColumnsOpen)}
+              onToggleColumn={toggleColumn}
+              onClearFilters={clearFilters}
+              onPageChange={setPage}
+              onSelect={setSelectedPayment}
+              onExport={handleExport}
+            />
+          )}
         </main>
       </div>
 
@@ -353,6 +373,7 @@ const DashboardView = ({
 
 /* ── 2. PAYMENTS LIST VIEW ── */
 const PaymentsListView = ({
+  viewType = "payments",
   payments,
   totalCount,
   page,
@@ -388,6 +409,7 @@ const PaymentsListView = ({
   onSelect,
   onExport,
 }: {
+  viewType?: ViewType;
   payments: Payment[];
   totalCount: number;
   page: number;
@@ -423,20 +445,34 @@ const PaymentsListView = ({
   onSelect: (p: Payment) => void;
   onExport: () => void;
 }) => {
+  const dispatch = useDispatch();
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
   const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
   const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + payments.length, totalCount);
 
+  // COD-specific state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const isCod = viewType === "cod";
+
+  const codStatuses = [
+    { value: "PENDING", label: "Pending" },
+    { value: "SUCCESS", label: "Collected" },
+    { value: "FAILED", label: "Failed" },
+  ];
+
+  const handleCodStatusSave = (paymentId: number) => {
+    if (!selectedStatus) return;
+    dispatch(paymentsActions.updatePaymentStatusRequest({ id: paymentId, status: selectedStatus }));
+    setEditingId(null);
+    setSelectedStatus("");
+  };
+
   return (
-  <div className="animate-in fade-in">
+    <div className="animate-in fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 gap-4 bg-white border-b border-[#EEEEEE]">
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {hasActiveFilters && (
-            <button onClick={onClearFilters} className="px-3 py-1.5 text-[10px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-              Reset
-            </button>
-          )}
           <button
             onClick={onToggleFilters}
             className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold transition-all ${showFilters ? "bg-black text-white border-black" : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"}`}
@@ -668,12 +704,50 @@ const PaymentsListView = ({
                     </td>
                   )}
                   <td className="px-5 py-4 text-right">
-                    <button
-                      className="p-2 text-[#A1A1AA] hover:text-black hover:bg-[#F4F4F5] rounded-lg transition-all inline-block"
-                      title="View Details"
-                    >
-                      <Eye size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        className="p-2 text-[#A1A1AA] hover:text-black hover:bg-[#F4F4F5] rounded-lg transition-all inline-block"
+                        title="View Details"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      {isCod && (
+                        editingId === p.id ? (
+                          <>
+                            <select
+                              value={selectedStatus}
+                              onChange={(e) => setSelectedStatus(e.target.value)}
+                              className="px-2 py-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-[11px] font-medium outline-none focus:border-[#D4D4D8]"
+                            >
+                              <option value="">Select status</option>
+                              {codStatuses.map((s) => (
+                                <option key={s.value} value={s.value}>{s.label}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleCodStatusSave(p.id); }}
+                              disabled={!selectedStatus}
+                              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditingId(null); setSelectedStatus(""); }}
+                              className="px-3 py-1.5 bg-[#F4F4F5] text-[#71717A] rounded-lg text-[10px] font-bold hover:bg-[#E4E4E7] transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingId(p.id); setSelectedStatus(""); }}
+                            className="px-3 py-1.5 bg-black text-white rounded-lg text-[10px] font-bold shadow-sm hover:bg-[#333] transition-colors"
+                          >
+                            Update
+                          </button>
+                        )
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -727,7 +801,7 @@ const PaymentsListView = ({
           </button>
         </div>
       </div>
-  </div>
+    </div>
   );
 };
 
