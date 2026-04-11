@@ -42,7 +42,6 @@ import type { Order, OrderStatus, PaymentStatus } from "./ordersSlice";
 
 /* --- FILTER TYPES --- */
 type FilterOrderStatus = OrderStatus | "All";
-type FilterPaymentStatus = PaymentStatus | "All";
 
 /* --- Column definitions --- */
 type ColumnKey =
@@ -108,7 +107,6 @@ const OrderManagement: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterOrderStatus>("All");
-  const [paymentFilter, setPaymentFilter] = useState<FilterPaymentStatus>("All");
   const [customerFilter, setCustomerFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [deliveryDateFilter, setDeliveryDateFilter] = useState("");
@@ -158,13 +156,12 @@ const OrderManagement: React.FC = () => {
       ordersActions.fetchOrdersRequest({
         q: debouncedSearch || undefined,
         status: statusFilter === "All" ? undefined : statusFilter,
-        payment_status: paymentFilter === "All" ? undefined : paymentFilter,
         page,
         limit,
         offset,
       })
     );
-  }, [dispatch, debouncedSearch, statusFilter, paymentFilter, page, limit]);
+  }, [dispatch, debouncedSearch, statusFilter, page, limit]);
 
   // Fetch dashboard analytics for orders page
   useEffect(() => {
@@ -206,7 +203,6 @@ const OrderManagement: React.FC = () => {
   const handleReset = () => {
     setSearchTerm("");
     setStatusFilter("All");
-    setPaymentFilter("All");
     setCustomerFilter("");
     setCityFilter("");
     setDeliveryDateFilter("");
@@ -252,7 +248,7 @@ const OrderManagement: React.FC = () => {
     return result;
   }, [orders, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
 
-  const hasServerFilters = !!(debouncedSearch || statusFilter !== "All" || paymentFilter !== "All");
+  const hasServerFilters = !!(debouncedSearch || statusFilter !== "All");
   const displayedOrders = hasServerFilters ? orders : filteredOrders;
 
 
@@ -580,16 +576,7 @@ const OrderManagement: React.FC = () => {
 
                   {isVisible("payment") && (
                     <td className="px-5 py-3">
-                      <select
-                        value={paymentFilter}
-                        onChange={(e) => { setPaymentFilter(e.target.value as FilterPaymentStatus); setPage(1); }}
-                        className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
-                      >
-                        <option value="All">All</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Refunded">Refunded</option>
-                      </select>
+                      <div className="text-[10px] text-[#A1A1AA] font-medium italic">—</div>
                     </td>
                   )}
                   {isVisible("status") && (

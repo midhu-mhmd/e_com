@@ -863,13 +863,18 @@ const CustomerManagement: React.FC = () => {
   // Filter states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
   const [verifiedFilter, setVerifiedFilter] = useState("");
   const [phoneFilter, setPhoneFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const deferredSearchTerm = useDeferredValue(searchTerm.trim());
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   // Prefill phone filter from URL ?phone= query
   useEffect(() => {
@@ -921,9 +926,23 @@ const CustomerManagement: React.FC = () => {
   // Fetch the current page from the backend using server-supported filters.
   useEffect(() => {
     const offset = (page - 1) * limit;
+
+    let is_email_verified: boolean | undefined = undefined;
+    let is_phone_verified: boolean | undefined = undefined;
+    if (verifiedFilter === "email") is_email_verified = true;
+    else if (verifiedFilter === "phone") is_phone_verified = true;
+    else if (verifiedFilter === "both") {
+      is_email_verified = true;
+      is_phone_verified = true;
+    } else if (verifiedFilter === "none") {
+      is_email_verified = false;
+      is_phone_verified = false;
+    }
+
     dispatch(
       customersActions.fetchCustomersRequest({
-        q: deferredSearchTerm || undefined,
+        q: debouncedSearch || undefined,
+        search: debouncedSearch || undefined,
         is_active:
           statusFilter === "All"
             ? undefined
@@ -931,12 +950,14 @@ const CustomerManagement: React.FC = () => {
               ? true
               : false,
         role: roleQueryValue,
+        is_email_verified,
+        is_phone_verified,
         page,
         limit,
         offset,
       })
     );
-  }, [dispatch, deferredSearchTerm, statusFilter, roleQueryValue, page, limit]);
+  }, [dispatch, debouncedSearch, statusFilter, roleQueryValue, verifiedFilter, page, limit]);
 
   const handleReset = useCallback(() => {
     setSearchTerm("");
@@ -986,6 +1007,24 @@ const CustomerManagement: React.FC = () => {
   const filteredCustomers = useMemo(() => {
     let result = customers;
 
+    if (debouncedSearch) {
+      const q = debouncedSearch.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.phone && c.phone.toLowerCase().includes(q))
+      );
+    }
+
+    if (statusFilter !== "All") {
+      result = result.filter((c) => c.status === statusFilter);
+    }
+
+    if (roleFilter !== "All") {
+      result = result.filter((c) => c.role === roleFilter);
+    }
+
     if (verifiedFilter === "email") result = result.filter((c) => c.isEmailVerified);
     else if (verifiedFilter === "phone") result = result.filter((c) => c.isPhoneVerified);
     else if (verifiedFilter === "both") result = result.filter((c) => c.isEmailVerified && c.isPhoneVerified);
@@ -997,14 +1036,9 @@ const CustomerManagement: React.FC = () => {
     }
 
     return result;
-  }, [customers, verifiedFilter, phoneFilter]);
+  }, [customers, verifiedFilter, phoneFilter, debouncedSearch, statusFilter, roleFilter]);
 
-  const hasServerFilters = !!(
-    deferredSearchTerm ||
-    statusFilter !== "All" ||
-    roleFilter !== "All"
-  );
-  const displayedCustomers = hasServerFilters ? customers : filteredCustomers;
+  const displayedCustomers = filteredCustomers;
 
   // If phone filter is present in URL and exactly one match, open details panel
   useEffect(() => {

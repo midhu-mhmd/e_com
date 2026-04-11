@@ -174,9 +174,13 @@ const ProductManagement: React.FC = () => {
         setPage(1);
     };
 
-    // Keep only filters the backend does not currently expose client-side.
+    // Apply local filters since the backend might not support all of them perfectly / perfectly intersect them.
     const filteredProducts = useMemo(() => {
         let result = products;
+
+        if (statusFilter !== "All") {
+            result = result.filter((p: Product) => p.status === statusFilter);
+        }
         if (minPrice) {
             const min = parseFloat(minPrice);
             if (!isNaN(min)) result = result.filter((p: Product) => p.finalPrice >= min);
@@ -208,10 +212,9 @@ const ProductManagement: React.FC = () => {
             );
         }
         return result;
-    }, [products, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
+    }, [products, statusFilter, minPrice, maxPrice, minStock, maxStock, skuFilter, ratingFilter, deliveryTimeFilter]);
 
-    const hasServerFilters = !!(debouncedSearch || statusFilter !== "All" || categoryFilter);
-    const displayedProducts = hasServerFilters ? products : filteredProducts;
+    const displayedProducts = filteredProducts;
 
     const uniqueCategories = useMemo(
         () => categories.map((category) => ({ id: category.id, name: category.name })),

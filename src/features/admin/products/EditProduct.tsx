@@ -98,8 +98,8 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
     /* ── Categories extracted from existing products ── */
     const uniqueCategories = React.useMemo(() => {
         const map = new Map<number, string>();
-        if (dto?.category && dto?.categoryName) {
-            map.set(dto.category, dto.categoryName);
+        if (dto?.category && dto?.category_name) {
+            map.set(dto.category, dto.category_name);
         }
         products.forEach((p) => {
             if (p.categoryId && p.categoryName) {
