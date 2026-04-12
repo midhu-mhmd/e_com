@@ -172,7 +172,7 @@ const AdminCancellationRequests: React.FC = () => {
       )}
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Cancellation Requests</h1>
             {pendingOrders.length > 0 && (
@@ -184,7 +184,7 @@ const AdminCancellationRequests: React.FC = () => {
           <button
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Refresh

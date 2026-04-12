@@ -61,23 +61,23 @@ export const DeliveryChargeSettings: React.FC = () => {
     <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="bg-white rounded-3xl border border-stone-100 shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-stone-50 bg-stone-50/50 flex justify-between items-center">
+        <div className="p-6 border-b border-stone-50 bg-stone-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
               <Truck className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-tight">Delivery Charges</h2>
+              <h2 className="text-lg font-bold tracking-tight leading-tight text-stone-900">Delivery Charges</h2>
               <p className="text-xs text-stone-400">
                 Configure free-delivery threshold and shipping fee.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setForm((f) => ({ ...f, is_active: !f.is_active }))}
               title={form.is_active ? "Disable delivery charges" : "Enable delivery charges"}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
                 form.is_active
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                   : "bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
@@ -89,16 +89,16 @@ export const DeliveryChargeSettings: React.FC = () => {
             <button
               onClick={handleSave}
               disabled={saving || !isDirty}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black text-white hover:bg-stone-800 disabled:opacity-40 transition-all"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-black text-white hover:bg-stone-800 disabled:opacity-40 transition-all"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Save Changes
+              Save
             </button>
           </div>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Info banner */}
           <div className="flex items-start gap-3 p-4 bg-blue-50/70 rounded-2xl border border-blue-100">
             <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />

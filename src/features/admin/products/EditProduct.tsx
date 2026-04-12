@@ -230,22 +230,22 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6 md:p-12 space-y-8 animate-in slide-in-from-right duration-500">
-            <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-4xl mx-auto">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate("/admin/products")} className="p-2 hover:bg-[#F4F4F5] rounded-full transition-colors">
+                    <button onClick={() => navigate("/admin/products")} className="p-2 hover:bg-[#F4F4F5] rounded-full transition-colors flex-shrink-0">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Edit Product</h1>
-                        <p className="text-sm text-[#71717A]">Update inventory, pricing tiers, and media.</p>
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Edit Product</h1>
+                        <p className="text-xs md:text-sm text-[#71717A]">Update inventory, pricing tiers, and media.</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button
                         type="button"
                         onClick={() => navigate("/admin/products")}
-                        className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 transition-all active:scale-95"
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 transition-all active:scale-95"
                     >
                         Discard
                     </button>
@@ -253,14 +253,14 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                         type="submit"
                         form="edit-product-form"
                         disabled={status === "loading"}
-                        className="group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center gap-2.5 transition-all active:scale-95 border border-white/10"
+                        className="flex-1 sm:flex-none group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-white/10"
                     >
                         {status === "loading" ? (
                             <Loader2 size={18} className="animate-spin" />
                         ) : (
                             <Save size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
                         )}
-                        <span>{status === "loading" ? "Saving..." : "Save Product"}</span>
+                        <span className="relative">{status === "loading" ? "Saving..." : "Save Product"}</span>
                     </button>
                 </div>
             </div>
@@ -280,9 +280,9 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                 {/* Basic Info */}
                 <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <h2 className="text-lg font-bold">Basic Information</h2>
-                        <span className="text-xs font-mono bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">Slug: {dto.slug}</span>
+                        <span className="text-xs font-mono bg-slate-100 text-slate-500 px-3 py-1 rounded-lg w-fit">Slug: {dto.slug}</span>
                     </div>
                     <div className="grid gap-6">
                         <div className="space-y-2">
@@ -308,9 +308,9 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                 {/* Pricing & Inventory */}
                 <section className="bg-white border border-[#EEEEEE] rounded-2xl p-6 shadow-sm space-y-6">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <h2 className="text-lg font-bold">Pricing & Inventory</h2>
-                        <span className="text-xs font-bold bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg">
+                        <span className="text-xs font-bold bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg w-fit">
                             Final Price: AED {dto.final_price}
                         </span>
                     </div>
@@ -523,10 +523,10 @@ const MainImageUpload = ({ register, watch, existingImageUrl }: any) => {
         <div className={`border-2 border-dashed border-[#E4E4E7] rounded-xl flex flex-col items-center justify-center text-center bg-[#FAFAFA] relative cursor-pointer overflow-hidden ${activePreview ? "p-0" : "p-10"}`}>
             <input type="file" accept="image/*" {...register("image")} className="absolute inset-0 opacity-0 z-10 cursor-pointer" />
             {activePreview ? (
-                <div className="relative w-full h-72">
+                <div className="relative w-full h-48 sm:h-72">
                     <img src={activePreview} alt="Main Preview" className="w-full h-full object-contain" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-20 pointer-events-none">
-                        <span className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold shadow-lg">Replace Main Image</span>
+                        <span className="bg-white text-black px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold shadow-lg">Replace Image</span>
                     </div>
                 </div>
             ) : (

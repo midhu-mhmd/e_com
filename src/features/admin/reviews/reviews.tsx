@@ -249,7 +249,7 @@ const ReviewsManagement: React.FC = () => {
       </div>
 
       {/* --- STATS OVERVIEW --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat
           label="Total Reviews"
           value={`${totalReviewsCount}`}
@@ -289,7 +289,7 @@ const ReviewsManagement: React.FC = () => {
                 : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
                 }`}
             >
-              <Filter size={14} /> {isFilterOpen ? "Hide Filters" : "Show Filters"}
+              <Filter size={14} /> <span className="hidden sm:inline">{isFilterOpen ? "Hide Filters" : "Show Filters"}</span>
             </button>
 
             {/* Column Visibility Dropdown */}
@@ -301,7 +301,7 @@ const ReviewsManagement: React.FC = () => {
                   : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
                   }`}
               >
-                <Columns3 size={14} /> Columns
+                <Columns3 size={14} /> <span className="hidden sm:inline">Columns</span>
               </button>
               {isColumnsOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -333,7 +333,7 @@ const ReviewsManagement: React.FC = () => {
               onClick={handleExport}
               className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-[#FAFAFA] transition-colors"
             >
-              <Download size={14} /> Export
+              <Download size={14} /> <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
@@ -352,15 +352,14 @@ const ReviewsManagement: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead className="bg-[#FAFAFA]">
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
-                {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
-                {isVisible("product") && <th className="px-5 py-4">Product</th>}
-                {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
-                {isVisible("rating") && <th className="px-5 py-4">Rating</th>}
-                {isVisible("comment") && <th className="px-5 py-4">Comment</th>}
-                {isVisible("visibility") && <th className="px-5 py-4">Visibility</th>}
-                {isVisible("date") && <th className="px-5 py-4">Created</th>}
-                {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
-                {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
+                {isVisible("index") && <th className="px-5 py-4 w-12 text-center text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">#</th>}
+                {isVisible("product") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE]">Product</th>}
+                {isVisible("customer") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE] hidden md:table-cell">Customer</th>}
+                {isVisible("rating") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE]">Rating</th>}
+                {isVisible("comment") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE] hidden lg:table-cell">Comment</th>}
+                {isVisible("visibility") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE] hidden lg:table-cell">Visibility</th>}
+                {isVisible("date") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE] hidden xl:table-cell">Created</th>}
+                {isVisible("actions") && <th className="px-5 py-4 text-right text-xs font-bold text-[#A1A1AA] uppercase border-b border-[#EEEEEE]">Actions</th>}
               </tr>
 
               {isFilterOpen && (
@@ -462,7 +461,11 @@ const ReviewsManagement: React.FC = () => {
                 ))
               ) : (
                 displayedReviews.map((r, index) => (
-                  <tr key={r.id} className="group hover:bg-[#FBFBFA] transition-colors">
+                  <tr
+                    key={r.id}
+                    onClick={() => dispatch(reviewsActions.setSelectedReviewId(r.id))}
+                    className="group hover:bg-[#FBFBFA] transition-colors cursor-pointer"
+                  >
                     {isVisible("index") && (
                       <td className="px-5 py-4 text-xs font-mono text-[#A1A1AA] text-center">
                         {(page - 1) * limit + index + 1}
@@ -477,7 +480,7 @@ const ReviewsManagement: React.FC = () => {
                     )}
 
                     {isVisible("customer") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden md:table-cell">
                         <p className="text-xs font-bold">{r.userName}</p>
                         <p className="text-[10px] text-[#A1A1AA]">ID: {r.userId}</p>
                       </td>
@@ -504,7 +507,7 @@ const ReviewsManagement: React.FC = () => {
                     
 
                     {isVisible("comment") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden lg:table-cell">
                         <p className="text-xs text-[#52525B] truncate max-w-[150px] sm:max-w-[240px]">
                           {r.comment || <span className="italic text-[#A1A1AA]">No comment</span>}
                         </p>
@@ -514,13 +517,13 @@ const ReviewsManagement: React.FC = () => {
                     
 
                     {isVisible("visibility") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden lg:table-cell">
                         <VisibilityBadge visible={r.isVisible} />
                       </td>
                     )}
 
                     {isVisible("date") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden xl:table-cell">
                         <p className="text-[11px] text-[#52525B] font-medium">
                           {new Date(r.createdAt).toLocaleDateString("en-IN", {
                             day: "2-digit",
@@ -554,16 +557,6 @@ const ReviewsManagement: React.FC = () => {
                             title={r.isVisible ? "Hide" : "Show"}
                           >
                             {r.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              dispatch(reviewsActions.setSelectedReviewId(r.id));
-                            }}
-                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
-                            title="View Details"
-                          >
-                            <Info size={16} />
                           </button>
                         </div>
                       </td>

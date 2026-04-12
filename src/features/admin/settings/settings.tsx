@@ -21,11 +21,17 @@ const SettingsPage: React.FC = () => {
       </aside>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 p-6 md:p-12 lg:p-16 max-w-5xl overflow-y-auto">
-        <header className="mb-12">
-          <h1 className="text-3xl font-black tracking-tight italic">Settings</h1>
+      <main className="flex-1 p-4 sm:p-6 md:p-12 lg:p-16 max-w-5xl overflow-y-auto w-full">
+        <header className="mb-8 md:mb-12">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight italic">Settings</h1>
           <p className="text-[#71717A] text-sm mt-1">Configure your storefront settings.</p>
         </header>
+
+        {/* --- MOBILE TABS --- */}
+        <div className="flex md:hidden gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none snap-x active:cursor-grabbing">
+          <TabButtonMobile icon={<Gift size={16} />} label="Rewards" active={activeTab === 'rewards'} onClick={() => setActiveTab('rewards')} />
+          <TabButtonMobile icon={<Truck size={16} />} label="Delivery" active={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
+        </div>
 
         <AnimatePresence mode="wait">
           {activeTab === "rewards" && (
@@ -65,6 +71,16 @@ const TabButton = ({ icon, label, active, onClick }: { icon: any, label: string,
       <span className="text-xs font-bold tracking-tight">{label}</span>
     </div>
     {active && <ChevronRight size={12} className="text-[#A1A1AA]" />}
+  </button>
+);
+
+const TabButtonMobile = ({ icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold transition-all whitespace-nowrap ${active ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-[#EEEEEE]'}`}
+  >
+    {icon}
+    {label}
   </button>
 );
 

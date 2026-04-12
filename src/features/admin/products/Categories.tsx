@@ -149,14 +149,14 @@ const CategoriesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Categories</h1>
           <p className="text-[#71717A] text-sm mt-1">Create and manage product categories.</p>
         </div>
         <button
           onClick={startCreate}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-black text-white text-sm font-bold"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-black text-white text-sm font-bold w-full sm:w-auto transition-all active:scale-95"
         >
           <Plus size={16} /> New Category
         </button>
@@ -181,9 +181,9 @@ const CategoriesPage: React.FC = () => {
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
                 <th className="px-5 py-3">Image</th>
                 <th className="px-5 py-3">Name</th>
-                <th className="px-5 py-3">Slug</th>
-                <th className="px-5 py-3">Parent</th>
-                <th className="px-5 py-3">Description</th>
+                <th className="px-5 py-3 hidden md:table-cell">Slug</th>
+                <th className="px-5 py-3 hidden lg:table-cell">Parent</th>
+                <th className="px-5 py-3 hidden sm:table-cell">Description</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -224,9 +224,9 @@ const CategoriesPage: React.FC = () => {
                         <div className="font-bold text-sm">{c.name}</div>
                         <div className="text-[11px] text-[#A1A1AA]">ID: {c.id}</div>
                       </td>
-                      <td className="px-5 py-4 text-sm">{c.slug}</td>
-                      <td className="px-5 py-4 text-sm">{parentName}</td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 text-sm hidden md:table-cell">{c.slug}</td>
+                      <td className="px-5 py-4 text-sm hidden lg:table-cell">{parentName}</td>
+                      <td className="px-5 py-4 hidden sm:table-cell">
                         <div className="text-sm text-[#52525B] truncate max-w-[200px] sm:max-w-[350px] lg:max-w-[500px]">
                           {c.description || <span className="italic text-[#A1A1AA]">—</span>}
                         </div>

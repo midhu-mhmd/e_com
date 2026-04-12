@@ -308,7 +308,7 @@ const ProductManagement: React.FC = () => {
             </div>
 
             {/* --- STATS OVERVIEW --- */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <QuickStat
                     label="Total Products"
                     value={`${productCounts.total_products || totalCount}`}
@@ -360,7 +360,7 @@ const ProductManagement: React.FC = () => {
                                     : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
                                     }`}
                             >
-                                <Columns3 size={14} /> Columns
+                                <Columns3 size={14} /> <span className="hidden sm:inline">Columns</span>
                             </button>
                             {isColumnsOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -392,7 +392,7 @@ const ProductManagement: React.FC = () => {
                             onClick={handleExport}
                             className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-[#FAFAFA] transition-colors"
                         >
-                            <Download size={14} /> Export
+                            <Download size={14} /> <span className="hidden sm:inline">Export</span>
                         </button>
                     </div>
                 </div>
@@ -414,13 +414,13 @@ const ProductManagement: React.FC = () => {
                                 {isVisible("index") && <th className="px-6 py-4 w-12 text-center">#</th>}
                                 {isVisible("product") && <th className="px-6 py-4">Product</th>}
                                 {isVisible("status") && <th className="px-6 py-4">Status</th>}
-                                {isVisible("category") && <th className="px-6 py-4">Category</th>}
+                                {isVisible("category") && <th className="px-6 py-4 hidden md:table-cell">Category</th>}
                                 {isVisible("price") && <th className="px-6 py-4">Price</th>}
                                 {isVisible("stock") && <th className="px-6 py-4">Stock</th>}
-                                {isVisible("sku") && <th className="px-6 py-4">SKU</th>}
-                                {isVisible("rating") && <th className="px-6 py-4">Rating</th>}
-                                {isVisible("deliveryTime") && <th className="px-6 py-4">Delivery</th>}
-                                {isVisible("discountPrice") && <th className="px-6 py-4">Discount</th>}
+                                {isVisible("sku") && <th className="px-6 py-4 hidden lg:table-cell">SKU</th>}
+                                {isVisible("rating") && <th className="px-6 py-4 hidden xl:table-cell">Rating</th>}
+                                {isVisible("deliveryTime") && <th className="px-6 py-4 hidden xl:table-cell">Delivery</th>}
+                                {isVisible("discountPrice") && <th className="px-6 py-4 hidden xl:table-cell">Discount</th>}
                                 {isVisible("actions") && <th className="px-6 py-4 text-right">Actions</th>}
                             </tr>
 
@@ -627,7 +627,7 @@ const ProductManagement: React.FC = () => {
                                         )}
 
                                         {isVisible("category") && (
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 hidden md:table-cell">
                                                 <div className="flex items-center gap-1.5">
                                                     <Tag size={10} className="text-[#A1A1AA]" />
                                                     <span className="text-xs font-medium">{p.categoryName}</span>
@@ -677,13 +677,13 @@ const ProductManagement: React.FC = () => {
                                         )}
 
                                         {isVisible("sku") && (
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 hidden lg:table-cell">
                                                 <span className="text-xs font-mono text-[#71717A]">{p.sku}</span>
                                             </td>
                                         )}
 
                                         {isVisible("rating") && (
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 hidden xl:table-cell">
                                                 <div className="flex items-center gap-1">
                                                     <Star size={12} className={`${p.averageRating > 0 ? "fill-amber-400 text-amber-400" : "text-[#D4D4D8]"}`} />
                                                     <span className="text-xs font-bold">{p.averageRating > 0 ? p.averageRating.toFixed(1) : "—"}</span>
@@ -695,7 +695,7 @@ const ProductManagement: React.FC = () => {
                                         )}
 
                                         {isVisible("deliveryTime") && (
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 hidden xl:table-cell">
                                                 <span className="text-xs text-[#52525B] font-medium">
                                                     {p.expectedDeliveryTime || "—"}
                                                 </span>

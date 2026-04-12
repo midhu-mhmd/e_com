@@ -363,7 +363,7 @@ const CustomerRow = memo(function CustomerRow({
       )}
 
       {isVisible("role") && (
-        <td className="px-5 py-4">
+        <td className="px-5 py-4 hidden md:table-cell">
           <span
             className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${customer.role === "admin"
               ? "bg-blue-50 text-blue-600 border-blue-100"
@@ -378,7 +378,7 @@ const CustomerRow = memo(function CustomerRow({
       )}
 
       {isVisible("verified") && (
-        <td className="px-5 py-4">
+        <td className="px-5 py-4 hidden lg:table-cell">
           <div className="flex items-center gap-2">
             <span
               title="Email"
@@ -399,7 +399,7 @@ const CustomerRow = memo(function CustomerRow({
       )}
 
       {isVisible("phone") && (
-        <td className="px-5 py-4">
+        <td className="px-5 py-4 hidden lg:table-cell">
           <span className="text-xs font-medium text-[#52525B]">{customer.phone || "—"}</span>
         </td>
       )}
@@ -435,7 +435,7 @@ const CustomerRow = memo(function CustomerRow({
       )}
 
       {isVisible("joined") && (
-        <td className="px-5 py-4">
+        <td className="px-5 py-4 hidden lg:table-cell">
           <span className="text-xs text-[#52525B] font-medium">{joinedLabel}</span>
         </td>
       )}
@@ -1172,8 +1172,8 @@ const CustomerManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* --- STATS --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* --- QUICK STATS --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickStat
           label="Total Users"
           value={countsLoading ? "..." : `${userCounts.total_users}`}
@@ -1290,17 +1290,17 @@ const CustomerManagement: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-250">
             <thead className="bg-[#FAFAFA]">
               <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">
-                {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
-                {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
-                {isVisible("status") && <th className="px-5 py-4">Status</th>}
-                {isVisible("role") && <th className="px-5 py-4">Role</th>}
-                {isVisible("verified") && <th className="px-5 py-4">Verified</th>}
-                {isVisible("phone") && <th className="px-5 py-4">Phone</th>}
-                {isVisible("googleLinked") && <th className="px-5 py-4">Google</th>}
-                {isVisible("language") && <th className="px-5 py-4">Language</th>}
-                {isVisible("newsletter") && <th className="px-5 py-4">Newsletter</th>}
-                {isVisible("joined") && <th className="px-5 py-4">Joined</th>}
-                {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
+                {isVisible("index") && <th className="px-5 py-4 w-12 text-center text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">#</th>}
+                {isVisible("customer") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">Customer</th>}
+                {isVisible("status") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">Status</th>}
+                {isVisible("role") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden md:table-cell">Role</th>}
+                {isVisible("verified") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden lg:table-cell">Verified</th>}
+                {isVisible("phone") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden lg:table-cell">Phone</th>}
+                {isVisible("googleLinked") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden xl:table-cell">Google</th>}
+                {isVisible("language") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden xl:table-cell">Lang</th>}
+                {isVisible("newsletter") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden xl:table-cell">Mail</th>}
+                {isVisible("joined") && <th className="px-5 py-4 text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE] hidden lg:table-cell">Joined</th>}
+                {isVisible("actions") && <th className="px-5 py-4 text-right text-xs font-bold text-[#A1A1AA] uppercase tracking-widest border-b border-[#EEEEEE]">Actions</th>}
               </tr>
 
               {isFilterOpen && (

@@ -188,7 +188,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* --- TOP STATS GRID --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           label="Total Orders"
           value={formatDashboardCount(dashboardCounts.orders)}
@@ -216,7 +216,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* --- SECONDARY STATS --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MiniStat label="Pending Orders" value={`${pendingOrders}`} color="text-amber-600 bg-amber-50" />
         <MiniStat label="Canceled" value={`${canceledOrders}`} color="text-rose-600 bg-rose-50" />
         <MiniStat label="Avg Rating" value={`${avgRating} ★`} color="text-amber-600 bg-amber-50" />
@@ -249,8 +249,8 @@ const Dashboard: React.FC = () => {
                 <thead>
                   <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase bg-white border-b border-[#EEEEEE]">
                     <th className="px-5 py-3">Order</th>
-                    <th className="px-5 py-3">Items</th>
-                    <th className="px-5 py-3">Date</th>
+                    <th className="px-5 py-3 hidden sm:table-cell">Items</th>
+                    <th className="px-5 py-3 hidden md:table-cell">Date</th>
                     <th className="px-5 py-3 text-right">Total</th>
                     <th className="px-5 py-3 text-right">Status</th>
                   </tr>
@@ -260,8 +260,8 @@ const Dashboard: React.FC = () => {
                     Array.from({ length: 3 }).map((_, i) => (
                       <tr key={i} className="animate-pulse">
                         <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
-                        <td className="px-5 py-4"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
-                        <td className="px-5 py-4"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
+                        <td className="px-5 py-4 hidden sm:table-cell"><div className="h-4 w-24 bg-gray-100 rounded" /></td>
+                        <td className="px-5 py-4 hidden md:table-cell"><div className="h-4 w-16 bg-gray-100 rounded" /></td>
                         <td className="px-5 py-4"><div className="h-4 w-12 bg-gray-100 rounded ml-auto" /></td>
                         <td className="px-5 py-4"><div className="h-5 w-16 bg-gray-100 rounded-full ml-auto" /></td>
                       </tr>
@@ -548,13 +548,13 @@ const RecentOrderRow = ({ order }: { order: Order }) => {
       <td className="px-5 py-4">
         <p className="font-mono text-[10px] font-bold text-[#71717A]">{order.orderNumber}</p>
       </td>
-      <td className="px-5 py-4">
+      <td className="px-5 py-4 hidden sm:table-cell">
         <p className="font-bold truncate max-w-[120px] sm:max-w-[180px]">{itemNames}</p>
       </td>
-      <td className="px-5 py-4 text-[#A1A1AA]">
+      <td className="px-5 py-4 text-[#A1A1AA] hidden md:table-cell">
         {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
       </td>
-      <td className="px-5 py-4 font-bold text-right font-mono">AED {order.total.toLocaleString("en-IN")}</td>
+      <td className="px-5 py-4 font-bold text-right font-mono whitespace-nowrap">AED {order.total.toLocaleString("en-IN")}</td>
       <td className="px-5 py-4 text-right">
         <OrderStatusBadge status={order.status} />
       </td>

@@ -328,7 +328,7 @@ const OrderDetailsPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full text-[#18181B] bg-[#FDFDFD]">
       <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/admin/orders")}
@@ -350,31 +350,33 @@ const OrderDetailsPage: React.FC = () => {
             </div>
           </div>
           {order && (
-            <div className="flex items-center gap-2">
-              <OrderStatusBadge status={order.status} />
+            <div className="flex flex-col items-start sm:items-end gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2">
+                <OrderStatusBadge status={order.status} />
                 <button
                   onClick={handleDownloadAdminReceipt}
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
-                  title="Delivery details PDF (all orders)"
+                  className="p-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
+                  title="Delivery details PDF"
                 >
-                  <Download size={14} /> Delivery Details (PDF)
+                  <Download size={14} />
                 </button>
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 {canDownloadReceipt && (
                   <>
                     <button
                       onClick={handleDownloadPdf}
-                      className="flex items-center gap-2 px-3 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-gray-800"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-gray-800"
                       title="Payment receipt PDF"
                     >
-                      <Download size={14} /> Payment Receipt (PDF)
+                      <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (PDF)</span>
                     </button>
                     <button
                       onClick={handleDownloadImage}
-                      className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
                       title="Payment receipt Image"
                     >
-                      <Download size={14} /> Payment Receipt (Image)
+                      <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (IMG)</span>
                     </button>
                   </>
                 )}

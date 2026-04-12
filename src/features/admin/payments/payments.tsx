@@ -341,7 +341,7 @@ const DashboardView = ({
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-500 p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Collected" value={`AED ${totalCollected.toLocaleString("en-IN")}`} trend="+12.5%" trendType="up" sub="This Month" />
         <StatCard label="Success Rate" value={`${successRate}%`} trend="+0.4%" trendType="up" sub="Gateway health" />
         <StatCard label="Pending COD" value={`AED ${pendingCod.toLocaleString("en-IN")}`} trend="-5.1%" trendType="down" sub="Collection due" />
@@ -474,9 +474,9 @@ const PaymentsListView = ({
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={onToggleFilters}
-            className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold transition-all ${showFilters ? "bg-black text-white border-black" : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"}`}
+            className={`flex items-center gap-2 px-3 py-2 border rounded-xl text-xs font-bold transition-all ${showFilters ? "bg-black text-white border-black" : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"}`}
           >
-            <Filter size={14} /> {showFilters ? "Hide" : "Filter"}
+            <Filter size={14} /> <span className="hidden sm:inline">{showFilters ? "Hide" : "Filter"}</span>
           </button>
 
           {/* Column Visibility Dropdown */}
@@ -485,7 +485,7 @@ const PaymentsListView = ({
               onClick={onToggleColumns}
               className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-xs font-bold transition-all ${isColumnsOpen ? "bg-black text-white border-black" : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"}`}
             >
-              <Columns3 size={14} /> Columns
+              <Columns3 size={14} /> <span className="hidden sm:inline">Columns</span>
             </button>
             {isColumnsOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -514,7 +514,7 @@ const PaymentsListView = ({
             onClick={onExport}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEEEE] rounded-xl text-xs font-bold hover:bg-[#FAFAFA] transition-colors"
           >
-            <Download size={14} /> Export
+            <Download size={14} /> <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
@@ -535,10 +535,10 @@ const PaymentsListView = ({
               {isVisible("order") && <th className="px-5 py-4">Order</th>}
               {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
               {isVisible("amount") && <th className="px-5 py-4">Amount</th>}
-              {isVisible("method") && <th className="px-5 py-4">Method</th>}
+              {isVisible("method") && <th className="px-5 py-4 hidden md:table-cell">Method</th>}
               {isVisible("status") && <th className="px-5 py-4">Status</th>}
-              {isVisible("date") && <th className="px-5 py-4">Date</th>}
-              {isVisible("orderStatus") && <th className="px-5 py-4">Order Status</th>}
+              {isVisible("date") && <th className="px-5 py-4 hidden lg:table-cell">Date</th>}
+              {isVisible("orderStatus") && <th className="px-5 py-4 hidden xl:table-cell">Order Status</th>}
               <th className="px-5 py-4 text-right">Detail</th>
             </tr>
 
@@ -672,7 +672,7 @@ const PaymentsListView = ({
                     </td>
                   )}
                   {isVisible("method") && (
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 hidden md:table-cell">
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#71717A]">
                         <MethodIcon method={p.paymentMethod} />
                         {p.paymentMethod}
@@ -685,7 +685,7 @@ const PaymentsListView = ({
                     </td>
                   )}
                   {isVisible("date") && (
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 hidden lg:table-cell">
                       <p className="text-[11px] text-[#52525B] font-medium">
                         {new Date(p.date).toLocaleDateString("en-IN", {
                           day: "2-digit",

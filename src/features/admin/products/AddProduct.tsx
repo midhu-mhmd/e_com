@@ -274,29 +274,29 @@ const AddProduct: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#FDFDFD] p-6 md:p-12 space-y-8 animate-in slide-in-from-right duration-500">
             {/* HEADER */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate("/admin/products")}
-                        className="p-2 hover:bg-[#F4F4F5] rounded-full transition-colors"
+                        className="p-2 hover:bg-[#F4F4F5] rounded-full transition-colors flex-shrink-0"
                     >
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">
+                        <h1 className="text-xl md:text-2xl font-bold tracking-tight">
                             Add New Product
                         </h1>
-                        <p className="text-sm text-[#71717A]">
+                        <p className="text-xs md:text-sm text-[#71717A]">
                             Create a new item in your inventory.
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <button
                         type="button"
                         onClick={() => navigate("/admin/products")}
-                        className="px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 transition-all active:scale-95"
+                        className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl font-bold text-sm text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/80 transition-all active:scale-95"
                     >
                         Cancel
                     </button>
@@ -304,7 +304,7 @@ const AddProduct: React.FC = () => {
                         type="submit"
                         form="add-product-form"
                         disabled={status === "loading"}
-                        className="group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center gap-2.5 transition-all active:scale-95 border border-white/10"
+                        className="flex-1 sm:flex-none group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-white/10"
                     >
                         {status === "loading" ? (
                             <Loader2 size={18} className="animate-spin" />

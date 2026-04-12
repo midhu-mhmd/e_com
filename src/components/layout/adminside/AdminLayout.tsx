@@ -181,16 +181,16 @@ const AdminLayout: React.FC = () => {
 
             <AdminNotificationsDropdown />
 
-            <div className="flex items-center gap-3 border-l border-[#EEEEEE] pl-4 md:pl-6">
-              <div className="text-right hidden md:block">
+            <div className="flex items-center gap-2 border-l border-[#EEEEEE] pl-3 md:pl-6">
+              <div className="text-right hidden sm:block">
                 <p className="text-[12px] font-bold leading-none">
                   {user?.full_name || user?.email || "Admin"}
                 </p>
                 <p className="text-[10px] text-[#A1A1AA] uppercase tracking-wider mt-1">
-                  {user?.is_superuser ? "Proprietor" : "Staff"}
+                  {user?.$is_superuser ? "Proprietor" : "Staff"}
                 </p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#F4F4F5] border border-[#E5E5E5] flex items-center justify-center text-[10px] font-bold hover:bg-black hover:text-white transition-all cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-[#F4F4F5] border border-[#E5E5E5] flex items-center justify-center text-[10px] font-bold hover:bg-black hover:text-white transition-all cursor-pointer flex-shrink-0">
                 {(user?.full_name?.[0] || user?.email?.[0] || "A").toUpperCase()}
               </div>
             </div>
@@ -198,8 +198,8 @@ const AdminLayout: React.FC = () => {
         </header>
 
         {/* --- VIEWPORT --- */}
-        <main className="flex-1 overflow-y-auto bg-white pt-2 px-4 pb-4 md:pt-4 md:px-8 md:pb-8 lg:pt-6 lg:px-12 lg:pb-12">
-          <div className="max-w-6xl mx-auto">
+        <main className="flex-1 overflow-y-auto bg-white pt-4 px-4 pb-12 md:px-8 lg:px-10">
+          <div className="max-w-full lg:max-w-[1400px] mx-auto">
             <Outlet />
           </div>
         </main>

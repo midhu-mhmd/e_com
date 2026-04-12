@@ -28,6 +28,8 @@ import {
   LineChart,
   BarChart3,
   DollarSign,
+  Search,
+  X,
 } from "lucide-react";
 import { FEATURE_ORDERS_ANALYTICS } from "../../../config/constants";
 
@@ -418,7 +420,7 @@ const OrderManagement: React.FC = () => {
       )}
 
       {/* --- STATS --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <QuickStat
           label="Total Revenue"
           value={countsLoading ? "..." : `AED ${Number(orderCounts.total_revenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
@@ -454,7 +456,7 @@ const OrderManagement: React.FC = () => {
       {/* --- TABLE --- */}
       <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
         {/* Status Tabs */}
-        <div className="px-4 pt-4 flex items-center gap-1.5 border-b border-[#EEEEEE] pb-0">
+        <div className="px-4 pt-4 flex items-center gap-1.5 border-b border-[#EEEEEE] overflow-x-auto scrollbar-none snap-x active:cursor-grabbing pb-0">
           {([
             { key: "All" as const, label: "All" },
             { key: "PENDING" as const, label: "Pending" },
@@ -467,7 +469,7 @@ const OrderManagement: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => { setStatusFilter(tab.key); setPage(1); }}
-              className={`text-[11px] font-bold px-4 py-2.5 border-b-2 transition-all duration-200 -mb-px ${
+              className={`text-[11px] font-bold px-4 py-2.5 border-b-2 transition-all duration-200 -mb-px whitespace-nowrap snap-start ${
                 statusFilter === tab.key
                   ? "border-black text-black"
                   : "border-transparent text-[#71717A] hover:text-[#18181B]"
@@ -480,8 +482,18 @@ const OrderManagement: React.FC = () => {
 
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={14} />
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-[#F9F9F9] border border-[#EEEEEE] rounded-xl text-xs focus:bg-white focus:border-black outline-none transition-all"
+            />
+          </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen
@@ -501,7 +513,7 @@ const OrderManagement: React.FC = () => {
                   : "bg-white text-black border-[#EEEEEE] hover:bg-gray-50"
                   }`}
               >
-                <Columns3 size={14} /> Columns
+                <Columns3 size={14} /> <span className="hidden sm:inline">Columns</span>
               </button>
               {isColumnsOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-[#EEEEEE] shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -533,7 +545,7 @@ const OrderManagement: React.FC = () => {
               onClick={handleExport}
               className="flex items-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-[#FAFAFA] transition-colors"
             >
-              <Download size={14} /> Export
+              <Download size={14} /> <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         </div>
@@ -553,15 +565,15 @@ const OrderManagement: React.FC = () => {
                 {isVisible("index") && <th className="px-5 py-4 w-12 text-center">#</th>}
                 {isVisible("order") && <th className="px-5 py-4">Order / Date</th>}
                 {isVisible("customer") && <th className="px-5 py-4">Customer</th>}
-                {isVisible("items") && <th className="px-5 py-4">Items</th>}
+                {isVisible("items") && <th className="px-5 py-4 hidden md:table-cell">Items</th>}
                 {isVisible("total") && <th className="px-5 py-4">Total</th>}
-                {isVisible("payment") && <th className="px-5 py-4">Payment</th>}
+                {isVisible("payment") && <th className="px-5 py-4 hidden lg:table-cell">Payment</th>}
                 {isVisible("status") && <th className="px-5 py-4">Status</th>}
-                {isVisible("deliveryDate") && <th className="px-5 py-4">Delivery Date</th>}
-                {isVisible("deliverySlot") && <th className="px-5 py-4">Delivery Slot</th>}
-                {isVisible("city") && <th className="px-5 py-4">City</th>}
-                {isVisible("paymentMethod") && <th className="px-5 py-4">Pay Method</th>}
-                {isVisible("transactionId") && <th className="px-5 py-4">Transaction ID</th>}
+                {isVisible("deliveryDate") && <th className="px-5 py-4 hidden xl:table-cell">Delivery Date</th>}
+                {isVisible("deliverySlot") && <th className="px-5 py-4 hidden xl:table-cell">Delivery Slot</th>}
+                {isVisible("city") && <th className="px-5 py-4 hidden lg:table-cell">City</th>}
+                {isVisible("paymentMethod") && <th className="px-5 py-4 hidden lg:table-cell">Pay Method</th>}
+                {isVisible("transactionId") && <th className="px-5 py-4 hidden xl:table-cell">Transaction ID</th>}
                 {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
               </tr>
 
@@ -739,7 +751,7 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("items") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden md:table-cell">
                         <span className="text-xs font-bold text-[#52525B]">
                           {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                         </span>
@@ -755,7 +767,7 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("payment") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden lg:table-cell">
                         <PaymentBadge status={order.paymentStatus} />
                       </td>
                     )}
@@ -767,7 +779,7 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("deliveryDate") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden xl:table-cell">
                         <span className="text-xs text-[#52525B] font-medium">
                           {order.deliveryDate
                             ? new Date(order.deliveryDate).toLocaleDateString("en-IN", {
@@ -781,7 +793,7 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("deliverySlot") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden xl:table-cell">
                         <span className="text-xs text-[#52525B] font-medium">
                           {order.deliverySlot || "—"}
                         </span>
@@ -789,7 +801,7 @@ const OrderManagement: React.FC = () => {
                     )}
 
                     {isVisible("city") && (
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden lg:table-cell">
                         <span className="text-xs text-[#52525B] font-medium">
                           {order.shippingAddress.city || "—"}
                         </span>

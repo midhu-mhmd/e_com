@@ -267,27 +267,27 @@ const DeliveryBoysList: React.FC = () => {
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#18181B]">Delivery Boys</h1>
           <p className="text-xs text-[#A1A1AA] mt-0.5">
             {allBoys.length} registered delivery personnel
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-bold hover:bg-gray-800 transition-colors"
           >
-            <Plus size={14} /> Add Delivery Boy
+            <Plus size={14} /> Add Boy
           </button>
           <button
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#EEEEEE] text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+            className="p-2 sm:px-3 sm:py-2 flex items-center justify-center gap-2 rounded-lg border border-[#EEEEEE] text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
@@ -296,7 +296,7 @@ const DeliveryBoysList: React.FC = () => {
       <div className="bg-white border border-[#EEEEEE] rounded-2xl overflow-hidden">
         {/* Search bar */}
         <div className="p-4 border-b border-[#EEEEEE]">
-          <div className="relative max-w-xs">
+          <div className="relative w-full sm:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
             <input
               value={search}
@@ -351,8 +351,8 @@ const DeliveryBoysList: React.FC = () => {
                   <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3">Name / Contact</th>
                   <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3 hidden md:table-cell">Emirates</th>
                   <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Vehicle</th>
-                  <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3">Availability</th>
-                  <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3">Active</th>
+                  <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3 hidden lg:table-cell">Availability</th>
+                  <th className="text-left text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Active</th>
                   <th className="px-5 py-3"></th>
                 </tr>
               </thead>
@@ -400,7 +400,7 @@ const DeliveryBoysList: React.FC = () => {
                           {boy.delivery_profile?.vehicle_number || <span className="text-[#D4D4D8]">—</span>}
                         </span>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden lg:table-cell">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
                           boy.delivery_profile?.is_available
                             ? "bg-green-50 text-green-700 border border-green-100"
@@ -410,7 +410,7 @@ const DeliveryBoysList: React.FC = () => {
                           {boy.delivery_profile?.is_available ? "Available" : "Unavailable"}
                         </span>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 hidden sm:table-cell">
                         {boy.is_active
                           ? <CheckCircle2 size={15} className="text-emerald-500" />
                           : <XCircle size={15} className="text-rose-400" />
