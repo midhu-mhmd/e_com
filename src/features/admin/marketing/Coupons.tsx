@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Search, Filter, Download, ListFilter,
-    Eye, X, Tag, Box, IndianRupee, TrendingUp, Plus, Columns3,
-    Clock, Edit3, Trash2, MessageSquare, Calendar, User, Check, Gift, RotateCcw
+    Eye, EyeOff, X, Tag, Box, IndianRupee, TrendingUp, Plus, Columns3,
+    Clock, Trash2, MessageSquare, Calendar, User, Check, Gift, RotateCcw
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -22,6 +22,7 @@ import {
     softDeleteCouponRequest,
     restoreCouponRequest,
     deleteCouponRequest,
+    updateCouponRequest,
 } from "./couponsSlice";
 import type { Coupon } from "./couponsSlice";
 import { CouponFormModal } from "./CouponFormModal";
@@ -84,7 +85,6 @@ const CouponManagement: React.FC = () => {
     const debouncedSearch = useDebounce(searchTerm, 500);
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [couponToDelete, setCouponToDelete] = useState<number | null>(null);
     const [isHardDelete, setIsHardDelete] = useState(false);
@@ -144,12 +144,6 @@ const CouponManagement: React.FC = () => {
     };
 
     const handleAddCoupon = () => {
-        setEditingCoupon(null);
-        setIsFormModalOpen(true);
-    };
-
-    const handleEditCoupon = (coupon: Coupon) => {
-        setEditingCoupon(coupon);
         setIsFormModalOpen(true);
     };
 
@@ -162,6 +156,11 @@ const CouponManagement: React.FC = () => {
     const handleRestoreCoupon = (id: number) => {
         dispatch(restoreCouponRequest(id));
         toast.success("Coupon restored successfully!");
+    };
+
+    const handleToggleActive = (coupon: Coupon) => {
+        dispatch(updateCouponRequest({ id: coupon.id, payload: { is_active: !coupon.is_active } }));
+        toast.success(coupon.is_active ? "Coupon deactivated." : "Coupon activated.");
     };
 
     const handleHardDeleteCoupon = (id: number) => {
@@ -226,14 +225,6 @@ const CouponManagement: React.FC = () => {
                     <p className="text-[#71717A] text-sm mt-1">Manage discount codes and reward configurations.</p>
                 </div>
                 <div className="flex gap-3">
-                    {activeTab === "list" && (
-                        <button
-                            onClick={handleAddCoupon}
-                            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-[#222] transition-all shadow-sm"
-                        >
-                            <Plus size={14} /> New Coupon
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -519,11 +510,15 @@ const CouponManagement: React.FC = () => {
                                                             {!coupon.deleted_at ? (
                                                                 <>
                                                                     <button
-                                                                        onClick={() => handleEditCoupon(coupon)}
-                                                                        className="p-2 rounded-full hover:bg-gray-100 text-[#A1A1AA] hover:text-black transition-colors"
-                                                                        title="Edit Coupon"
+                                                                        onClick={() => handleToggleActive(coupon)}
+                                                                        className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${
+                                                                            coupon.is_active
+                                                                                ? "text-amber-500 hover:text-amber-700"
+                                                                                : "text-emerald-500 hover:text-emerald-700"
+                                                                        }`}
+                                                                        title={coupon.is_active ? "Deactivate" : "Activate"}
                                                                     >
-                                                                        <Edit3 size={16} />
+                                                                        {coupon.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleSoftDeleteCoupon(coupon.id)}
@@ -578,11 +573,7 @@ const CouponManagement: React.FC = () => {
                 </>
             )}
 
-            <CouponFormModal
-                isOpen={isFormModalOpen}
-                onClose={() => setIsFormModalOpen(false)}
-                coupon={editingCoupon}
-            />
+            {/* CouponFormModal hidden */}
 
             <ConfirmModal
                 open={isConfirmModalOpen}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Mail, Search, CheckCircle2, XCircle, Reply, Loader2, Eye } from "lucide-react";
+import { Mail, Search, CheckCircle2, XCircle, Reply, Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { supportApi, type ContactMessageDto } from "./supportApi";
 import { useToast } from "../../../components/ui/Toast";
 
@@ -7,63 +7,59 @@ const ContactMessagesPage: React.FC = () => {
   const toast = useToast();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [allItems, setAllItems] = React.useState<ContactMessageDto[]>([]);
+  const [items, setItems] = React.useState<ContactMessageDto[]>([]);
+  const [totalCount, setTotalCount] = React.useState(0);
   const [page, setPage] = React.useState(1);
-  const [limit] = React.useState(20);
-  const [q, setQ] = React.useState("");
+  const [limit, setLimit] = React.useState(10);
+  const [search, setSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [resolved, setResolved] = React.useState<"all" | "open" | "closed">("all");
   const [replying, setReplying] = React.useState<number | null>(null);
   const [viewing, setViewing] = React.useState<ContactMessageDto | null>(null);
   const [reply, setReply] = React.useState({ reply_message: "", mark_resolved: false });
+
+  // Debounce search input
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await supportApi.list({
+        search: debouncedSearch || undefined,
         is_resolved: resolved === "all" ? undefined : resolved === "closed",
-        limit: 1000,
-        offset: 0,
+        limit,
+        offset: (page - 1) * limit,
       });
-      setAllItems(data.results);
+      setItems(data.results);
+      setTotalCount(data.count);
     } catch (e: any) {
       setError(e?.response?.data?.detail || "Unable to load messages. Please ensure the admin list endpoint exists.");
-      setAllItems([]);
+      setItems([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  }, [resolved]);
+  }, [resolved, debouncedSearch, page, limit]);
 
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Client-side search filtering
-  const filteredItems = React.useMemo(() => {
-    if (!q.trim()) return allItems;
-    const lower = q.toLowerCase();
-    return allItems.filter(
-      (m) =>
-        m.name.toLowerCase().includes(lower) ||
-        m.email.toLowerCase().includes(lower) ||
-        m.subject.toLowerCase().includes(lower) ||
-        m.message.toLowerCase().includes(lower)
-    );
-  }, [allItems, q]);
-
-  // Paginate the filtered results
-  const count = filteredItems.length;
-  const items = React.useMemo(() => {
-    const start = (page - 1) * limit;
-    return filteredItems.slice(start, start + limit);
-  }, [filteredItems, page, limit]);
-
-  const totalPages = Math.max(1, Math.ceil(count / limit));
+  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+  const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const visibleEnd = Math.min(page * limit, totalCount);
 
   const handleResolve = async (m: ContactMessageDto, makeResolved: boolean) => {
     try {
       const updated = await supportApi.resolve(m.id, makeResolved);
-      setAllItems((prev) => prev.map((x) => (x.id === m.id ? updated : x)));
+      setItems((prev) => prev.map((x) => (x.id === m.id ? updated : x)));
       toast.show(makeResolved ? "Marked as resolved" : "Marked as open", "success");
     } catch (e: any) {
       toast.show(e?.response?.data?.detail || "Failed to update", "error");
@@ -80,7 +76,7 @@ const ContactMessagesPage: React.FC = () => {
       const res = await supportApi.reply(m.id, reply);
       toast.show(res?.detail || "Reply sent successfully", "success");
       if (reply.mark_resolved) {
-        setAllItems((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_resolved: true } : x)));
+        setItems((prev) => prev.map((x) => (x.id === m.id ? { ...x, is_resolved: true } : x)));
       }
       setReplying(null);
     } catch {
@@ -107,17 +103,16 @@ const ContactMessagesPage: React.FC = () => {
           <div className="relative flex-1 md:max-w-md">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A1A1AA]" />
             <input
-              value={q}
+              value={search}
               onChange={(e) => {
-                setQ(e.target.value);
-                setPage(1);
+                setSearch(e.target.value);
               }}
               placeholder="Search by name, email, subject or message..."
               className="w-full pl-10 pr-10 py-2.5 bg-[#F4F4F5] border border-transparent rounded-xl text-[13px] font-medium outline-none transition-all duration-200 focus:bg-white focus:border-[#D4D4D8] focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] placeholder:text-[#A1A1AA]"
             />
-            {q && (
+            {search && (
               <button
-                onClick={() => { setQ(""); setPage(1); }}
+                onClick={() => { setSearch(""); setPage(1); }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-[#E5E5E5] text-[#A1A1AA] hover:text-[#52525B] transition-colors"
               >
                 <XCircle size={14} />
@@ -151,13 +146,13 @@ const ContactMessagesPage: React.FC = () => {
 
           {/* Count Badge */}
           <div className="ml-auto flex items-center gap-2">
-            {q && (
+            {debouncedSearch && (
               <span className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wider">
-                {count} result{count !== 1 ? "s" : ""}
+                {totalCount} result{totalCount !== 1 ? "s" : ""}
               </span>
             )}
             <span className="text-[11px] font-bold text-white bg-black px-2.5 py-1 rounded-full min-w-[28px] text-center">
-              {count}
+              {totalCount}
             </span>
           </div>
         </div>
@@ -259,27 +254,39 @@ const ContactMessagesPage: React.FC = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#EEEEEE]">
+        <div className="p-4 border-t border-[#EEEEEE] flex flex-col sm:flex-row items-center justify-between gap-3 bg-white">
+          <div className="flex items-center gap-4">
+            <div className="text-[11px] text-[#A1A1AA] font-medium">
+              Showing {visibleStart}–{visibleEnd} of {totalCount} messages
+            </div>
+            <select
+              value={limit}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="p-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-xs outline-none focus:border-[#D4D4D8]"
+            >
+              <option value={10}>10 / page</option>
+              <option value={20}>20 / page</option>
+              <option value={50}>50 / page</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 text-sm font-bold rounded-md border border-[#E5E5E5] disabled:opacity-50"
+              disabled={page === 1 || loading}
+              className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Prev
+              <ChevronLeft size={14} />
             </button>
-            <div className="text-[11px] font-bold text-[#A1A1AA]">
-              Page {page} / {totalPages}
-            </div>
+            <span className="text-xs font-bold px-2">Page {page} of {totalPages}</span>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1.5 text-sm font-bold rounded-md border border-[#E5E5E5] disabled:opacity-50"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= totalPages || loading}
+              className="p-2 border border-[#EEEEEE] rounded-lg hover:bg-[#FAFAFA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Next
+              <ChevronRight size={14} />
             </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* View Drawer */}

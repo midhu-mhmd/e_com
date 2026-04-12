@@ -19,6 +19,7 @@ import {
     selectProductsError,
     selectProducts,
 } from "./productsSlice";
+import { productsApi, type CategoryDto } from "./productApi";
 import ProductLocationsField from "./ProductLocationsField";
 import DeliveryTiersManager from "./DeliveryTiersManager";
 import DiscountTiersManager from "./DiscountTiersManager";
@@ -72,26 +73,19 @@ const AddProduct: React.FC = () => {
     const navigate = useNavigate();
     const status = useSelector(selectProductsStatus);
     const error = useSelector(selectProductsError);
-    const products = useSelector(selectProducts);
     const submitted = useRef(false);
 
-    /* ── Categories extracted from existing products ── */
-    const uniqueCategories = React.useMemo(() => {
-        const map = new Map<number, string>();
-        products.forEach((p) => {
-            if (p.categoryId && p.categoryName) {
-                map.set(p.categoryId, p.categoryName);
-            }
-        });
-        return Array.from(map.entries()); // [[id, name], ...]
-    }, [products]);
+    /* ── Categories from API ── */
+    const [categories, setCategories] = useState<CategoryDto[]>([]);
+    const [catsLoading, setCatsLoading] = useState(false);
 
-    /* ── Fetch products once so categories dropdown is populated ── */
     useEffect(() => {
-        if (products.length === 0) {
-            dispatch(productsActions.fetchProductsRequest({ limit: 100 }));
-        }
-    }, [dispatch, products.length]);
+        setCatsLoading(true);
+        productsApi.listCategories()
+            .then((data) => setCategories(data))
+            .catch(() => {})
+            .finally(() => setCatsLoading(false));
+    }, []);
 
     /* ── react-hook-form ── */
     const {
@@ -429,19 +423,16 @@ const AddProduct: React.FC = () => {
                                 {...register("category", {
                                     required: "Category is required",
                                 })}
+                                disabled={catsLoading}
                                 className={inputClass}
                             >
-                                <option value="">— Select category —</option>
-                                {uniqueCategories.map(([id, name]) => (
-                                    <option key={id} value={id}>
-                                        {name}
+                                <option value="">{catsLoading ? "Loading..." : "— Select category —"}</option>
+                                {categories.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name}
                                     </option>
                                 ))}
                             </select>
-                            <p className="text-[10px] text-[#A1A1AA] mt-1">
-                                Categories are derived from existing products. You can also type
-                                an ID directly in the Django admin.
-                            </p>
                         </Field>
 
                         <Field label="Unit" error={errors.unit?.message}>

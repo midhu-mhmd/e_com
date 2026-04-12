@@ -382,7 +382,7 @@ const ProductProfile: React.FC = () => {
               </div>
 
               {/* Stock count */}
-              {product.is_available && product.stock > 0 && (
+              {product.is_available && product.stock > 0 && product.stock < 15 && (
                 <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
                   {product.stock} {product.stock === 1 ? "item" : "items"} in stock
                 </p>

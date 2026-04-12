@@ -234,7 +234,7 @@ const DeliveryBoysList: React.FC = () => {
     setError(null);
     try {
       const data = await deliveryApi.adminListDeliveryBoys();
-      setAllBoys(Array.isArray(data) ? data : data.results ?? []);
+      setAllBoys(data);
     } catch (e: any) {
       setError(e?.response?.data?.detail || e?.message || "Failed to load delivery boys");
     } finally {

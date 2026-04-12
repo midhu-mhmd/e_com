@@ -9,7 +9,7 @@ import {
     selectProductsError,
     selectProducts,
 } from "./productsSlice";
-import type { ProductDto } from "./productApi";
+import type { ProductDto, CategoryDto } from "./productApi";
 import { productsApi } from "./productApi";
 import DeliveryTiersManager from "./DeliveryTiersManager";
 import DiscountTiersManager from "./DiscountTiersManager";
@@ -93,28 +93,25 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
     const status = useSelector(selectProductsStatus);
     const backendError = useSelector(selectProductsError);
-    const products = useSelector(selectProducts);
 
-    /* ── Categories extracted from existing products ── */
-    const uniqueCategories = React.useMemo(() => {
-        const map = new Map<number, string>();
-        if (dto?.category && dto?.category_name) {
-            map.set(dto.category, dto.category_name);
-        }
-        products.forEach((p) => {
-            if (p.categoryId && p.categoryName) {
-                map.set(p.categoryId, p.categoryName);
-            }
-        });
-        return Array.from(map.entries()); // [[id, name], ...]
-    }, [products, dto]);
+    /* ── Categories from API ── */
+    const [categories, setCategories] = useState<CategoryDto[]>([]);
+    const [catsLoading, setCatsLoading] = useState(false);
 
-    /* ── Fetch products once so categories dropdown is populated ── */
     useEffect(() => {
-        if (products.length === 0) {
-            dispatch(productsActions.fetchProductsRequest({ limit: 100 }));
+        setCatsLoading(true);
+        productsApi.listCategories()
+            .then((data) => setCategories(data))
+            .catch(() => {})
+            .finally(() => setCatsLoading(false));
+    }, []);
+
+    // Once categories are loaded, re-apply the category value so the select finds the matching option
+    useEffect(() => {
+        if (categories.length > 0 && dto?.category) {
+            setValue("category", String(dto.category) as any);
         }
-    }, [dispatch, products.length]);
+    }, [categories]);
 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
@@ -125,7 +122,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         )
     );
 
-    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<ProductFormValues>({
+    const { register, handleSubmit, watch, reset, setValue, formState: { errors } } = useForm<ProductFormValues>({
         defaultValues: dto
     });
 
@@ -141,7 +138,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                 price: dto.price,
                 discount_price: dto.discount_price || "",
                 stock: dto.stock,
-                category: dto.category,
+                category: String(dto.category) as any,
                 sku: dto.sku || "",
                 is_available: dto.is_available,
                 expected_delivery_time: dto.expected_delivery_time || "",
@@ -368,18 +365,16 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                             <label className="text-xs font-bold uppercase text-[#A1A1AA]">Category</label>
                             <select
                                 {...register("category", { required: "Category is required" })}
+                                disabled={catsLoading}
                                 className={`w-full px-4 py-3 bg-[#FAFAFA] border-2 rounded-xl text-sm font-medium focus:ring-2 outline-none transition-all ${errors.category ? 'border-rose-200 focus:border-rose-400 focus:ring-rose-100' : 'border-transparent focus:border-black focus:ring-black/5'}`}
                             >
-                                <option value="">— Select category —</option>
-                                {uniqueCategories.map(([id, name]) => (
-                                    <option key={id} value={id}>
-                                        {name}
+                                <option value="">{catsLoading ? "Loading..." : "— Select category —"}</option>
+                                {categories.map((c) => (
+                                    <option key={c.id} value={String(c.id)}>
+                                        {c.name}
                                     </option>
                                 ))}
                             </select>
-                            <p className="text-[10px] text-[#A1A1AA] mt-1">
-                                Categories are derived from existing products. You can also type an ID directly in the Django admin.
-                            </p>
                             {errors.category && <p className="text-rose-500 text-[10px] font-bold">{errors.category.message}</p>}
                         </div>
                         <div className="space-y-2">

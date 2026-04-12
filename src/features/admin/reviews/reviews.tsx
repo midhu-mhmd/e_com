@@ -43,7 +43,6 @@ type ColumnKey =
   | "comment"
   | "visibility"
   | "date"
-  | "updated"
   | "actions";
 
 interface ColumnDef {
@@ -62,7 +61,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "comment", label: "Comment", icon: <MessageSquare size={12} />, defaultVisible: true },
   { key: "visibility", label: "Visibility", defaultVisible: true },
   { key: "date", label: "Created", icon: <Calendar size={12} />, defaultVisible: true },
-  { key: "updated", label: "Updated", icon: <Calendar size={12} />, defaultVisible: false },
   { key: "actions", label: "Actions", defaultVisible: true, alwaysVisible: true },
 ];
 
@@ -361,7 +359,7 @@ const ReviewsManagement: React.FC = () => {
                 {isVisible("comment") && <th className="px-5 py-4">Comment</th>}
                 {isVisible("visibility") && <th className="px-5 py-4">Visibility</th>}
                 {isVisible("date") && <th className="px-5 py-4">Created</th>}
-                {isVisible("updated") && <th className="px-5 py-4">Updated</th>}
+                {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
                 {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
               </tr>
 
@@ -374,16 +372,7 @@ const ReviewsManagement: React.FC = () => {
                   )}
                   {isVisible("product") && (
                     <td className="px-5 py-3">
-                      <div className="relative">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={12} />
-                        <input
-                          type="text"
-                          placeholder="Product..."
-                          value={searchTerm}
-                          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                          className="w-full pl-7 pr-2 py-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
-                        />
-                      </div>
+                      <div className="text-[10px] text-[#A1A1AA] italic">—</div>
                     </td>
                   )}
                   {isVisible("customer") && (
@@ -441,9 +430,6 @@ const ReviewsManagement: React.FC = () => {
                     <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
                   )}
                   {isVisible("date") && (
-                    <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
-                  )}
-                  {isVisible("updated") && (
                     <td className="px-5 py-3"><div className="text-[10px] text-[#A1A1AA] italic">—</div></td>
                   )}
                   {isVisible("actions") && (
@@ -537,18 +523,6 @@ const ReviewsManagement: React.FC = () => {
                       <td className="px-5 py-4">
                         <p className="text-[11px] text-[#52525B] font-medium">
                           {new Date(r.createdAt).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </td>
-                    )}
-
-                    {isVisible("updated") && (
-                      <td className="px-5 py-4">
-                        <p className="text-[11px] text-[#52525B] font-medium">
-                          {new Date(r.updatedAt).toLocaleDateString("en-IN", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",

@@ -453,6 +453,31 @@ const OrderManagement: React.FC = () => {
 
       {/* --- TABLE --- */}
       <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
+        {/* Status Tabs */}
+        <div className="px-4 pt-4 flex items-center gap-1.5 border-b border-[#EEEEEE] pb-0">
+          {([
+            { key: "All" as const, label: "All" },
+            { key: "PENDING" as const, label: "Pending" },
+            { key: "PAID" as const, label: "Paid" },
+            { key: "PROCESSING" as const, label: "Processing" },
+            { key: "SHIPPED" as const, label: "Shipped" },
+            { key: "DELIVERED" as const, label: "Delivered" },
+            { key: "CANCELLED" as const, label: "Cancelled" },
+          ] as { key: FilterOrderStatus; label: string }[]).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { setStatusFilter(tab.key); setPage(1); }}
+              className={`text-[11px] font-bold px-4 py-2.5 border-b-2 transition-all duration-200 -mb-px ${
+                statusFilter === tab.key
+                  ? "border-black text-black"
+                  : "border-transparent text-[#71717A] hover:text-[#18181B]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Toolbar */}
         <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
 

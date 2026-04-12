@@ -149,7 +149,7 @@ const ProductCard = memo(({
 
                         {/* Stock info — always reserve height to keep card size consistent */}
                         <p className="text-[10px] text-slate-400 font-medium h-4">
-                            {product.is_available && product.stock > 0 ? `${product.stock} in stock` : ""}
+                            {product.is_available && product.stock > 0 && product.stock < 15 ? `${product.stock} in stock` : ""}
                         </p>
 
                         {/* Buy Now Button */}

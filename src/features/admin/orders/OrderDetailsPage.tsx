@@ -156,6 +156,7 @@ const OrderDetailsPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "">("");
   const [statusNotes, setStatusNotes] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);  const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoyUser[]>([]);
+  const [deliveryBoysError, setDeliveryBoysError] = useState<string | null>(null);
   const [selectedBoyId, setSelectedBoyId] = useState<number | "">("");
   const [assigning, setAssigning] = useState(false);
   const [assignMsg, setAssignMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -265,7 +266,9 @@ const OrderDetailsPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    deliveryApi.adminListDeliveryBoys().then((res) => setDeliveryBoys(res.results ?? [])).catch(() => {});
+    deliveryApi.adminListDeliveryBoys()
+      .then((boys) => { setDeliveryBoys(boys); setDeliveryBoysError(null); })
+      .catch((e: any) => setDeliveryBoysError(e?.response?.data?.detail || e?.message || "Failed to load delivery boys"));
   }, []);
 
   const handleAssign = async () => {
@@ -278,7 +281,9 @@ const OrderDetailsPage: React.FC = () => {
       const raw = await ordersApi.details(order.id);
       setOrder((prev) => prev ? { ...prev, deliveryAssignment: raw.delivery_assignment ?? null, cancellationRequest: raw.cancellation_request ?? null } : prev);
     } catch (e: any) {
-      setAssignMsg({ type: "err", text: e?.response?.data?.detail ?? e?.message ?? "Assignment failed." });
+      const d = e?.response?.data;
+      const msg = d?.detail || d?.error || d?.message || (typeof d === "string" ? d : null) || e?.message || "Assignment failed.";
+      setAssignMsg({ type: "err", text: msg });
     } finally {
       setAssigning(false);
     }
@@ -785,10 +790,13 @@ const OrderDetailsPage: React.FC = () => {
                     <option value="">— Select a delivery boy —</option>
                     {deliveryBoys.map((boy) => (
                       <option key={boy.id} value={boy.id}>
-                        {boy.full_name} {boy.delivery_profile?.assigned_emirates_display?.length ? `(${boy.delivery_profile.assigned_emirates_display.join(", ")})` : ""}
+                        {boy.full_name || `${boy.first_name} ${boy.last_name}`.trim()} {boy.delivery_profile?.assigned_emirates_display?.length ? `(${boy.delivery_profile.assigned_emirates_display.join(", ")})` : ""}
                       </option>
                     ))}
                   </select>
+                  {deliveryBoysError && (
+                    <p className="text-[11px] text-rose-600 font-medium">{deliveryBoysError}</p>
+                  )}
                   <button
                     onClick={handleAssign}
                     disabled={!selectedBoyId || assigning}

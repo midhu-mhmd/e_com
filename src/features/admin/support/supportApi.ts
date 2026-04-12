@@ -12,7 +12,7 @@ export interface ContactMessageDto {
 }
 
 export type ContactQuery = {
-  q?: string;
+  search?: string;
   is_resolved?: boolean;
   page?: number;
   limit?: number;

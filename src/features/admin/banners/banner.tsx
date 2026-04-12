@@ -134,8 +134,10 @@ const BannersManagement: React.FC = () => {
         try {
             if (editingBanner) {
                 await dispatch(updateBanner({ id: editingBanner.id, payload: data })).unwrap();
+                dispatch(fetchBanners());
             } else {
                 await dispatch(addBanner(data)).unwrap();
+                dispatch(fetchBanners());
             }
             handleCloseModal();
         } catch (err: any) {

@@ -115,7 +115,7 @@ export interface OrderDto {
 export type OrdersQuery = {
     q?: string;
     status?: string;
-    payment_status?: string;
+    payment__status?: string;
     page?: number;
     limit?: number;
     offset?: number;

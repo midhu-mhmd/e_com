@@ -104,7 +104,7 @@ export interface DeliveryBoyUser {
   email: string;
   first_name: string;
   last_name: string;
-  full_name: string;
+  full_name?: string;
   phone_number: string | null;
   role: string;
   is_active: boolean;
@@ -208,9 +208,9 @@ export const deliveryApi = {
   },
 
   /** GET /users/delivery_boys/ */
-  adminListDeliveryBoys: async (params?: { limit?: number; offset?: number; search?: string }): Promise<{ results: DeliveryBoyUser[]; count: number }> => {
-    const res = await api.get<{ results: DeliveryBoyUser[]; count: number }>("/users/delivery_boys/", { params });
-    return res.data;
+  adminListDeliveryBoys: async (params?: { limit?: number; offset?: number; search?: string }): Promise<DeliveryBoyUser[]> => {
+    const res = await api.get<DeliveryBoyUser[] | { results: DeliveryBoyUser[]; count: number }>("/users/delivery_boys/", { params });
+    return Array.isArray(res.data) ? res.data : res.data.results ?? [];
   },
 
   /** POST /orders/:id/admin_assign_delivery_boy/ */

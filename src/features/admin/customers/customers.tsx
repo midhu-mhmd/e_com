@@ -65,7 +65,6 @@ type ColumnKey =
   | "googleLinked"
   | "language"
   | "newsletter"
-  | "lastLogin"
   | "joined"
   | "actions";
 
@@ -92,7 +91,6 @@ const COLUMNS: ColumnDef[] = [
   { key: "googleLinked", label: "Google", icon: <Globe size={12} />, defaultVisible: false },
   { key: "language", label: "Language", icon: <Globe size={12} />, defaultVisible: false },
   { key: "newsletter", label: "Newsletter", icon: <Bell size={12} />, defaultVisible: false },
-  { key: "lastLogin", label: "Last Login", icon: <Calendar size={12} />, defaultVisible: false },
   { key: "joined", label: "Joined", icon: <Calendar size={12} />, defaultVisible: true },
   { key: "actions", label: "Actions", defaultVisible: true, alwaysVisible: true },
 ];
@@ -300,7 +298,6 @@ const CustomerRow = memo(function CustomerRow({
   onView,
   onAction,
   joinedLabel,
-  lastLoginLabel,
 }: {
   customer: Customer;
   index: number;
@@ -310,7 +307,6 @@ const CustomerRow = memo(function CustomerRow({
   onView: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onAction: (actionType: string, id: string, payload?: any) => void;
   joinedLabel: string;
-  lastLoginLabel: string;
 }) {
   const navigate = useNavigate();
   const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -436,12 +432,6 @@ const CustomerRow = memo(function CustomerRow({
           ) : (
             <XCircle size={14} className="text-[#D4D4D8]" />
           )}
-        </td>
-      )}
-
-      {isVisible("lastLogin") && (
-        <td className="px-5 py-4">
-          <span className="text-xs text-[#52525B] font-medium">{lastLoginLabel}</span>
         </td>
       )}
 
@@ -1310,7 +1300,6 @@ const CustomerManagement: React.FC = () => {
                 {isVisible("googleLinked") && <th className="px-5 py-4">Google</th>}
                 {isVisible("language") && <th className="px-5 py-4">Language</th>}
                 {isVisible("newsletter") && <th className="px-5 py-4">Newsletter</th>}
-                {isVisible("lastLogin") && <th className="px-5 py-4">Last Login</th>}
                 {isVisible("joined") && <th className="px-5 py-4">Joined</th>}
                 {isVisible("actions") && <th className="px-5 py-4 text-right">Actions</th>}
               </tr>
@@ -1433,11 +1422,6 @@ const CustomerManagement: React.FC = () => {
                       <div className="text-[10px] text-[#A1A1AA] italic">—</div>
                     </td>
                   )}
-                  {isVisible("lastLogin") && (
-                    <td className="px-5 py-3">
-                      <div className="text-[10px] text-[#A1A1AA] italic">—</div>
-                    </td>
-                  )}
                   {isVisible("joined") && (
                     <td className="px-5 py-3">
                       <div className="text-[10px] text-[#A1A1AA] italic">—</div>
@@ -1495,7 +1479,6 @@ const CustomerManagement: React.FC = () => {
                       onView={onViewCustomer}
                       onAction={onAction}
                       joinedLabel={fd?.joined ?? "—"}
-                      lastLoginLabel={fd?.lastLogin ?? "Never"}
                     />
                   );
                 })}
