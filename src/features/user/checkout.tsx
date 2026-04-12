@@ -138,10 +138,7 @@ const CheckoutPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
 
-  const [deliveryDate, setDeliveryDate] = useState(() => {
-    // Default to UAE today
-    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
-  });
+  const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [deliverySlot, setDeliverySlot] = useState<number | "">("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [availableSlots, setAvailableSlots] = useState<DeliverySlotDto[]>([]);
@@ -335,8 +332,9 @@ const CheckoutPage: React.FC = () => {
     ? parseAmount(checkoutSummary.final_total)
     : Number((cartTotal + effectiveTip).toFixed(2));
 
-  // Min date = today (UAE time)
-  const minDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
+  // Min date = earliest delivery date from estimation, or UAE today as fallback
+  const uaeTodayDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
+  const minDate = estimation?.estimated_delivery_date ?? uaeTodayDate;
 
   // ─── Fetch Available Slots ───
   useEffect(() => {
@@ -956,10 +954,10 @@ const CheckoutPage: React.FC = () => {
                     </p>
                   </div>
                   <p className="text-sm font-black text-slate-900">
-                    {estimation.max_delivery_days} {estimation.max_delivery_days === 1 ? "day" : "days"} delivery time
+                    {estimation.max_delivery_days === 0 ? "Same day delivery" : `${estimation.max_delivery_days} ${estimation.max_delivery_days === 1 ? "day" : "days"} delivery time`}
                   </p>
                   <p className="text-xs text-amber-700">
-                    Minimum delivery date is {minDate === new Date(Date.now() + 86400000).toISOString().split("T")[0] ? "tomorrow" : `in ${deliveryDaysNeeded} days`}
+                    {estimation.max_delivery_days === 0 ? "Available for delivery today" : estimation.max_delivery_days === 1 ? "Minimum delivery date is tomorrow" : `Minimum delivery date is in ${estimation.max_delivery_days} days`}
                   </p>
                 </div>
 
@@ -993,10 +991,14 @@ const CheckoutPage: React.FC = () => {
                   type="date"
                   value={deliveryDate}
                   min={minDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val && val < minDate) return;
+                    setDeliveryDate(val);
+                  }}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
                 />
-                <p className="text-[10px] text-slate-400">Earliest: {minDate}</p>
+                <p className="text-[10px] text-slate-400">Earliest: {estimationLoading ? "…" : minDate}</p>
               </div>
 
               {/* Slot */}
@@ -1031,9 +1033,9 @@ const CheckoutPage: React.FC = () => {
                     </>
                   )}
                 </div>
-                {availableSlots.length === 0 && !loadingSlots && deliveryDate === minDate && (
+                {availableSlots.length === 0 && !loadingSlots && !!deliveryDate && (
                   <p className="text-[10px] font-bold text-rose-500 mt-1">
-                    All delivery slots for today have passed. Please select tomorrow or a future date.
+                    No available slots for this date. Please select a different date.
                   </p>
                 )}
                 {slotsError && (

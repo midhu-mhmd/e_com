@@ -70,7 +70,7 @@ export interface DashboardAnalyticsDto {
 
 /* ── Delivery Estimation DTO ── */
 export interface DeliveryEstimationDto {
-    earliest_delivery_date: string;
+    estimated_delivery_date: string;
     max_delivery_days: number;
     items_breakdown: Array<{
         product_id: number;
@@ -123,6 +123,7 @@ export interface DeliverySlotDto {
     start_time_display: string;
     end_time_display: string;
     sort_order: number;
+    is_active: boolean;
 }
 
 /* --- Available Slots Response --- */
@@ -354,6 +355,16 @@ export const ordersApi = {
 
     deleteSlot: async (id: number): Promise<void> => {
         await api.delete(`/orders/delivery-slots/${id}/`);
+    },
+
+    activateSlot: async (id: number): Promise<DeliverySlotDto> => {
+        const res = await api.post<DeliverySlotDto>(`/orders/delivery-slots/${id}/activate/`);
+        return res.data;
+    },
+
+    deactivateSlot: async (id: number): Promise<DeliverySlotDto> => {
+        const res = await api.post<DeliverySlotDto>(`/orders/delivery-slots/${id}/deactivate/`);
+        return res.data;
     },
 
     /* ── Delivery Overrides (Admin) ── */

@@ -45,6 +45,22 @@ export const RewardSettings: React.FC = () => {
         formState: { isDirty },
     } = useForm<RewardConfigFormData>({
         resolver: zodResolver(rewardConfigSchema) as any,
+        defaultValues: {
+            first_order_discount_type: "percentage",
+            first_order_discount_value: 0,
+            first_order_min_amount: 0,
+            first_order_validity_days: 1,
+            referral_discount_type: "percentage",
+            referral_discount_value: 0,
+            referral_min_amount: 0,
+            referral_validity_days: 1,
+            referral_usage_limit: 1,
+            referrer_discount_value: 0,
+            referrer_validity_days: 1,
+            max_discount_percentage: null,
+            is_referral_active: false,
+            is_first_order_active: false,
+        },
     });
 
     useEffect(() => {

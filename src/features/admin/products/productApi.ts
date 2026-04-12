@@ -22,8 +22,7 @@ export interface DiscountTierDto {
   id?: number;
   product?: number;
   min_quantity: number;
-  discount_percentage?: number;
-  discount_price?: string;
+  discount_percentage: string;
 }
 
 /* ── Delivery Tier DTO ── */
@@ -32,9 +31,6 @@ export interface DeliveryTierDto {
   product?: number;
   min_quantity: number;
   delivery_days: number;
-  name?: string;
-  cost?: string;
-  estimated_days?: string;
 }
 
 /* ── Product DTO returned by backend ── */
@@ -73,7 +69,9 @@ export type ProductsQuery = {
   category_slug?: string;
   min_price?: number;
   max_price?: number;
-  ordering?: "price" | "-price" | "created_at";
+  is_available?: boolean;
+  available_emirates?: string;
+  ordering?: "price" | "-price" | "created_at" | "-created_at" | "stock" | "-stock";
   page?: number;
   limit?: number;
   offset?: number;
@@ -230,5 +228,38 @@ export const productsApi = {
 
   deleteDiscountTier: async (id: number): Promise<void> => {
     await api.delete(`/products/discount-tiers/${id}/`);
+  },
+
+  /* ── Product Images ── */
+  addProductImage: async (data: FormData): Promise<ProductImageDto> => {
+    const res = await api.post<ProductImageDto>("/products/product-images/", data, { timeout: 60000 });
+    return res.data;
+  },
+
+  updateProductImage: async (id: number, data: FormData | { is_feature: boolean }): Promise<ProductImageDto> => {
+    const res = await api.patch<ProductImageDto>(`/products/product-images/${id}/`, data);
+    return res.data;
+  },
+
+  deleteProductImage: async (id: number): Promise<void> => {
+    await api.delete(`/products/product-images/${id}/`);
+  },
+
+  /* ── Product Videos ── */
+  addProductVideo: async (data: FormData | { product: number; video_url: string; title?: string }): Promise<ProductVideoDto> => {
+    const isFormData = data instanceof FormData;
+    const res = await api.post<ProductVideoDto>("/products/product-videos/", data, {
+      ...(isFormData && { timeout: 60000 }),
+    });
+    return res.data;
+  },
+
+  updateProductVideo: async (id: number, data: Partial<ProductVideoDto> | FormData): Promise<ProductVideoDto> => {
+    const res = await api.patch<ProductVideoDto>(`/products/product-videos/${id}/`, data);
+    return res.data;
+  },
+
+  deleteProductVideo: async (id: number): Promise<void> => {
+    await api.delete(`/products/product-videos/${id}/`);
   },
 };

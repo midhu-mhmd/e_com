@@ -9,7 +9,7 @@ import type { Category } from "./productsSlice";
 
 /* ── Map backend DTO → UI Product ── */
 function mapProductDtoToProduct(dto: ProductDto): Product {
-    const featureImage =
+    const fallbackImage =
         dto.images?.find((img) => img.is_feature) ?? dto.images?.[0];
 
     let status: Product["status"] = "Active";
@@ -34,7 +34,7 @@ function mapProductDtoToProduct(dto: ProductDto): Product {
         stock: dto.stock,
         isAvailable: dto.is_available,
         status,
-        imageUrl: featureImage?.image ?? dto.image ?? null,
+        imageUrl: dto.image ?? fallbackImage?.image ?? null,
         images: Array.isArray(dto.images)
             ? dto.images.map((img) => ({
                 id: img.id,

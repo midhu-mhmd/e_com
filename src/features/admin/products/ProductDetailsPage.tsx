@@ -1,7 +1,15 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Package, Tag, Clock, Star, Edit3, Truck, Image as ImageIcon, Video } from "lucide-react";
+import { ChevronLeft, Package, Tag, Clock, Star, Edit3, Truck, Image as ImageIcon, Video, Play } from "lucide-react";
 import { productsApi, type ProductDto } from "./productApi";
+import MediaLightbox, { type MediaItem } from "./MediaLightbox";
+
+function getBestImage(dto: ProductDto): string | null {
+  if (dto.image) return dto.image;
+  const featured = dto.images?.find((img) => img.is_feature);
+  if (featured) return featured.image;
+  return dto.images?.[0]?.image || null;
+}
 
 function mapDto(dto: ProductDto) {
   return {
@@ -18,7 +26,7 @@ function mapDto(dto: ProductDto) {
     sku: dto.sku,
     stock: dto.stock,
     isAvailable: dto.is_available,
-    imageUrl: dto.image,
+    imageUrl: getBestImage(dto),
     images: dto.images.map((img) => ({ id: img.id, url: img.image, isFeature: img.is_feature })),
     videos: dto.videos.map((v) => ({ id: v.id, url: v.video_url || v.video_file || "", title: v.title })),
     averageRating: dto.average_rating,
@@ -52,6 +60,7 @@ const ProductDetailsPage: React.FC = () => {
   const [product, setProduct] = useState<ReturnType<typeof mapDto> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ items: MediaItem[]; index: number } | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -196,11 +205,25 @@ const ProductDetailsPage: React.FC = () => {
                 <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 flex items-center gap-2"><ImageIcon size={12} /> Images</p>
                   <div className="flex flex-wrap gap-3">
-                    {product.images.map((img) => (
-                      <div key={img.id} className="w-28 h-28 rounded-xl border border-[#EEEEEE] overflow-hidden">
-                        <img src={img.url} alt={product.name} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
+                    {product.images.map((img, idx) => {
+                      const items: MediaItem[] = product.images.map(i => ({ id: i.id, type: "image", src: i.url }));
+                      return (
+                        <button
+                          key={img.id}
+                          type="button"
+                          onClick={() => setLightbox({ items, index: idx })}
+                          className="relative w-28 h-28 rounded-xl border border-[#EEEEEE] overflow-hidden group focus:outline-none focus:ring-2 focus:ring-black"
+                        >
+                          <img src={img.url} alt={product.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play size={20} className="text-white" fill="white" />
+                          </div>
+                          {img.isFeature && (
+                            <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">Feature</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -208,13 +231,35 @@ const ProductDetailsPage: React.FC = () => {
               {!!product.videos.length && (
                 <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 flex items-center gap-2"><Video size={12} /> Videos</p>
-                  <ul className="list-disc pl-5 text-sm">
-                    {product.videos.map((v) => (
-                      <li key={v.id} className="mb-1">
-                        {v.title || "Video"} — <a href={v.url} className="text-blue-600 hover:underline" target="_blank" rel="noreferrer">Open</a>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex flex-col gap-2">
+                    {product.videos.map((v, idx) => {
+                      const items: MediaItem[] = product.videos
+                        .filter(vi => !!vi.url)
+                        .map(vi => ({ id: vi.id, type: "video", src: vi.url, title: vi.title || undefined }));
+                      const itemIdx = items.findIndex(i => i.id === v.id);
+                      return (
+                        <div key={v.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <span className="text-sm font-medium text-slate-700 truncate">{v.title || "Product Video"}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {v.url && itemIdx !== -1 && (
+                              <button
+                                type="button"
+                                onClick={() => setLightbox({ items, index: itemIdx })}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-zinc-800 transition-colors"
+                              >
+                                <Play size={12} fill="white" /> Play
+                              </button>
+                            )}
+                            {v.url && (
+                              <a href={v.url} target="_blank" rel="noreferrer" className="text-xs text-cyan-600 font-medium hover:underline">
+                                Open ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -271,6 +316,16 @@ const ProductDetailsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Media Lightbox */}
+      {lightbox && (
+        <MediaLightbox
+          items={lightbox.items}
+          index={lightbox.index}
+          onClose={() => setLightbox(null)}
+          onChange={(i) => setLightbox(prev => prev ? { ...prev, index: i } : null)}
+        />
+      )}
     </div>
   );
 };

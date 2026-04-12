@@ -10,6 +10,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { type ProductDto } from "../admin/products/productApi";
 
+/** Main image field → feature gallery image → first gallery image */
+const getBestProductImage = (product: ProductDto): string => {
+    if (product.image) return product.image;
+    const featured = product.images?.find((img) => img.is_feature);
+    if (featured) return featured.image;
+    return product.images?.[0]?.image || "";
+};
+
 const WishlistPage: React.FC = () => {
     const { t } = useTranslation("common");
     const [wishlistItems, setWishlistItems] = useState<ProductDto[]>([]);
@@ -119,7 +127,7 @@ const WishlistPage: React.FC = () => {
                                     {/* Image */}
                                     <div className="relative aspect-[4/5] bg-slate-50 rounded-2xl overflow-hidden mb-4">
                                         <img
-                                            src={product.image || "https://via.placeholder.com/400x500?text=Fresh+Catch"}
+                                            src={getBestProductImage(product) || "https://via.placeholder.com/400x500?text=Fresh+Catch"}
                                             alt={product.name}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         />

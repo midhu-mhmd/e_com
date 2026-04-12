@@ -1,19 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle, Save } from "lucide-react";
-import {
-    productsActions,
-    selectProductsStatus,
-    selectProductsError,
-} from "./productsSlice";
+import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle, Save, Plus, Link as LinkIcon, Eye } from "lucide-react";
 import type { ProductDto, CategoryDto } from "./productApi";
 import { productsApi } from "./productApi";
 import DeliveryTiersManager from "./DeliveryTiersManager";
 import DiscountTiersManager from "./DiscountTiersManager";
 import ProductLocationsField from "./ProductLocationsField";
 import { extractProductLocationValues } from "./productLocationOptions";
+import MediaLightbox, { type MediaItem } from "./MediaLightbox";
 
 /* ─────────────────────────────────────────────
    Extended Interface for Form Handling
@@ -86,12 +81,10 @@ interface EditProductFormProps {
 }
 
 const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => {
-    const dispatch = useDispatch();
     const navigate = useNavigate();
-    const submitted = useRef(false);
 
-    const status = useSelector(selectProductsStatus);
-    const backendError = useSelector(selectProductsError);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
     /* ── Categories from API ── */
     const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -114,7 +107,16 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
     const [existingImages, setExistingImages] = useState(dto.images || []);
     const [existingVideos, setExistingVideos] = useState(dto.videos || []);
+    const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
+    const [removedVideoIds, setRemovedVideoIds] = useState<number[]>([]);
     const [validationError, setValidationError] = useState<string | null>(null);
+    const [newVideoUrl, setNewVideoUrl] = useState("");
+    const [newVideoTitle, setNewVideoTitle] = useState("");
+
+    /* ── Lightbox ── */
+    const [lightbox, setLightbox] = useState<{ items: MediaItem[]; index: number } | null>(null);
+
+    const openLightbox = (items: MediaItem[], index: number) => setLightbox({ items, index });
     const [selectedLocations, setSelectedLocations] = useState<string[]>(() =>
         extractProductLocationValues(
             dto.available_locations ?? dto.available_emirates ?? dto.service_areas
@@ -144,6 +146,8 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
             });
             setExistingImages(dto.images || []);
             setExistingVideos(dto.videos || []);
+            setRemovedImageIds([]);
+            setRemovedVideoIds([]);
             setSelectedLocations(
                 extractProductLocationValues(
                     dto.available_locations ?? dto.available_emirates ?? dto.service_areas
@@ -152,70 +156,87 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
         }
     }, [dto, reset]);
 
-    useEffect(() => {
-        dispatch(productsActions.resetStatus());
-        return () => { dispatch(productsActions.resetStatus()); };
-    }, [dispatch]);
-
-    useEffect(() => {
-        if (status === "succeeded" && submitted.current) {
-            navigate("/admin/products");
-        }
-    }, [status, navigate]);
-
     // Handle Frontend Validation failures to ensure silent blocking doesn't happen
     const onInvalid = (errors: any) => {
         console.error("Form Validation Errors:", errors);
         setValidationError("Please fill out all required fields correctly.");
     };
 
-    const onSubmit = (data: ProductFormValues) => {
+    const onSubmit = async (data: ProductFormValues) => {
         setValidationError(null);
-        submitted.current = true;
-        const formData = new FormData();
+        setSaveError(null);
+        setIsSaving(true);
+        try {
+            const formData = new FormData();
 
-        // 1. Append Standard Text & Number Fields
-        formData.append("name", data.name || "");
-        formData.append("description", data.description || "");
-        formData.append("category", String(data.category));
-        formData.append("price", String(data.price));
-        formData.append("stock", String(data.stock));
-        formData.append("is_available", data.is_available ? "True" : "False");
+            // Product fields
+            formData.append("name", data.name || "");
+            formData.append("description", data.description || "");
+            formData.append("category", String(data.category));
+            formData.append("price", String(data.price));
+            formData.append("stock", String(data.stock));
+            formData.append("is_available", data.is_available ? "True" : "False");
+            if (data.discount_price) formData.append("discount_price", String(data.discount_price));
+            else formData.append("discount_price", "");
+            if (data.unit) formData.append("unit", String(data.unit));
+            if (data.sku) formData.append("sku", data.sku);
+            if (data.expected_delivery_time) formData.append("expected_delivery_time", data.expected_delivery_time);
+            formData.append("available_emirates", JSON.stringify(selectedLocations));
 
-        // Safely handle discount price so backend doesn't crash on empty string
-        if (data.discount_price) {
-            formData.append("discount_price", String(data.discount_price));
-        } else {
-            formData.append("discount_price", "");
+            // Main image
+            if (data.image && data.image instanceof FileList && data.image.length > 0) {
+                formData.append("image", data.image[0]);
+            }
+
+            // 1. Update product
+            await productsApi.update(productId, formData);
+
+            // 2. Delete removed gallery images
+            await Promise.all(removedImageIds.map(id => productsApi.deleteProductImage(id)));
+
+            // 3. Upload new gallery images
+            if (data.new_gallery_images && data.new_gallery_images.length > 0) {
+                await Promise.all(Array.from(data.new_gallery_images).map(file => {
+                    const fd = new FormData();
+                    fd.append("product", String(productId));
+                    fd.append("image", file);
+                    return productsApi.addProductImage(fd);
+                }));
+            }
+
+            // 4. Delete removed videos
+            await Promise.all(removedVideoIds.map(id => productsApi.deleteProductVideo(id)));
+
+            // 5. Upload new video files
+            if (data.new_videos && data.new_videos.length > 0) {
+                await Promise.all(Array.from(data.new_videos).map(file => {
+                    const fd = new FormData();
+                    fd.append("product", String(productId));
+                    fd.append("video_file", file);
+                    return productsApi.addProductVideo(fd);
+                }));
+            }
+
+            // 6. Add new video URL if provided
+            if (newVideoUrl.trim()) {
+                await productsApi.addProductVideo({
+                    product: productId,
+                    video_url: newVideoUrl.trim(),
+                    title: newVideoTitle.trim() || undefined,
+                });
+            }
+
+            navigate("/admin/products");
+        } catch (err: any) {
+            const msg = err?.response?.data?.detail
+                || err?.response?.data?.error
+                || (typeof err?.response?.data === 'string' ? err.response.data : null)
+                || err?.message
+                || "Failed to save changes";
+            setSaveError(msg);
+        } finally {
+            setIsSaving(false);
         }
-
-        if (data.unit) formData.append("unit", String(data.unit));
-        if (data.sku) formData.append("sku", data.sku);
-        if (data.expected_delivery_time) formData.append("expected_delivery_time", data.expected_delivery_time);
-
-        formData.append("available_emirates", JSON.stringify(selectedLocations));
-
-        formData.append("retained_image_ids", JSON.stringify(existingImages.map(img => img.id)));
-        formData.append("retained_video_ids", JSON.stringify(existingVideos.map(vid => vid.id)));
-
-        // 3. Append Files (Checking if it's a FileList and not the existing URL string)
-        if (data.image && data.image instanceof FileList && data.image.length > 0) {
-            formData.append("image", data.image[0]);
-        }
-
-        if (data.new_gallery_images && data.new_gallery_images.length > 0) {
-            Array.from(data.new_gallery_images).forEach((file) => {
-                formData.append("uploaded_images", file);
-            });
-        }
-
-        if (data.new_videos && data.new_videos.length > 0) {
-            Array.from(data.new_videos).forEach((file) => {
-                formData.append("uploaded_videos", file);
-            });
-        }
-
-        dispatch(productsActions.updateProductRequest({ id: productId, data: formData }));
     };
 
     const toggleLocation = (location: string) => {
@@ -252,26 +273,26 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                     <button
                         type="submit"
                         form="edit-product-form"
-                        disabled={status === "loading"}
+                        disabled={isSaving}
                         className="flex-1 sm:flex-none group relative px-7 py-2.5 bg-black hover:bg-zinc-900 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-black/20 disabled:opacity-50 flex items-center justify-center gap-2.5 transition-all active:scale-95 border border-white/10"
                     >
-                        {status === "loading" ? (
+                        {isSaving ? (
                             <Loader2 size={18} className="animate-spin" />
                         ) : (
                             <Save size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
                         )}
-                        <span className="relative">{status === "loading" ? "Saving..." : "Save Product"}</span>
+                        <span className="relative">{isSaving ? "Saving..." : "Save Product"}</span>
                     </button>
                 </div>
             </div>
 
             {/* Error Displays */}
-            {(backendError || validationError) && (
+            {(saveError || validationError) && (
                 <div className="max-w-4xl mx-auto bg-rose-50 text-rose-700 p-4 rounded-xl text-sm font-medium border border-rose-200 flex items-start gap-3">
                     <AlertCircle size={18} className="mt-0.5 shrink-0" />
                     <div>
                         <p className="font-bold">Failed to save changes</p>
-                        <p className="opacity-90">{validationError || (typeof backendError === 'string' ? backendError : JSON.stringify(backendError))}</p>
+                        <p className="opacity-90">{validationError || saveError}</p>
                     </div>
                 </div>
             )}
@@ -385,7 +406,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                                 <option value="">— Select unit —</option>
                                 <option value="piece">Piece</option>
                                 <option value="kg">Kg</option>
-                                <option value="Gram">100g</option>
+                                <option value="g">100g</option>
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -441,18 +462,33 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                         {/* Existing Images */}
                         {existingImages.length > 0 && (
                             <div className="flex gap-4 overflow-x-auto pb-2">
-                                {existingImages.map((img) => (
-                                    <div key={img.id} className="relative w-24 h-24 rounded-xl border border-slate-200 overflow-hidden shrink-0 group">
-                                        <img src={img.image} alt="Gallery" className="w-full h-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => setExistingImages(prev => prev.filter(i => i.id !== img.id))}
-                                            className="absolute top-1 right-1 bg-white/90 text-rose-500 p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                ))}
+                                {existingImages.map((img, idx) => {
+                                    const galleryItems: MediaItem[] = existingImages.map(i => ({ id: i.id, type: "image", src: i.image }));
+                                    return (
+                                        <div key={img.id} className="relative w-24 h-24 rounded-xl border border-slate-200 overflow-hidden shrink-0 group">
+                                            <img src={img.image} alt="Gallery" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openLightbox(galleryItems, idx)}
+                                                    className="bg-white/90 text-slate-700 p-1.5 rounded-md"
+                                                >
+                                                    <Eye size={13} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setRemovedImageIds(prev => [...prev, img.id]);
+                                                        setExistingImages(prev => prev.filter(i => i.id !== img.id));
+                                                    }}
+                                                    className="bg-white/90 text-rose-500 p-1.5 rounded-md"
+                                                >
+                                                    <Trash2 size={13} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -473,16 +509,33 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                         {existingVideos.length > 0 && (
                             <div className="flex flex-col gap-2">
-                                {existingVideos.map((vid) => (
-                                    <div key={vid.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <a href={vid.video_url || vid.video_file || undefined} target="_blank" rel="noreferrer" className="text-sm font-medium text-cyan-600 hover:underline truncate">
-                                            {vid.title || "Product Video"}
-                                        </a>
-                                        <button type="button" onClick={() => setExistingVideos(prev => prev.filter(v => v.id !== vid.id))} className="text-rose-500 p-1 hover:bg-rose-50 rounded-lg transition-colors">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
+                                {existingVideos.map((vid, idx) => {
+                                    const videoItems: MediaItem[] = existingVideos
+                                        .filter(v => v.video_url || v.video_file)
+                                        .map(v => ({ id: v.id, type: "video", src: (v.video_url || v.video_file)!, title: v.title || undefined }));
+                                    const videoIdx = videoItems.findIndex(v => v.id === vid.id);
+                                    return (
+                                        <div key={vid.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <span className="text-sm font-medium text-slate-700 truncate">{vid.title || "Product Video"}</span>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                {(vid.video_url || vid.video_file) && videoIdx !== -1 && (
+                                                    <button type="button" onClick={() => openLightbox(videoItems, videoIdx)} className="text-slate-500 p-1.5 hover:bg-slate-200 rounded-lg transition-colors">
+                                                        <Eye size={15} />
+                                                    </button>
+                                                )}
+                                                <a href={(vid.video_url || vid.video_file) || undefined} target="_blank" rel="noreferrer" className="text-cyan-600 p-1.5 hover:bg-slate-200 rounded-lg transition-colors text-sm font-medium">
+                                                    ↗
+                                                </a>
+                                                <button type="button" onClick={() => {
+                                                    setRemovedVideoIds(prev => [...prev, vid.id]);
+                                                    setExistingVideos(prev => prev.filter(v => v.id !== vid.id));
+                                                }} className="text-rose-500 p-1.5 hover:bg-rose-50 rounded-lg transition-colors">
+                                                    <Trash2 size={15} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -492,12 +545,43 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
                             <p className="text-sm font-bold text-cyan-600">Select new videos to upload</p>
                             <p className="text-xs text-slate-400 mt-1">{(watch("new_videos")?.length || 0)} files selected</p>
                         </div>
+
+                        {/* Add Video by URL */}
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold uppercase text-[#A1A1AA] flex items-center gap-1"><LinkIcon size={12} /> Or add by URL</p>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="text"
+                                    value={newVideoUrl}
+                                    onChange={e => setNewVideoUrl(e.target.value)}
+                                    placeholder="https://..."
+                                    className="flex-1 px-4 py-2.5 bg-[#FAFAFA] border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-black outline-none"
+                                />
+                                <input
+                                    type="text"
+                                    value={newVideoTitle}
+                                    onChange={e => setNewVideoTitle(e.target.value)}
+                                    placeholder="Title (optional)"
+                                    className="sm:w-44 px-4 py-2.5 bg-[#FAFAFA] border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-black outline-none"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                 </section>
 
 
             </form>
+
+            {/* Media Lightbox */}
+            {lightbox && (
+                <MediaLightbox
+                    items={lightbox.items}
+                    index={lightbox.index}
+                    onClose={() => setLightbox(null)}
+                    onChange={(i) => setLightbox(prev => prev ? { ...prev, index: i } : null)}
+                />
+            )}
         </div>
     );
 };

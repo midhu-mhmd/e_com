@@ -13,12 +13,12 @@ import { useInfiniteProducts } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
 
-/** Get the best available image: featured image → first gallery image → main image field */
+/** Main image field → feature gallery image → first gallery image */
 const getProductImage = (p: ProductDto): string => {
+    if (p.image) return p.image;
     const featured = p.images?.find((img) => img.is_feature);
     if (featured) return featured.image;
-    if (p.images?.[0]) return p.images[0].image;
-    return p.image || "";
+    return p.images?.[0]?.image || "";
 };
 
 // --- Extracted Memoized Product Card ---

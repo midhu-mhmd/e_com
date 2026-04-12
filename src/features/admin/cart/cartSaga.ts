@@ -19,9 +19,9 @@ import { setUser, setUnauthenticated } from "../../auth/authSlice";
 
 function mapCartItemDto(dto: CartItemDto): AdminCartItem {
     const pd = dto.product_details;
-    // Get the best image: feature image first, then main image
+    // Main image first, then feature gallery, then first gallery
     const featureImage = pd?.images?.find((img) => img.is_feature);
-    const imageUrl = featureImage?.image ?? pd?.image ?? null;
+    const imageUrl = pd?.image ?? featureImage?.image ?? pd?.images?.[0]?.image ?? null;
 
     return {
         id: dto.id,
@@ -120,7 +120,7 @@ export function* adminCartsSaga(): SagaIterator {
 function mapApiItemToCartItem(dto: CartItemDto): CartItem {
     const pd = dto.product_details;
     const featureImg = pd?.images?.find((img) => img.is_feature);
-    const image = featureImg?.image ?? pd?.image ?? null;
+    const image = pd?.image ?? featureImg?.image ?? pd?.images?.[0]?.image ?? null;
     const price = parseFloat(pd?.price ?? "0") || 0;
     const discountPrice = pd?.discount_price ? parseFloat(pd.discount_price) || undefined : undefined;
     const finalPrice = parseFloat(pd?.final_price ?? pd?.price ?? "0") || price;

@@ -202,10 +202,10 @@ const BestsellersSection: React.FC = () => {
   const requireAuth = useRequireAuth();
 
   const getProductImage = (p: ProductDto) => {
+    if (p.image) return p.image;
     const featured = p.images?.find((img) => img.is_feature);
     if (featured) return featured.image;
-    if (p.images?.[0]) return p.images[0].image;
-    return p.image || "";
+    return p.images?.[0]?.image || "";
   };
 
   const getDiscount = (p: ProductDto) => {
