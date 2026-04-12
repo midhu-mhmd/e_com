@@ -101,7 +101,7 @@ export interface OrderDto {
     discount_amount?: string;
     delivery_charge?: string;
     preferred_delivery_date: string | null;
-    preferred_delivery_slot: string | null;
+    preferred_delivery_slot: number | null;
     delivery_notes: string | null;
     items: OrderItemDto[];
     status_history: StatusHistoryDto[];
@@ -110,6 +110,25 @@ export interface OrderDto {
     updated_at: string;
     delivery_assignment?: any | null;
     cancellation_request?: any | null;
+    preferred_delivery_slot_details?: DeliverySlotDto;
+}
+
+/* --- Delivery Slot DTO --- */
+export interface DeliverySlotDto {
+    id: number;
+    name: string;
+    start_time: string;
+    end_time: string;
+    cutoff_time: string;
+    start_time_display: string;
+    end_time_display: string;
+    sort_order: number;
+}
+
+/* --- Available Slots Response --- */
+export interface AvailableSlotsResponse {
+    date: string;
+    available_slots: DeliverySlotDto[];
 }
 
 export type OrdersQuery = {
@@ -142,7 +161,7 @@ export interface CheckoutSummaryRequest {
     coupon_code?: string;
     tip_amount?: number;
     preferred_delivery_date?: string;
-    preferred_delivery_slot?: string;
+    preferred_delivery_slot?: number;
 }
 
 /* ── Delivery Charge Settings DTO ── */
@@ -231,7 +250,7 @@ export const ordersApi = {
         address_id: number;
         payment_method: "COD" | "ZIINA";
         preferred_delivery_date?: string;
-        preferred_delivery_slot?: string;
+        preferred_delivery_slot?: number;
         delivery_notes?: string;
         tip_amount?: number;
         coupon_code?: string;
@@ -308,5 +327,47 @@ export const ordersApi = {
     /* ── Verify Payment ── */
     verifyPayment: async (orderId: number): Promise<void> => {
         await api.post(`/orders/${orderId}/verify_payment/`);
+    },
+
+    getAvailableSlots: async (date?: string): Promise<AvailableSlotsResponse> => {
+        const res = await api.get<AvailableSlotsResponse>("/orders/delivery-slots/available/", {
+            params: date ? { date } : {},
+        });
+        return res.data;
+    },
+
+    /* ── Delivery Slots (Admin) ── */
+    getSlots: async (): Promise<DeliverySlotDto[]> => {
+        const res = await api.get<DeliverySlotDto[]>("/orders/delivery-slots/");
+        return res.data;
+    },
+
+    createSlot: async (data: Partial<DeliverySlotDto>): Promise<DeliverySlotDto> => {
+        const res = await api.post<DeliverySlotDto>("/orders/delivery-slots/", data);
+        return res.data;
+    },
+
+    updateSlot: async (id: number, data: Partial<DeliverySlotDto>): Promise<DeliverySlotDto> => {
+        const res = await api.patch<DeliverySlotDto>(`/orders/delivery-slots/${id}/`, data);
+        return res.data;
+    },
+
+    deleteSlot: async (id: number): Promise<void> => {
+        await api.delete(`/orders/delivery-slots/${id}/`);
+    },
+
+    /* ── Delivery Overrides (Admin) ── */
+    getOverrides: async (params?: any): Promise<any[]> => {
+        const res = await api.get<any[]>("/orders/delivery-slot-overrides/", { params });
+        return res.data;
+    },
+
+    createOverride: async (data: any): Promise<any> => {
+        const res = await api.post<any>("/orders/delivery-slot-overrides/", data);
+        return res.data;
+    },
+
+    deleteOverride: async (id: number): Promise<void> => {
+        await api.delete(`/orders/delivery-slot-overrides/${id}/`);
     },
 };

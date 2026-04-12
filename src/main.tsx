@@ -25,6 +25,7 @@ export const queryClient = new QueryClient({
 
 
 // Show initial loader immediately
+// InitialLoader manages its own lifecycle (English -> Chinese -> Arabic -> Fade)
 const loaderDiv = document.createElement('div');
 loaderDiv.id = 'initial-loader-root';
 document.body.appendChild(loaderDiv);
@@ -44,12 +45,3 @@ createRoot(document.getElementById('root')!).render(
     </Provider>
   </GoogleOAuthProvider>
 );
-
-// Remove/hide the loader after React is ready
-setTimeout(() => {
-  const loader = document.getElementById('initial-loader-root');
-  if (loader) loader.style.opacity = '0';
-  setTimeout(() => {
-    if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
-  }, 400);
-}, 2000);

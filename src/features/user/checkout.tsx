@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { useDeliveryEstimation } from "../../hooks/useDeliveryEstimation";
 import { selectCartItems, selectCartTotal, clearCart } from "../admin/cart/cartSlice";
-import { ordersApi, type CheckoutSummaryResponse } from "../admin/orders/ordersApi";
+import { ordersApi, type CheckoutSummaryResponse, type DeliverySlotDto } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
   MapPin, CreditCard, Truck, ArrowLeft, Loader2,
@@ -18,13 +18,6 @@ import useLanguageToggle from "../../hooks/useLanguageToggle";
 import { profileApi } from "./profileApi";
 import { setUser } from "../auth/authSlice";
 import { api, tokenManager } from "../../services/api";
-
-/* ─── Delivery Slot Options ─── */
-const DELIVERY_SLOTS = [
-  { value: "9AM-12PM", key: "delivery.slots.morning" },
-  { value: "2PM-5PM", key: "delivery.slots.afternoon" },
-  { value: "6PM-9PM", key: "delivery.slots.evening" },
-];
 
 // ✅ Updated Tip Presets
 const TIP_PRESETS = [0, 1, 3, 5];
@@ -145,9 +138,15 @@ const CheckoutPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
 
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [deliverySlot, setDeliverySlot] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState(() => {
+    // Default to UAE today
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
+  });
+  const [deliverySlot, setDeliverySlot] = useState<number | "">("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
+  const [availableSlots, setAvailableSlots] = useState<DeliverySlotDto[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const [tipAmount, setTipAmount] = useState(0);
   const [customTip, setCustomTip] = useState<string>("");
@@ -336,9 +335,48 @@ const CheckoutPage: React.FC = () => {
     ? parseAmount(checkoutSummary.final_total)
     : Number((cartTotal + effectiveTip).toFixed(2));
 
-  // Min date = earliest possible delivery (based on tier estimation)
-  const deliveryDaysNeeded = estimation?.max_delivery_days || 1;
-  const minDate = new Date(Date.now() + deliveryDaysNeeded * 86400000).toISOString().split("T")[0];
+  // Min date = today (UAE time)
+  const minDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
+
+  // ─── Fetch Available Slots ───
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSlots = async () => {
+      if (!deliveryDate) return;
+
+      setLoadingSlots(true);
+      setSlotsError(null);
+
+      try {
+        const response = await ordersApi.getAvailableSlots(deliveryDate);
+        if (isMounted) {
+          setAvailableSlots(response.available_slots);
+          // If current slot is not in the new list, clear it
+          if (deliverySlot && !response.available_slots.find(s => s.id === deliverySlot)) {
+            setDeliverySlot("");
+          }
+          // Auto-select first slot if none selected? Optional.
+        }
+      } catch (error: any) {
+        if (isMounted) {
+          const msg = getApiErrorMessage(error, "Unable to load delivery slots.");
+          setSlotsError(msg);
+          setAvailableSlots([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingSlots(false);
+        }
+      }
+    };
+
+    void loadSlots();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [deliveryDate]);
 
   // ─── Add Address Handler ───
   const fetchCheckoutSummary = async () => {
@@ -526,6 +564,11 @@ const CheckoutPage: React.FC = () => {
 
     if (!deliveryDate) {
       toast.show("Please select a preferred delivery date", "error");
+      return;
+    }
+
+    if (!deliverySlot) {
+      toast.show("Please select a preferred delivery slot", "error");
       return;
     }
 
@@ -962,18 +1005,40 @@ const CheckoutPage: React.FC = () => {
                   <Clock size={12} /> {t("delivery.slot")}
                 </label>
                 <div className="relative">
-                  <select
-                    value={deliverySlot}
-                    onChange={(e) => setDeliverySlot(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
-                  >
-                    <option value="">{t("delivery.slot")}</option>
-                    {DELIVERY_SLOTS.map((s) => (
-                      <option key={s.value} value={s.value}>{t(s.key)}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={16} className={`absolute ${isArabic ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
+                  {loadingSlots ? (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                      <Loader2 size={14} className="animate-spin text-cyan-600" />
+                      <span className="text-slate-500">Checking slots...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        value={deliverySlot}
+                        onChange={(e) => setDeliverySlot(e.target.value ? parseInt(e.target.value) : "")}
+                        disabled={availableSlots.length === 0}
+                        className={`w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all ${availableSlots.length === 0 ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      >
+                        <option value="">
+                          {availableSlots.length === 0 ? "No slots available" : "Select a slot"}
+                        </option>
+                        {availableSlots.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.start_time_display} - {s.end_time_display} ({s.name})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className={`absolute ${isArabic ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none`} />
+                    </>
+                  )}
                 </div>
+                {availableSlots.length === 0 && !loadingSlots && deliveryDate === minDate && (
+                  <p className="text-[10px] font-bold text-rose-500 mt-1">
+                    All delivery slots for today have passed. Please select tomorrow or a future date.
+                  </p>
+                )}
+                {slotsError && (
+                  <p className="text-[10px] font-bold text-rose-500 mt-1">{slotsError}</p>
+                )}
               </div>
             </div>
 

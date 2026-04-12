@@ -3,10 +3,12 @@ import {
   ChevronRight,
   Gift,
   Truck,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RewardSettings } from "../marketing/RewardSettings";
 import { DeliveryChargeSettings } from "./DeliveryChargeSettings";
+import { DeliveryTimeslotsSettings } from "./DeliveryTimeslotsSettings";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("rewards");
@@ -18,6 +20,7 @@ const SettingsPage: React.FC = () => {
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A1A1AA] mb-4 px-3">Storefront Settings</h2>
         <TabButton icon={<Gift size={16} />} label="Rewards" active={activeTab === 'rewards'} onClick={() => setActiveTab('rewards')} />
         <TabButton icon={<Truck size={16} />} label="Delivery" active={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
+        <TabButton icon={<Clock size={16} />} label="Timeslots" active={activeTab === 'timeslots'} onClick={() => setActiveTab('timeslots')} />
       </aside>
 
       {/* --- MAIN CONTENT --- */}
@@ -31,6 +34,7 @@ const SettingsPage: React.FC = () => {
         <div className="flex md:hidden gap-2 mb-8 overflow-x-auto pb-2 scrollbar-none snap-x active:cursor-grabbing">
           <TabButtonMobile icon={<Gift size={16} />} label="Rewards" active={activeTab === 'rewards'} onClick={() => setActiveTab('rewards')} />
           <TabButtonMobile icon={<Truck size={16} />} label="Delivery" active={activeTab === 'delivery'} onClick={() => setActiveTab('delivery')} />
+          <TabButtonMobile icon={<Clock size={16} />} label="Timeslots" active={activeTab === 'timeslots'} onClick={() => setActiveTab('timeslots')} />
         </div>
 
         <AnimatePresence mode="wait">
@@ -52,6 +56,16 @@ const SettingsPage: React.FC = () => {
               exit={{ opacity: 0, x: -20 }}
             >
               <DeliveryChargeSettings />
+            </motion.div>
+          )}
+          {activeTab === "timeslots" && (
+            <motion.div
+              key="timeslots"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <DeliveryTimeslotsSettings />
             </motion.div>
           )}
         </AnimatePresence>

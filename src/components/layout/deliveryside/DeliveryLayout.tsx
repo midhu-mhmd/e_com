@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import simakLogo from "../../../assets/SIMAK FRESH FINAL SVG-01.svg";
+import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 interface NavItem {
   label: string;

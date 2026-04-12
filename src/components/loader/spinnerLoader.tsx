@@ -1,7 +1,18 @@
+import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import LogoAnimated from "../ui/LogoAnimated";
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import simakLogo from "../../assets/SIMAK FRESH FINAL SVG-01.svg";
+const PRELOADER_TEXTS = [
+    <span key="en" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        SIMAK <span className="text-cyan-600/50">FRESH</span>
+    </span>,
+    <span key="zh" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        思马克 <span className="text-cyan-600/50">新鲜</span>
+    </span>,
+    <span key="ar" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 font-sans">
+        سماك <span className="text-cyan-600/50">فريش</span>
+    </span>,
+];
 
 /**
  * SIMAK FRESH branded preloader.
@@ -9,44 +20,28 @@ import simakLogo from "../../assets/SIMAK FRESH FINAL SVG-01.svg";
 const InitialLoader = ({ label: _label }: { label?: string }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [langIndex, setLangIndex] = useState(0);
-    // 0: English, 1: Chinese, 2: Arabic
 
     useEffect(() => {
         let timer: number;
-        if (langIndex < 2) {
+        if (langIndex < PRELOADER_TEXTS.length) {
+            const delay = langIndex === 0 ? 2500 : 2000;
             timer = window.setTimeout(() => {
                 setLangIndex((prev) => prev + 1);
-            }, 500); // 1.5 seconds per language
-        } else if (langIndex === 2) {
-            timer = window.setTimeout(() => {
-                setLangIndex((prev) => prev + 1);
-            }, 1500); // 1.5 seconds for Arabic
-        } else if (langIndex === 3) {
-            // Fade out after Arabic
+            }, delay);
+        } else {
+            // Fade out
             timer = window.setTimeout(() => {
                 if (containerRef.current) {
                     containerRef.current.style.opacity = "0";
-                    containerRef.current.style.transition = "opacity 0.4s ease-in";
+                    containerRef.current.style.transition = "opacity 0.8s ease-in-out";
                     setTimeout(() => {
                         if (containerRef.current) containerRef.current.style.display = "none";
-                    }, 400);
+                    }, 800);
                 }
-            }, 400); // Short pause after last language
+            }, 1000);
         }
         return () => clearTimeout(timer);
     }, [langIndex]);
-
-    const texts = [
-        <span key="en" className="text-sm font-extrabold tracking-tight text-slate-900">
-            SIMAK <span className="text-cyan-600">FRESH</span>
-        </span>,
-        <span key="zh" className="text-sm font-extrabold tracking-tight text-slate-900">
-            思马克 <span className="text-cyan-600">新鲜</span>
-        </span>,
-        <span key="ar" className="text-sm font-extrabold tracking-tight text-slate-900">
-            سماك <span className="text-cyan-600">فريش</span>
-        </span>,
-    ];
 
     return (
         <div
@@ -54,7 +49,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
             className="fixed inset-0 z-9999 flex items-center justify-center bg-white"
         >
             <div className="flex flex-col items-center gap-5">
-                {/* Brand logo icon — matches navbar */}
+                {/* Brand logo icon */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -62,74 +57,37 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
                     className="relative"
                 >
                     <motion.div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25 bg-white overflow-hidden"
-                        animate={{ boxShadow: [
-                            "0 10px 15px -3px rgba(6,182,212,0.25)",
-                            "0 10px 25px -3px rgba(6,182,212,0.4)",
-                            "0 10px 15px -3px rgba(6,182,212,0.25)",
-                        ]}}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-80 h-48 flex items-center justify-center"
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <img src={simakLogo} alt="SIMAK FRESH" className="w-12 h-12 object-contain" />
+                        <LogoAnimated className="w-full h-full" />
                     </motion.div>
-
-                    {/* Shrimp orbiting top-right */}
-                    <motion.img
-                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f990.png"
-                        alt="shrimp"
-                        className="absolute -top-3 -right-3 w-7 h-7 select-none"
-                        animate={{ y: [0, -3, 0], rotate: [0, -10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-
-                    {/* Crab orbiting bottom-left */}
-                    <motion.img
-                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f980.png"
-                        alt="crab"
-                        className="absolute -bottom-3 -left-3 w-7 h-7 select-none"
-                        animate={{ y: [0, 3, 0], rotate: [0, 10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                    />
-
-                    {/* Hamour orbiting top-left */}
-                    <motion.img
-                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f41f.png"
-                        alt="hamour"
-                        className="absolute -top-3 -left-3 w-7 h-7 select-none"
-                        animate={{ y: [0, -3, 0], rotate: [0, 10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
-                    />
-
-                    {/* Sea bream orbiting bottom-right */}
-                    <motion.img
-                        src="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/128/emoji_u1f420.png"
-                        alt="sea bream"
-                        className="absolute -bottom-3 -right-3 w-7 h-7 select-none"
-                        animate={{ y: [0, 3, 0], rotate: [0, -10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}
-                    />
                 </motion.div>
 
-                {/* Animated brand text, one at a time */}
-                {langIndex <= 2 && (
-                    <motion.div
-                        key={langIndex}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="flex flex-col items-center gap-1"
-                    >
-                        {texts[langIndex]}
-                    </motion.div>
-                )}
+                {/* Animated brand text */}
+                <div className="h-6 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        {langIndex < PRELOADER_TEXTS.length && (
+                            <motion.div
+                                key={`lang-${langIndex}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.6, ease: "easeInOut" }}
+                                className="flex flex-col items-center"
+                            >
+                                {PRELOADER_TEXTS[langIndex]}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
-                {/* Thin loading bar */}
-                <div className="h-0.5 w-14 overflow-hidden rounded-full bg-slate-100">
+                {/* Loading bar */}
+                <div className="h-1 w-32 overflow-hidden rounded-full bg-slate-100 mt-2">
                     <motion.div
-                        className="h-full w-5 rounded-full bg-cyan-500"
-                        animate={{ x: ["-20%", "200%"] }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                        className="h-full w-12 rounded-full bg-cyan-500"
+                        animate={{ x: ["-20%", "250%"] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                     />
                 </div>
             </div>

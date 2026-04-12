@@ -58,7 +58,7 @@ export interface Order {
     shippingAddress: ShippingAddress;
     total: number;
     deliveryDate: string | null;
-    deliverySlot: string | null;
+    deliverySlot: string | number | null;
     deliveryNotes: string | null;
     items: OrderItem[];
     statusHistory: StatusHistoryEntry[];

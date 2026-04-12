@@ -17,7 +17,7 @@ import {
 
 
 import { useTranslation } from "react-i18next";
-import simakLogo from "../../../assets/SIMAK FRESH FINAL SVG-01.svg";
+import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /* ── Component ── */
 const Footer: React.FC = () => {

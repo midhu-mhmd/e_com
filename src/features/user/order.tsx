@@ -1255,7 +1255,12 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 {order.preferred_delivery_slot && (
                                     <div className="flex justify-between items-center">
                                         <span>{t("detail.timeSlot")}</span>
-                                        <span className="text-white text-base capitalize">{order.preferred_delivery_slot}</span>
+                                        <span className="text-white text-base">
+                                            {order.preferred_delivery_slot_details 
+                                                ? `${order.preferred_delivery_slot_details.start_time_display} - ${order.preferred_delivery_slot_details.end_time_display} (${order.preferred_delivery_slot_details.name})`
+                                                : order.preferred_delivery_slot
+                                            }
+                                        </span>
                                     </div>
                                 )}
                             </div>

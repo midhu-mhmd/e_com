@@ -1,17 +1,39 @@
-import { motion } from "framer-motion";
-import simakLogo from "../../assets/SIMAK FRESH FINAL SVG-01.svg";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import LogoAnimated from "../ui/LogoAnimated";
+
+const PRELOADER_TEXTS = [
+    <span key="en" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        SIMAK <span className="text-cyan-600/50">FRESH</span>
+    </span>,
+    <span key="zh" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        思马克 <span className="text-cyan-600/50">新鲜</span>
+    </span>,
+    <span key="ar" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 font-sans">
+        سماك <span className="text-cyan-600/50">فريش</span>
+    </span>,
+];
 
 /**
  * SIMAK FRESH branded preloader.
  * Shown during internal page loading states with a blurred background overlay.
  */
 const ShrimpLoader = () => {
+    const [langIndex, setLangIndex] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setLangIndex((prev) => (prev + 1) % 3);
+        }, 2000);
+        return () => clearInterval(timer);
+    }, []);
+
     return (
         <div
             className="fixed inset-0 z-9999 flex items-center justify-center bg-white/60 backdrop-blur-sm"
         >
             <div className="flex flex-col items-center gap-5">
-                {/* Brand logo icon — matches navbar */}
+                {/* Brand logo icon */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -19,56 +41,35 @@ const ShrimpLoader = () => {
                     className="relative"
                 >
                     <motion.div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/25 bg-white overflow-hidden"
-                        animate={{
-                            boxShadow: [
-                                "0 10px 15px -3px rgba(6,182,212,0.25)",
-                                "0 10px 25px -3px rgba(6,182,212,0.4)",
-                                "0 10px 15px -3px rgba(6,182,212,0.25)",
-                            ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-80 h-48 flex items-center justify-center"
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <img src={simakLogo} alt="SIMAK FRESH" className="w-12 h-12 object-contain" />
+                        <LogoAnimated className="w-full h-full" />
                     </motion.div>
-                    {/* Shrimp orbiting top-right */}
-                    <motion.span
-                        className="absolute -top-2 -right-2 text-xs select-none"
-                        role="img"
-                        aria-label="shrimp"
-                        animate={{ y: [0, -3, 0], rotate: [0, -10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                        🦐
-                    </motion.span>
-                    {/* Crab orbiting bottom-left */}
-                    <motion.span
-                        className="absolute -bottom-2 -left-2 text-xs select-none"
-                        role="img"
-                        aria-label="crab"
-                        animate={{ y: [0, 3, 0], rotate: [0, 10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-                    >
-                        🦀
-                    </motion.span>
                 </motion.div>
 
-                {/* Brand text */}
-                <motion.p
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
-                    className="text-sm font-extrabold tracking-tight text-slate-900"
-                >
-                    SIMAK <span className="text-cyan-600">FRESH</span>
-                </motion.p>
+                {/* Brand text with Animation */}
+                <div className="h-6 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={`pre-lang-${langIndex}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.6, ease: "easeInOut" }}
+                            className="flex flex-col items-center"
+                        >
+                            {PRELOADER_TEXTS[langIndex]}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
 
                 {/* Thin loading bar */}
-                <div className="h-0.5 w-14 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-1 w-32 overflow-hidden rounded-full bg-slate-100 mt-2">
                     <motion.div
-                        className="h-full w-5 rounded-full bg-cyan-500"
-                        animate={{ x: ["-20%", "200%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="h-full w-12 rounded-full bg-cyan-500"
+                        animate={{ x: ["-20%", "250%"] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                     />
                 </div>
             </div>

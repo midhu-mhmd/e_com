@@ -26,7 +26,7 @@ import {
 
 import ScannerModal from './ScannerModal';
 import AdminNotificationsDropdown from '../../../features/admin/notifications/AdminNotificationsDropdown';
-import simakLogo from '../../../assets/SIMAK FRESH FINAL SVG-01.svg';
+import simakLogo from '../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png';
 
 
 interface NavItem {
