@@ -387,7 +387,6 @@ const PaymentsListView = ({
   amountMin,
   amountMax,
   showFilters,
-  hasActiveFilters,
   isVisible,
   isColumnsOpen,
   visibleColumns,
@@ -932,7 +931,7 @@ const PaymentDetailDrawer = ({
 };
 
 /* ── SUB-VIEWS ── */
-const CODView = ({
+export const CODView = ({
   payments,
   totalCount,
   page,
@@ -1073,7 +1072,7 @@ const CODView = ({
   );
 };
 
-const RefundsView = ({
+export const RefundsView = ({
   payments,
   totalCount,
   page,

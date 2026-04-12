@@ -7,7 +7,6 @@ import {
     productsActions,
     selectProductsStatus,
     selectProductsError,
-    selectProducts,
 } from "./productsSlice";
 import type { ProductDto, CategoryDto } from "./productApi";
 import { productsApi } from "./productApi";

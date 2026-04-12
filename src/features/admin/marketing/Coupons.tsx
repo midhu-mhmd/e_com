@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     Search, Filter, Download, ListFilter,
-    Eye, EyeOff, X, Tag, Box, IndianRupee, TrendingUp, Plus, Columns3,
+    Eye, EyeOff, X, Tag, Box, IndianRupee, TrendingUp, Columns3,
     Clock, Trash2, MessageSquare, Calendar, User, Check, Gift, RotateCcw
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -25,7 +25,6 @@ import {
     updateCouponRequest,
 } from "./couponsSlice";
 import type { Coupon } from "./couponsSlice";
-import { CouponFormModal } from "./CouponFormModal";
 import { formatDate } from "../../../utils/date";
 
 /* --- Column definitions --- */
@@ -84,7 +83,6 @@ const CouponManagement: React.FC = () => {
     const [limit, setLimit] = useState(10);
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [couponToDelete, setCouponToDelete] = useState<number | null>(null);
     const [isHardDelete, setIsHardDelete] = useState(false);
@@ -141,10 +139,6 @@ const CouponManagement: React.FC = () => {
         setStatusFilter("All");
         setDiscountTypeFilter("All");
         setPage(1);
-    };
-
-    const handleAddCoupon = () => {
-        setIsFormModalOpen(true);
     };
 
     const handleSoftDeleteCoupon = (id: number) => {

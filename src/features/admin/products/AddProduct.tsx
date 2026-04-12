@@ -17,7 +17,6 @@ import {
     productsActions,
     selectProductsStatus,
     selectProductsError,
-    selectProducts,
 } from "./productsSlice";
 import { productsApi, type CategoryDto } from "./productApi";
 import ProductLocationsField from "./ProductLocationsField";
