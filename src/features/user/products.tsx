@@ -263,7 +263,7 @@ const UserProductsPage: React.FC = () => {
     }, [dispatch, navigate, requireAuth, toast]);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
+        <div dir="ltr" className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
 
             {/* ─── Static Filter Bar ─── */}
             <div className="relative z-30 bg-white border-b border-slate-100 shadow-sm">
@@ -272,13 +272,14 @@ const UserProductsPage: React.FC = () => {
 
                         {/* Search Input */}
                         <div className="relative w-full md:w-96 group">
-                            <Search className={`absolute ${isArabic ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors`} size={20} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors" size={20} />
                             <input
                                 type="text"
                                 placeholder={t("list.searchPlaceholder")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`w-full ${isArabic ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:bg-white focus:border-cyan-200 focus:ring-4 focus:ring-cyan-500/10 rounded-2xl text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400`}
+                                dir="auto"
+                                className="w-full pl-12 pr-4 py-3 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:bg-white focus:border-cyan-200 focus:ring-4 focus:ring-cyan-500/10 rounded-2xl text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400"
                             />
                         </div>
                     </div>

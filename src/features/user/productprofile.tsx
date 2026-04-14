@@ -184,8 +184,8 @@ const ProductProfile: React.FC = () => {
 
   // ✅ Calculate total dynamic price based on quantity
   const basePriceTotal = (parseFloat(product.price) * quantity).toFixed(2);
-  const discountPriceTotal = product.discount_price 
-    ? (parseFloat(product.discount_price) * quantity).toFixed(2) 
+  const discountPriceTotal = product.discount_price
+    ? (parseFloat(product.discount_price) * quantity).toFixed(2)
     : null;
 
   const addItemToCart = (goTo: "cart" | "checkout") => {
@@ -546,7 +546,7 @@ const ProductProfile: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
-                          {(r.user_name || 'U').slice(0,1).toUpperCase()}
+                          {(r.user_name || 'U').slice(0, 1).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-sm font-black text-stone-900">
@@ -570,17 +570,18 @@ const ProductProfile: React.FC = () => {
                           const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
                           const url = normalizeReviewImage(cleaned);
                           return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setViewerUrl(url)}
-                            className="group relative"
-                            aria-label="Expand image"
-                          >
-                            <img src={url} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
-                            <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
-                          </button>
-                        )})}
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setViewerUrl(url)}
+                              className="group relative"
+                              aria-label="Expand image"
+                            >
+                              <img src={url} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
+                              <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
+                            </button>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
