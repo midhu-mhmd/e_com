@@ -44,6 +44,10 @@ const notificationsApi = {
         const res = await api.post('/notifications/mark_all_as_read/');
         return res.data;
     },
+
+    deleteNotification: async (id: number) => {
+        await api.delete(`/notifications/${id}/`);
+    },
 };
 
 /* ── Helper: format date for display ── */
@@ -121,6 +125,9 @@ const NotificationPage: React.FC = () => {
 
     // Mark single as read
     const markAsRead = async (id: number) => {
+        const notification = notifications.find(n => n.id === id);
+        if (!notification || notification.read) return;
+
         try {
             await notificationsApi.markAsRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -142,9 +149,13 @@ const NotificationPage: React.FC = () => {
         }
     };
 
-    // Local-only remove (keeps UI responsive)
-    const deleteNotification = (id: number) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const deleteNotification = async (id: number) => {
+        try {
+            await notificationsApi.deleteNotification(id);
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        } catch {
+            // leave notification visible if delete failed
+        }
     };
 
     const getIcon = (type: NotificationType) => {
@@ -244,8 +255,9 @@ const NotificationPage: React.FC = () => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -100 }}
+                                    onClick={() => !notification.read && markAsRead(notification.id)}
                                     className={`relative bg-white rounded-2xl p-5 border transition-all hover:shadow-md group ${
-                                        notification.read ? 'border-slate-100' : 'border-rose-100 bg-rose-50/10'
+                                        notification.read ? 'border-slate-100' : 'border-rose-100 bg-rose-50/10 cursor-pointer'
                                     }`}
                                 >
                                     <div className="flex gap-4">
@@ -270,19 +282,21 @@ const NotificationPage: React.FC = () => {
                                     </div>
 
                                     {/* ✅ Actions (Absolute corner to preserve card height) */}
-                                    <div className={`absolute bottom-4 ${isArabic ? 'left-4' : 'right-4'} flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300`}>
+                                    <div className={`absolute bottom-4 ${isArabic ? 'left-4' : 'right-4'} flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300`}>
                                         {notification.action_url && (
                                             <button
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     const url = String(notification.action_url || '').trim();
                                                     if (!url) return;
+                                                    if (!notification.read) markAsRead(notification.id);
                                                     if (/^https?:\/\//i.test(url)) {
                                                         window.location.href = url;
                                                     } else if (url.startsWith('/')) {
                                                         navigate(url);
                                                     }
                                                 }}
-                                                className="p-1.5 bg-white text-violet-600 rounded-lg shadow-sm border border-slate-100 hover:bg-violet-50 transition-colors"
+                                                className="px-3 py-1.5 bg-white text-violet-600 rounded-lg shadow-sm border border-slate-100 hover:bg-violet-50 transition-colors text-[10px] font-bold"
                                                 title="Open"
                                             >
                                                 Open
@@ -290,7 +304,10 @@ const NotificationPage: React.FC = () => {
                                         )}
                                         {!notification.read && (
                                             <button
-                                                onClick={() => markAsRead(notification.id)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    markAsRead(notification.id);
+                                                }}
                                                 className="p-1.5 bg-white text-emerald-600 rounded-lg shadow-sm border border-slate-100 hover:bg-emerald-50 transition-colors"
                                                 title={t('notifications.markRead', 'Mark as Read')}
                                             >
@@ -298,7 +315,10 @@ const NotificationPage: React.FC = () => {
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => deleteNotification(notification.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteNotification(notification.id);
+                                            }}
                                             className="p-1.5 bg-white text-slate-400 rounded-lg shadow-sm border border-slate-100 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                             title={t('notifications.delete', 'Delete')}
                                         >
