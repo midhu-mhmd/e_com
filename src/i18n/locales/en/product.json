@@ -67,6 +67,19 @@
         "title": "Fresh Guaranteed",
         "subtitle": "Certified Quality"
       }
+    },
+    "availableIn": {
+      "title": "Available in",
+      "subtitle": "This product can be delivered in the following emirates."
+    },
+    "emirates": {
+      "Abu Dhabi": "Abu Dhabi",
+      "Dubai": "Dubai",
+      "Sharjah": "Sharjah",
+      "Ajman": "Ajman",
+      "Umm Al Quwain": "Umm Al Quwain",
+      "Ras Al Khaimah": "Ras Al Khaimah",
+      "Fujairah": "Fujairah"
     }
   },
   "units": {

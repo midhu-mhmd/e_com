@@ -443,7 +443,7 @@ const SupportPage: React.FC = () => {
                                                 {verifySuccess && (
                                                     <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-600">
                                                         <CheckCircle2 size={14} />
-                                                        {t("form.verify.success", { defaultValue: "Email verified successfully!" })}
+                                                        {t("form.verify.success")}
                                                     </div>
                                                 )}
                                             </div>
@@ -494,12 +494,12 @@ const SupportPage: React.FC = () => {
                             </div>
 
                             <a
-                                href="tel:+971800123456"
+                                href={t("sidebar.call.tel")}
                                 className="block w-full text-center bg-emerald-600 text-white py-4 rounded-2xl text-sm font-bold tracking-wide hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-500/20 active:scale-[0.98] transition-all"
                             >
                                 <span className="flex items-center justify-center gap-2">
                                     <Phone size={16} />
-                                    +971 800 123 456
+                                    {t("sidebar.call.value")}
                                 </span>
                             </a>
 
@@ -522,7 +522,7 @@ const SupportPage: React.FC = () => {
                                             {t("sidebar.email.title")}
                                         </p>
                                         <a
-                                            href="mailto:support@example.com"
+                                            href={`mailto:${t("sidebar.email.value")}`}
                                             className="text-xs font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
                                         >
                                             {t("sidebar.email.value")}

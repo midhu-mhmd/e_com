@@ -14,7 +14,13 @@
   },
   "alerts": {
     "placeOrderFailed": "Failed to place order. Please try again.",
-    "selectAddress": "Please select a delivery address."
+    "selectAddress": "Please select a delivery address.",
+    "selectDeliveryDate": "Please select a preferred delivery date.",
+    "selectDeliverySlot": "Please select a preferred delivery slot.",
+    "summaryUnsupported": "This server does not support checkout summary yet. You can still continue to place the order.",
+    "summaryUpdateFailedShort": "Unable to load the checkout summary right now.",
+    "summaryUpdateFailed": "Unable to confirm your final total right now. Please try again.",
+    "couponValidationFailed": "Unable to validate this coupon right now."
   },
   "address": {
     "title": "Delivery Address",
@@ -23,6 +29,18 @@
     "noAddresses": "No saved addresses found.",
     "addNew": "Add New Address",
     "adding": "Adding...",
+    "cancel": "Cancel",
+    "defaultLabel": "Address",
+    "errors": {
+      "nameRequired": "Full name must be at least 3 characters",
+      "phoneInvalid": "{{name}}: {{length}} digits{{reqPatternStr}}",
+      "cityInvalid": "Select a valid UAE city/emirate",
+      "streetRequired": "Street address is required",
+      "areaRequired": "Area is required",
+      "cityRequired": "City is required",
+      "emirateRequired": "Please select an emirate",
+      "saveFailed": "Failed to save address. Please try again."
+    },
     "fields": {
       "label": {
         "label": "Label",
@@ -76,17 +94,39 @@
       "evening": "Evening (5 PM – 9 PM)"
     },
     "notes": "Delivery Notes",
-    "notesPlaceholder": "Ring the bell, leave at the door, etc."
+    "notesPlaceholder": "Ring the bell, leave at the door, etc.",
+    "loading": "Loading delivery estimates...",
+    "window": "Estimated Delivery Window",
+    "sameDay": "Same day delivery",
+    "dayDelivery": "{{count}} day delivery time",
+    "daysDelivery": "{{count}} days delivery time",
+    "availableToday": "Available for delivery today",
+    "minDateTomorrow": "Minimum delivery date is tomorrow",
+    "minDateInDays": "Minimum delivery date is in {{count}} days",
+    "productsDeliveryTimes": "Products Delivery Times",
+    "fallbackProductName": "Product {{index}}",
+    "qty": "Qty: {{count}}",
+    "daysShort": "{{count}}d",
+    "earliest": "Earliest:",
+    "checkingSlots": "Checking slots...",
+    "noSlots": "No slots available",
+    "selectSlot": "Select a slot",
+    "noSlotsForDate": "No available slots for this date. Please select a different date.",
+    "selectDateHint": "Please select a preferred delivery date to proceed with your order.",
+    "fulfillmentHelper": "Delivery time based on order quantity. Larger orders may take longer due to fulfillment requirements."
   },
   "tip": {
     "title": "Add a Tip",
-    "custom": "Custom"
+    "noTip": "No Tip",
+    "custom": "Custom",
+    "addPointFive": "Add 0.5 AED"
   },
   "payment": {
     "title": "Payment Method",
     "cod": {
       "title": "Cash on Delivery",
-      "subtitle": "Pay when you receive your order"
+      "subtitle": "Pay when you receive your order",
+      "unavailableForOrder": "Not available for this order now."
     },
     "ziina": {
       "title": "Pay Online",
@@ -95,11 +135,18 @@
   },
   "summary": {
     "title": "Order Summary",
+    "updating": "Updating",
     "qtyPrice": "{{qty}} x AED {{price}}",
     "subtotal": "Subtotal",
+    "discount": "Discount",
+    "afterDiscount": "After Discount",
     "shipping": "Shipping",
-    "tip": "Tip",
+    "calculatedAtCheckout": "Calculated at checkout",
     "free": "Free",
+    "deliveryRule": "Delivery is free for orders AED 40 above.",
+    "tip": "Tip",
+    "selectAddressHint": "Select a delivery address to calculate the final delivery charge.",
+    "selectDateHint": "Choose your delivery date to preview the final total and delivery charge.",
     "total": "Total"
   },
   "actions": {
@@ -107,7 +154,8 @@
     "processing": "Processing..."
   },
   "currency": {
-    "aed": "AED {{value}}"
+    "aed": "AED {{value}}",
+    "aedCode": "AED"
   },
   "addressTypes": {
     "home": "Home",
@@ -129,58 +177,10 @@
     "phone": "Phone",
     "emirate": "Emirate",
     "cancel": "Cancel",
-    "digits": "digits",
+    "digits": "{{count}} digits",
     "enterOtp": "Enter OTP",
     "otpPlaceholder": "6 digits",
     "editPhone": "Edit Phone"
-  },
-  "delivery": {
-    "title": "Delivery Preferences",
-    "date": "Preferred Date",
-    "slot": "Delivery Slot",
-    "slots": {
-      "morning": "Morning (8 AM – 12 PM)",
-      "afternoon": "Afternoon (12 PM – 5 PM)",
-      "evening": "Evening (5 PM – 9 PM)"
-    },
-    "notes": "Delivery Notes",
-    "notesPlaceholder": "Ring the bell, leave at the door, etc.",
-    "loading": "Loading delivery estimates...",
-    "window": "Estimated Delivery Window",
-    "sameDay": "Same day delivery",
-    "dayDelivery": "{{count}} day delivery time",
-    "daysDelivery": "{{count}} days delivery time",
-    "availableToday": "Available for delivery today",
-    "minDateTomorrow": "Minimum delivery date is tomorrow",
-    "minDateInDays": "Minimum delivery date is in {{count}} days",
-    "productsDeliveryTimes": "Products Delivery Times",
-    "fallbackProductName": "Product {{index}}",
-    "qty": "Qty: {{count}}",
-    "daysShort": "{{count}}d",
-    "checkingSlots": "Checking slots...",
-    "noSlotsForDate": "No available slots for this date. Please select a different date.",
-    "fulfillmentHelper": "Delivery time based on order quantity. Larger orders may take longer due to fulfillment requirements."
-  },
-  "tip": {
-    "title": "Add a Tip",
-    "noTip": "No Tip",
-    "custom": "Custom",
-    "addPointFive": "Add 0.5 AED"
-  },
-  "summary": {
-    "title": "Order Summary",
-    "updating": "Updating",
-    "qtyPrice": "{{qty}} x AED {{price}}",
-    "subtotal": "Subtotal",
-    "shipping": "Shipping",
-    "tip": "Tip",
-    "free": "Free",
-    "total": "Total",
-    "selectAddressHint": "Select a delivery address to calculate the final delivery charge.",
-    "selectDateHint": "Choose your delivery date to preview the final total and delivery charge.",
-    "afterDiscount": "After Discount",
-    "deliveryRule": "Delivery is free for orders AED 40 above.",
-    "calculatedAtCheckout": "Calculated at checkout"
   },
   "verifyPhone": {
     "title": "Verify Phone Number",
@@ -189,14 +189,32 @@
     "button": "Verify Phone",
     "sending": "Sending...",
     "sendOtp": "Send OTP",
+    "sendError": "Failed to send OTP. Try again.",
     "verifying": "Verifying...",
-    "verifyAndContinue": "Verify & Continue"
+    "verifyAndContinue": "Verify & Continue",
+    "verifyError": "OTP verification failed.",
+    "success": "Phone verified. You can now place your order.",
+    "otpError": "Enter the 6-digit OTP."
+  },
+  "coupon": {
+    "title": "Coupon Code",
+    "subtitle": "Validate your code before placing the order.",
+    "placeholder": "Enter coupon code",
+    "apply": "Apply",
+    "remove": "Remove",
+    "applied": "Applied coupon: {{code}}",
+    "availableTitle": "Available Coupons",
+    "loading": "Loading available coupons...",
+    "empty": "No coupons are available right now.",
+    "appliedShort": "Applied",
+    "applyShort": "Tap to apply"
   },
   "coupons": {
     "applyToOrder": "Apply {{badge}} to this order.",
     "availableCoupon": "Available coupon",
     "loading": "Loading available coupons...",
     "empty": "No coupons are available right now.",
-    "enterToApply": "Enter a coupon code to apply it."
+    "enterToApply": "Enter a coupon code to apply it.",
+    "unableToLoad": "Unable to load available coupons right now."
   }
 }

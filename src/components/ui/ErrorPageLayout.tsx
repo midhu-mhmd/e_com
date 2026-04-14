@@ -35,15 +35,7 @@ export const ErrorPageLayout: React.FC<ErrorPageLayoutProps> = ({
     return (
         <div className="min-h-screen flex flex-col bg-[#FAFAFA] font-sans overflow-hidden">
             {/* Minimal Header */}
-            <div className="w-full p-8 flex justify-between items-center bg-transparent relative z-20">
-                <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-md bg-cyan-600 flex items-center justify-center">
-                        <span className="text-white font-black text-[10px] leading-none">S</span>
-                    </div>
-                    <span className="text-xs font-black tracking-widest text-gray-900 uppercase">
-                        {t('brand.name')}
-                    </span>
-                </div>
+            <div className="w-full p-8 flex justify-end items-center bg-transparent relative z-20">
                 {showBackButton && (
                     <button
                         onClick={() => navigate(-1)}

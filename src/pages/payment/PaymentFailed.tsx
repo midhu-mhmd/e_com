@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AlertTriangle, RefreshCcw, ArrowLeft, Headphones, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentFailed: React.FC = () => {
+  const { t } = useTranslation("common");
+
   React.useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
     if (id) {
-      ordersApi.verifyPayment(Number(id)).catch(() => {});
+      ordersApi.verifyPayment(Number(id)).catch(() => { });
     }
     localStorage.removeItem("pending_order_id");
   }, []);
@@ -33,11 +36,13 @@ const PaymentFailed: React.FC = () => {
         window.location.href = res.payment_url;
       }
     } catch (err: any) {
-      setRetryError(err?.response?.data?.error || err?.response?.data?.detail || "Failed to retry payment. Please try again.");
+      setRetryError(err?.response?.data?.error || err?.response?.data?.detail || t("payment.failed.retryFallback"));
     } finally {
       setRetrying(false);
     }
   };
+
+  const reasons = t("payment.failed.reasons", { returnObjects: true }) as string[];
 
   return (
     <div className="min-h-screen bg-linear-to-br from-red-50 via-white to-rose-50 flex items-center justify-center p-4">
@@ -71,24 +76,23 @@ const PaymentFailed: React.FC = () => {
         >
           <span className="w-2 h-2 rounded-full bg-red-500" />
           <span className="text-xs font-bold text-red-700 tracking-wide uppercase">
-            Payment Failed
+            {t("payment.failed.badge")}
           </span>
         </motion.div>
 
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-          Payment Unsuccessful
+          {t("payment.failed.title")}
         </h1>
 
         {orderId && (
           <p className="text-sm font-semibold text-red-500 mb-2">
-            Order #{orderId}
+            {t("payment.failed.orderId", { id: orderId })}
           </p>
         )}
 
         <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
-          We couldn't process your payment. No amount has been charged.
-          Please try again or use a different payment method.
+          {t("payment.failed.description")}
         </p>
 
         {/* Troubleshooting Card */}
@@ -98,14 +102,9 @@ const PaymentFailed: React.FC = () => {
           transition={{ delay: 0.5 }}
           className="bg-white rounded-2xl border border-red-100 p-5 mb-8 shadow-sm text-left"
         >
-          <p className="text-sm font-bold text-slate-800 mb-3">Common reasons for failure:</p>
+          <p className="text-sm font-bold text-slate-800 mb-3">{t("payment.failed.reasonsTitle")}</p>
           <ul className="space-y-2">
-            {[
-              "Insufficient balance in your account",
-              "Card expired or incorrect details entered",
-              "Transaction declined by your bank",
-              "Network interruption during payment",
-            ].map((reason, i) => (
+            {Array.isArray(reasons) && reasons.map((reason, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-300 mt-1.5 shrink-0" />
                 <span className="text-xs text-slate-500">{reason}</span>
@@ -133,9 +132,9 @@ const PaymentFailed: React.FC = () => {
             className="group flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {retrying ? (
-              <><Loader2 size={16} className="animate-spin" /> Processing...</>
+              <><Loader2 size={16} className="animate-spin" /> {t("payment.failed.processing")}</>
             ) : (
-              <><RefreshCcw size={16} /> Try Again</>
+              <><RefreshCcw size={16} /> {t("payment.failed.tryAgain")}</>
             )}
           </button>
         </div>
@@ -146,7 +145,7 @@ const PaymentFailed: React.FC = () => {
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-cyan-600 transition-colors"
           >
             <Headphones size={14} />
-            Contact Support
+            {t("payment.failed.contactSupport")}
           </button>
           <span className="text-slate-200">|</span>
           <button
@@ -154,7 +153,7 @@ const PaymentFailed: React.FC = () => {
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
           >
             <ArrowLeft size={14} />
-            Back to Home
+            {t("payment.failed.backHome")}
           </button>
         </div>
       </motion.div>

@@ -1,84 +1,161 @@
 {
   "header": {
-    "title": "الدفع"
+    "title": "إتمام الطلب"
   },
   "emptyCart": {
-    "title": "سلة التسوق فارغة.",
+    "title": "عربة التسوق فارغة.",
     "cta": "اذهب للتسوق"
   },
   "success": {
     "title": "تم تقديم الطلب بنجاح!",
-    "subtitle": "شكرًا لك. نحن نجهز طلبك الآن.",
-    "redirecting": "جارٍ التحويل إلى الصفحة الرئيسية..."
+    "subtitle": "شكرًا لاختيارك، نقوم بتحضير طلبك الآن.",
+    "redirecting": "جاري التوجيه إلى الصفحة الرئيسية...",
+    "orderId": "الطلب #{{id}}"
   },
   "alerts": {
-    "placeOrderFailed": "فشل تقديم الطلب. حاول مرة أخرى."
+    "placeOrderFailed": "فشل في تقديم الطلب. يرجى المحاولة مرة أخرى.",
+    "selectAddress": "يرجى تحديد عنوان التوصيل.",
+    "selectDeliveryDate": "يرجى اختيار تاريخ التوصيل المفضل.",
+    "selectDeliverySlot": "يرجى اختيار فترة التوصيل المفضلة.",
+    "summaryUnsupported": "لا يدعم هذا الخادم ملخص الطلب بعد. لا يزال بإمكانك الاستمرار في تقديم الطلب.",
+    "summaryUpdateFailedShort": "عذرًا، لا يمكن تحميل ملخص الدفع الآن.",
+    "summaryUpdateFailed": "عذرًا، لا يمكن تأكيد الإجمالي النهائي الآن. يرجى المحاولة مرة أخرى.",
+    "couponValidationFailed": "غير قادر على التحقق من هذه القسيمة الآن."
   },
-  "shipping": {
-    "title": "تفاصيل الشحن",
+  "address": {
+    "title": "عنوان التوصيل",
+    "select": "اختيار عنوان",
+    "default": "الافتراضي",
+    "noAddresses": "لم يتم العثور على عناوين محفوظة.",
+    "addNew": "إضافة عنوان جديد",
+    "adding": "جاري الإضافة...",
+    "cancel": "إلغاء",
+    "defaultLabel": "العنوان",
+    "errors": {
+      "nameRequired": "يجب أن يتكون الاسم الكامل من 3 أحرف على الأقل",
+      "phoneInvalid": "{{name}}: {{length}} أرقام{{reqPatternStr}}",
+      "cityInvalid": "يرجى اختيار مدينة/إمارة صحيحة في الإمارات",
+      "streetRequired": "عنوان الشارع مطلوب",
+      "areaRequired": "المنطقة مطلوبة",
+      "cityRequired": "المدينة مطلوبة",
+      "emirateRequired": "يرجى اختيار إمارة",
+      "saveFailed": "فشل حفظ العنوان. يرجى المحاولة مرة أخرى."
+    },
     "fields": {
+      "label": {
+        "label": "التسمية",
+        "placeholder": "المنزل، العمل..."
+      },
       "fullName": {
         "label": "الاسم الكامل",
-        "placeholder": "محمد أحمد",
-        "required": "الاسم مطلوب"
+        "placeholder": "جون دو"
       },
       "phone": {
-        "label": "رقم الهاتف",
-        "placeholder": "+971 50 000 0000",
-        "required": "رقم الهاتف مطلوب"
+        "label": "الهاتف",
+        "placeholder": "+971 50 123 4567"
       },
-      "email": {
-        "label": "البريد الإلكتروني",
-        "placeholder": "mohammed@example.com",
-        "required": "البريد الإلكتروني مطلوب",
-        "invalid": "البريد الإلكتروني غير صالح"
+      "building": {
+        "label": "المبنى",
+        "placeholder": "برج الريم"
       },
-      "address": {
+      "flat": {
+        "label": "شقة / فيلا",
+        "placeholder": "شقة 4B"
+      },
+      "street": {
         "label": "عنوان الشارع",
-        "placeholder": "شارع البحر 123، شقة 4B",
-        "required": "العنوان مطلوب"
+        "placeholder": "شارع المحيط 123"
+      },
+      "area": {
+        "label": "المنطقة",
+        "placeholder": "النهدة"
       },
       "city": {
         "label": "المدينة",
-        "placeholder": "دبي",
-        "required": "المدينة مطلوبة"
+        "placeholder": "دبي"
       },
-      "state": {
-        "label": "الولاية/الإمارة",
-        "placeholder": "دبي",
-        "required": "الولاية مطلوبة"
+      "emirate": {
+        "label": "الإمارة",
+        "placeholder": "دبي"
       },
-      "zip": {
-        "label": "الرمز البريدي",
-        "placeholder": "00000",
-        "required": "الرمز البريدي مطلوب"
+      "country": {
+        "label": "البلد",
+        "placeholder": "الإمارات"
       }
     }
+  },
+  "delivery": {
+    "title": "تفضيلات التوصيل",
+    "date": "التاريخ المفضل",
+    "slot": "فترة التوصيل",
+    "slots": {
+      "morning": "صباحاً (8 ص – 12 م)",
+      "afternoon": "عصراً (12 م – 5 م)",
+      "evening": "مساءً (5 م – 9 م)"
+    },
+    "notes": "ملاحظات التوصيل",
+    "notesPlaceholder": "رن الجرس، اتركه عند الباب وما إلى ذلك.",
+    "loading": "تنزيل أوقات التوصيل المتوقعة...",
+    "window": "نافذة التوصيل المتوقعة",
+    "sameDay": "توصيل في نفس اليوم",
+    "dayDelivery": "{{count}} يوم وقت التوصيل",
+    "daysDelivery": "{{count}} أيام وقت التوصيل",
+    "availableToday": "متاح للتوصيل اليوم",
+    "minDateTomorrow": "أول يوم متاح للتوصيل هو غداً",
+    "minDateInDays": "تاريخ التوصيل الأدنى خلال {{count}} أيام",
+    "productsDeliveryTimes": "مواعيد توصيل المنتجات",
+    "fallbackProductName": "المنتج {{index}}",
+    "qty": "الكمية: {{count}}",
+    "daysShort": "{{count}}أيام",
+    "earliest": "أقرب وقت:",
+    "checkingSlots": "التحقق من الفترات...",
+    "noSlots": "لا توجد فترات متاحة",
+    "selectSlot": "اختار فترة",
+    "noSlotsForDate": "لا توجد فترات متاحة في هذا التاريخ. الرجاء اختيار تاريخ مختلف.",
+    "selectDateHint": "يرجى تحديد تاريخ التوصيل المفضل للمتابعة في طلبك.",
+    "fulfillmentHelper": "موعد التوصيل يعتمد على كمية الطلب. الطلبات الأكبر قد تستغرق وقتاً أطول لتلبيتها."
+  },
+  "tip": {
+    "title": "إضافة إكرامية",
+    "noTip": "لا يوجد إكرامية",
+    "custom": "مخصص",
+    "addPointFive": "أضف 0.5 درهم"
   },
   "payment": {
     "title": "طريقة الدفع",
     "cod": {
       "title": "الدفع عند الاستلام",
-      "subtitle": "ادفع عند استلام طلبك"
+      "subtitle": "ادفع عند استلام طلبك",
+      "unavailableForOrder": "غير متاح لهذا الطلب حاليا."
     },
     "ziina": {
-      "title": "الدفع الإلكتروني",
+      "title": "الدفع عبر الإنترنت",
       "subtitle": "بطاقة ائتمان، بطاقة خصم"
     }
   },
   "summary": {
     "title": "ملخص الطلب",
-    "qtyPrice": "{{qty}} x AED {{price}}",
+    "updating": "تحديث",
+    "qtyPrice": "{{qty}} x درهم {{price}}",
     "subtotal": "المجموع الفرعي",
+    "discount": "خصم",
+    "afterDiscount": "بعد الخصم",
     "shipping": "الشحن",
+    "calculatedAtCheckout": "يُحسب عند الخروج",
     "free": "مجاني",
+    "deliveryRule": "توصيل مجاني للطلبات فوق 40 درهم.",
+    "tip": "إكرامية",
+    "selectAddressHint": "حدد عنوان التسليم لحساب رسوم التوصيل الشاملة.",
+    "selectDateHint": "اختر تاريخ التسليم لمعاينة الإجمالي ورسوم التوصيل النهائية.",
     "total": "الإجمالي"
   },
   "actions": {
-    "placeOrder": "تأكيد الطلب"
+    "placeOrder": "تأكيد الطلب",
+    "processing": "جاري المعالجة..."
   },
   "currency": {
-    "aed": "AED {{value}}"
+    "aed": "درهم {{value}}",
+    "aedCode": "درهم"
   },
   "addressTypes": {
     "home": "المنزل",
@@ -86,12 +163,58 @@
     "other": "أخرى"
   },
   "emirates": {
-    "abu_dhabi": "أبوظبي",
+    "abu_dhabi": "أبو ظبي",
     "dubai": "دبي",
     "sharjah": "الشارقة",
     "ajman": "عجمان",
     "umm_al_quwain": "أم القيوين",
     "ras_al_khaimah": "رأس الخيمة",
     "fujairah": "الفجيرة"
+  },
+  "fields": {
+    "pinLocation": "تحديد موقعك على الخريطة",
+    "addressType": "نوع العنوان",
+    "phone": "رقم الهاتف",
+    "emirate": "الإمارة",
+    "cancel": "إلغاء",
+    "digits": "{{count}} أرقام",
+    "enterOtp": "أدخل رمز التحقق",
+    "otpPlaceholder": "6 أرقام",
+    "editPhone": "تعديل الهاتف"
+  },
+  "verifyPhone": {
+    "title": "تأكيد رقم الهاتف",
+    "subtitle": "فقط المستخدمين الذين أكدوا هواتفهم يمكنهم إجراء الطلبات.",
+    "helper": "قم بتأكيد رقمك قبل الطلب. هذا الإجراء ضروري لمنع الطلبات الوهمية.",
+    "button": "تأكيد الهاتف",
+    "sending": "جاري الإرسال...",
+    "sendOtp": "أرسل رمز التحقق (OTP)",
+    "sendError": "فشل في إرسال الرمز، يرجى المحاولة مجددًا.",
+    "verifying": "جاري التحقق...",
+    "verifyAndContinue": "تأكيد واستمرار",
+    "verifyError": "فشل التحقق، الرمز غير صحيح.",
+    "success": "تم تأكيد هاتفك! يمكنك الآن إتمام الطلب.",
+    "otpError": "الرجاء إدخال أرقام الرمز الستة."
+  },
+  "coupon": {
+    "title": "رمز القسيمة",
+    "subtitle": "تحقق من رمز القسيمة قبل تأكيد طلبك.",
+    "placeholder": "ادخل رمز الخصم",
+    "apply": "تطبيق",
+    "remove": "إلغاء",
+    "applied": "تم تطبيق القسيمة: {{code}}",
+    "availableTitle": "القسائم المتاحة",
+    "loading": "جاري تحميل القسائم...",
+    "empty": "لا يوجد قسائم متاحة الآن.",
+    "appliedShort": "تم التطبيق",
+    "applyShort": "اضغط للتطبيق"
+  },
+  "coupons": {
+    "applyToOrder": "تطبيق {{badge}} على الطلب.",
+    "availableCoupon": "قسيمة متاحة",
+    "loading": "تنزيل القسائم المتاحة...",
+    "empty": "لا يوجد قسائم متاحة في الوقت الحالي.",
+    "enterToApply": "أدخل رمز الخصم أولًا.",
+    "unableToLoad": "تعذر تحميل القسيمة الآن."
   }
 }

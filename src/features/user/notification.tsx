@@ -51,7 +51,7 @@ const notificationsApi = {
 };
 
 /* ── Helper: format date for display ── */
-function formatDate(dateStr?: string): string {
+function formatRelativeTime(dateStr: string | undefined, t: any, lang: string): string {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     const now = new Date();
@@ -60,17 +60,19 @@ function formatDate(dateStr?: string): string {
     const diffHr = Math.floor(diffMs / 3600000);
     const diffDay = Math.floor(diffMs / 86400000);
 
-    if (diffMin < 1) return 'Just now';
-    if (diffMin < 60) return `${diffMin} min ago`;
-    if (diffHr < 24) return `${diffHr} hour${diffHr > 1 ? 's' : ''} ago`;
-    if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
-    return date.toLocaleDateString('en-AE', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (diffMin < 1) return t('notifications.justNow');
+    if (diffMin < 60) return t('notifications.minAgo', { count: diffMin });
+    if (diffHr < 24) return t('notifications.hourAgo', { count: diffHr });
+    if (diffDay < 7) return t('notifications.dayAgo', { count: diffDay });
+
+    const locale = lang === 'ar' ? 'ar-AE' : lang === 'cn' ? 'zh-CN' : 'en-AE';
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 const NotificationPage: React.FC = () => {
     const navigate = useNavigate();
     const { isArabic } = useLanguageToggle();
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [markingAll, setMarkingAll] = useState(false);
@@ -90,7 +92,7 @@ const NotificationPage: React.FC = () => {
                 ...n,
                 type: n.type || 'system',
                 read: n.read ?? n.is_read ?? false,
-                date: n.date || formatDate(n.created_at),
+                date: n.date || formatRelativeTime(n.created_at, t, i18n.language),
                 action_url: n.action_url || null,
             }));
             if (reset) setNotifications(mapped);
@@ -297,9 +299,9 @@ const NotificationPage: React.FC = () => {
                                                     }
                                                 }}
                                                 className="px-3 py-1.5 bg-white text-violet-600 rounded-lg shadow-sm border border-slate-100 hover:bg-violet-50 transition-colors text-[10px] font-bold"
-                                                title="Open"
+                                                title={t('notifications.open')}
                                             >
-                                                Open
+                                                {t('notifications.open')}
                                             </button>
                                         )}
                                         {!notification.read && (

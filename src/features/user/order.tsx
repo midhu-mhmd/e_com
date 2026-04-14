@@ -33,11 +33,11 @@ const STATUS_MAP: Record<string, { color: string; bg: string; icon: React.ReactN
 const getStatus = (status: string) =>
     STATUS_MAP[status.toLowerCase()] || STATUS_MAP.pending;
 
-const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-AE", { year: "numeric", month: "long", day: "numeric" });
+const formatDate = (d: string, lang: string = "en") =>
+    new Date(d).toLocaleDateString(lang === 'ar' ? 'ar-AE' : lang === 'cn' ? 'zh-CN' : 'en-AE', { year: "numeric", month: "long", day: "numeric" });
 
-const formatDateTime = (d: string) =>
-    new Date(d).toLocaleString("en-AE", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const formatDateTime = (d: string, lang: string = "en") =>
+    new Date(d).toLocaleString(lang === 'ar' ? 'ar-AE' : lang === 'cn' ? 'zh-CN' : 'en-AE', { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /* ══════════════════════════════════════════════════
    REVIEW MODAL (MINIMAL & INDUSTRY STANDARD)
@@ -325,7 +325,7 @@ const ReviewModal: React.FC<{
                                 </div>
                                 <div className={`${isArabic ? 'pl-6' : 'pr-6'}`}>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{current.review_id ? t("review.editReview") : t("review.rateYourPurchase")}</p>
-                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">Order ID: {current.review_id}</h3>
+                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">{t("review.productName", { name: current.product_name })}</h3>
                                 </div>
                             </div>
 
@@ -461,7 +461,7 @@ const OrderPage: React.FC = () => {
    ORDER LIST VIEW
    ══════════════════════════════════════════════════ */
 const OrderList: React.FC = () => {
-    const { t } = useTranslation("orders");
+    const { t, i18n } = useTranslation("orders");
     const [orders, setOrders] = useState<OrderDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -641,10 +641,10 @@ const OrderList: React.FC = () => {
 
                                             <div className="flex-1">
                                                 <h3 className="text-3xl font-black text-slate-900 tracking-tight group-hover:text-cyan-600 transition-colors">
-                                                    Order ID: {order.id}
+                                                    {t("list.orderId", { id: order.id })}
                                                 </h3>
                                                 <p className="text-sm font-medium text-slate-400 mt-2">
-                                                    {t("list.orderedOn", { date: formatDate(order.created_at) })}
+                                                    {t("list.orderedOn", { date: formatDate(order.created_at, i18n.language) })}
                                                 </p>
                                             </div>
 
@@ -669,11 +669,11 @@ const OrderList: React.FC = () => {
                                                 <div className="flex flex-col">
                                                     {Number(order.discount_amount || 0) > 0 && (
                                                         <span className="text-[10px] font-black uppercase text-emerald-600 mb-1 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md self-start">
-                                                            {order.coupon_code || "OFF"} - AED {parseFloat(order.discount_amount || "0").toFixed(0)} SAVED
+                                                            {order.coupon_code || "OFF"} - {t("currency.aedValue", { value: parseFloat(order.discount_amount || "0").toFixed(0) })} {t("list.saved")}
                                                         </span>
                                                     )}
                                                     <div className="text-2xl font-black text-slate-900">
-                                                        AED {parseFloat(order.total_amount).toFixed(2)}
+                                                        {t("currency.aedValue", { value: parseFloat(order.total_amount).toFixed(2) })}
                                                     </div>
                                                 </div>
                                                 <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-colors text-slate-400">
@@ -706,7 +706,7 @@ const OrderList: React.FC = () => {
    ORDER DETAIL VIEW (BENTO BOX GRID)
    ══════════════════════════════════════════════════ */
 const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
-    const { t } = useTranslation("orders");
+    const { t, i18n } = useTranslation("orders");
     const navigate = useNavigate();
     const toast = useToast();
     const { isArabic } = useLanguageToggle();
@@ -820,7 +820,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                 window.location.href = res.payment_url;
             }
         } catch (err: any) {
-            const msg = err?.response?.data?.error || err?.response?.data?.detail || "Failed to retry payment. Please try again.";
+            const msg = err?.response?.data?.error || err?.response?.data?.detail || t("detail.errorLoad");
             toast.show(msg, "error");
         } finally {
             setRetryingPayment(false);
@@ -847,13 +847,13 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold mb-6 ${st.bg} ${st.color}`}>
                                 {st.icon} {t(`status.${st.key}`)}
                             </span>
-                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">Order ID: <BackendData value={order.id} /></h1>
-                            <p className="text-lg text-slate-500 font-medium">{t("detail.placed", { date: formatDateTime(order.created_at) })}</p>
+                            <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">{t("detail.orderId", { id: "" })}<BackendData value={order.id} /></h1>
+                            <p className="text-lg text-slate-500 font-medium">{t("detail.placed", { date: formatDateTime(order.created_at, i18n.language) })}</p>
                         </div>
                         <div className="hidden sm:flex self-stretch items-center">
                             <div className="text-right">
                                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{t("detail.orderTotal")}</p>
-                                <p className="text-4xl font-black text-slate-900">AED {parseFloat(order.total_amount).toFixed(2)}</p>
+                                <p className="text-4xl font-black text-slate-900">{t("currency.aedValue", { value: parseFloat(order.total_amount).toFixed(2) })}</p>
                                 {(isPaymentPending || (!payment && order.status.toLowerCase() === "pending")) && (
                                     <button
                                         onClick={handleRetryPayment}
@@ -861,9 +861,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {retryingPayment ? (
-                                            <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                            <><Loader2 size={16} className="animate-spin" /> {t("detail.processing")}</>
                                         ) : (
-                                            <><CreditCard size={16} /> Retry Payment</>
+                                            <><CreditCard size={16} /> {t("detail.retryPayment")}</>
                                         )}
                                     </button>
                                 )}
@@ -918,15 +918,15 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         <h3
                                             className="text-lg font-bold text-slate-900 mb-1 line-clamp-2"
                                         >
-                                            Order ID: {order.id}
+                                            {item.product_name}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-2">
                                             <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">{t("detail.qty", { count: item.quantity })}</span>
-                                            <span className="text-sm font-semibold text-slate-500">AED {parseFloat(item.price).toFixed(2)}</span>
+                                            <span className="text-sm font-semibold text-slate-500">{t("currency.aedValue", { value: parseFloat(item.price).toFixed(2) })}</span>
                                         </div>
                                     </div>
                                     <div className="sm:self-center">
-                                        <p className="text-xl font-black text-slate-900">AED {parseFloat(item.subtotal).toFixed(2)}</p>
+                                        <p className="text-xl font-black text-slate-900">{t("currency.aedValue", { value: parseFloat(item.subtotal).toFixed(2) })}</p>
                                     </div>
                                 </div>
                             )})}
@@ -1049,7 +1049,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                                     </div>
                                                     {historyEntry && (
                                                         <div className="text-xs font-semibold text-slate-400 mt-1">
-                                                            {formatDateTime(historyEntry.created_at)}
+                                                            {formatDateTime(historyEntry.created_at, i18n.language)}
                                                         </div>
                                                     )}
                                                     {historyEntry?.notes && (
@@ -1113,13 +1113,13 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                             : payment.status.toLowerCase() === "failed"
                                                 ? "text-rose-500"
                                                 : "text-amber-500"
-                                            }`}>{payment.status}</p>
+                                            }`}>{t(`status.${payment.status.toLowerCase()}`, { defaultValue: payment.status })}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.method")}</p>
                                         <p className="font-black text-lg text-slate-900">
                                             {(payment.payment_method || "").toUpperCase() === "ZIINA"
-                                                ? t("detail.online", { defaultValue: "Online" })
+                                                ? t("detail.online")
                                                 : payment.payment_method}
                                         </p>
                                     </div>
@@ -1132,7 +1132,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     {isPaymentSuccess && payment.created_at && (
                                         <div>
                                             <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.paymentDate")}</p>
-                                            <p className="font-bold text-sm text-slate-700">{formatDateTime(payment.created_at)}</p>
+                                            <p className="font-bold text-sm text-slate-700">{formatDateTime(payment.created_at, i18n.language)}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1171,9 +1171,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                         className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {retryingPayment ? (
-                                            <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                            <><Loader2 size={16} className="animate-spin" /> {t("detail.processing")}</>
                                         ) : (
-                                            <><CreditCard size={16} /> Retry Payment</>
+                                            <><CreditCard size={16} /> {t("detail.retryPayment")}</>
                                         )}
                                     </button>
                                 </div>
@@ -1188,7 +1188,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                 </div>
                                 <div>
                                     <p className="text-sm font-bold text-slate-400 mb-1">{t("detail.status")}</p>
-                                    <p className="capitalize font-black text-lg text-amber-500">Pending</p>
+                                    <p className="capitalize font-black text-lg text-amber-500">{t("status.pending")}</p>
                                 </div>
                             </div>
                             <div className="mt-6 pt-6 border-t border-slate-100">
@@ -1198,9 +1198,9 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {retryingPayment ? (
-                                        <><Loader2 size={16} className="animate-spin" /> Processing...</>
+                                        <><Loader2 size={16} className="animate-spin" /> {t("detail.processing")}</>
                                     ) : (
-                                        <><CreditCard size={16} /> Retry Payment</>
+                                        <><CreditCard size={16} /> {t("detail.retryPayment")}</>
                                     )}
                                 </button>
                             </div>
@@ -1227,31 +1227,31 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             <div className="space-y-4 text-sm font-bold text-slate-400">
                                 <div className="flex justify-between items-center">
                                     <span>{t("detail.subtotal")}</span>
-                                    <span className="text-white text-base">AED {subtotal.toFixed(2)}</span>
+                                    <span className="text-white text-base">{t("currency.aedValue", { value: subtotal.toFixed(2) })}</span>
                                 </div>
                                 {discountAmount > 0 && (
                                     <div className="flex justify-between items-center text-emerald-400">
                                         <div className="flex flex-col">
-                                            <span>{t("summary.discount", { defaultValue: "Discount" })}</span>
+                                            <span>{t("summary.discount")}</span>
                                             {couponCode && (
                                                 <span className="text-[10px] font-mono uppercase tracking-wider opacity-75">
-                                                    Code: {couponCode}
+                                                    {t("summary.couponCode", { code: couponCode })}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-base">-AED {discountAmount.toFixed(2)}</span>
+                                        <span className="text-base">-{t("currency.aedValue", { value: discountAmount.toFixed(2) })}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center">
-                                    <span>{t("summary.shipping", { defaultValue: "Shipping" })}</span>
+                                    <span>{t("summary.shipping")}</span>
                                     <span className="text-white text-base">
-                                        {deliveryCharge > 0 ? `AED ${deliveryCharge.toFixed(2)}` : t("summary.free", { defaultValue: "Free" })}
+                                        {deliveryCharge > 0 ? t("currency.aedValue", { value: deliveryCharge.toFixed(2) }) : t("summary.free")}
                                     </span>
                                 </div>
                                 {tipAmount > 0 && (
                                     <div className="flex justify-between items-center">
                                         <span>{t("detail.tipAdded")}</span>
-                                        <span className="text-white text-base">AED {tipAmount.toFixed(2)}</span>
+                                        <span className="text-white text-base">{t("currency.aedValue", { value: tipAmount.toFixed(2) })}</span>
                                     </div>
                                 )}
                                 {order.preferred_delivery_date && (
@@ -1275,7 +1275,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                         </div>
                         <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col items-end relative z-10">
                             <span className="font-bold text-slate-400 mb-1">{t("detail.totalAmount")}</span>
-                            <span className="text-4xl font-black text-cyan-400">AED {parseFloat(order.total_amount).toFixed(2)}</span>
+                            <span className="text-4xl font-black text-cyan-400">{t("currency.aedValue", { value: parseFloat(order.total_amount).toFixed(2) })}</span>
                         </div>
 
                         {/* Decorative background shape */}

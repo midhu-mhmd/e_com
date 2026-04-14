@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, ArrowRight, Home, ShoppingBag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "../../hooks";
 import { clearCart } from "../../features/admin/cart/cartSlice";
 import { ordersApi } from "../../features/admin/orders/ordersApi";
 
 const PaymentSuccess: React.FC = () => {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
@@ -16,7 +18,7 @@ const PaymentSuccess: React.FC = () => {
   useEffect(() => {
     dispatch(clearCart());
     if (orderId) {
-      ordersApi.verifyPayment(Number(orderId)).catch(() => {});
+      ordersApi.verifyPayment(Number(orderId)).catch(() => { });
     }
     localStorage.removeItem("pending_order_id");
   }, [dispatch, orderId]);
@@ -68,24 +70,23 @@ const PaymentSuccess: React.FC = () => {
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs font-bold text-emerald-700 tracking-wide uppercase">
-            Payment Confirmed
+            {t("payment.success.badge")}
           </span>
         </motion.div>
 
         {/* Title */}
         <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-          Order Placed Successfully!
+          {t("payment.success.title")}
         </h1>
 
         {orderId && (
           <p className="text-lg font-bold text-emerald-600 mb-2">
-            Order #{orderId}
+            {t("payment.success.orderId", { id: orderId })}
           </p>
         )}
 
         <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
-          Thank you for your order! Your payment has been processed successfully.
-          We're preparing your fresh catch now.
+          {t("payment.success.description")}
         </p>
 
         {/* Order Status Card */}
@@ -100,21 +101,21 @@ const PaymentSuccess: React.FC = () => {
               <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
                 <CheckCircle size={18} className="text-emerald-600" />
               </div>
-              <span className="text-xs font-semibold text-emerald-600">Confirmed</span>
+              <span className="text-xs font-semibold text-emerald-600">{t("payment.success.stepConfirmed")}</span>
             </div>
             <div className="h-px w-8 bg-slate-200" />
             <div className="flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-cyan-100 flex items-center justify-center">
                 <Package size={18} className="text-cyan-600" />
               </div>
-              <span className="text-xs font-semibold text-slate-400">Preparing</span>
+              <span className="text-xs font-semibold text-slate-400">{t("payment.success.stepPreparing")}</span>
             </div>
             <div className="h-px w-8 bg-slate-200" />
             <div className="flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
                 <ShoppingBag size={18} className="text-slate-400" />
               </div>
-              <span className="text-xs font-semibold text-slate-400">Delivered</span>
+              <span className="text-xs font-semibold text-slate-400">{t("payment.success.stepDelivered")}</span>
             </div>
           </div>
         </motion.div>
@@ -125,7 +126,7 @@ const PaymentSuccess: React.FC = () => {
             onClick={() => navigate("/orders")}
             className="group flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-all"
           >
-            View My Orders
+            {t("payment.success.viewOrders")}
             <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
           <button
@@ -133,13 +134,13 @@ const PaymentSuccess: React.FC = () => {
             className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-50 transition-all"
           >
             <Home size={16} />
-            Back to Home
+            {t("payment.success.backHome")}
           </button>
         </div>
 
         {/* Countdown */}
         <p className="text-xs text-slate-400">
-          Redirecting to your orders in {countdown}s...
+          {t("payment.success.redirect", { count: countdown })}
         </p>
       </motion.div>
     </div>

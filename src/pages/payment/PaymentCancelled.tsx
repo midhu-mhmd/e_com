@@ -2,20 +2,13 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, ArrowLeft, Package } from "lucide-react";
-import { ordersApi } from "../../features/admin/orders/ordersApi";
+import { useTranslation } from "react-i18next";
 
 const PaymentCancelled: React.FC = () => {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
-
-  React.useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("order_id") || sessionStorage.getItem("pending_order_id") || localStorage.getItem("pending_order_id");
-    if (id) {
-      ordersApi.verifyPayment(Number(id)).catch(() => {});
-    }
-    localStorage.removeItem("pending_order_id");
-  }, []);
+  const orderId = searchParams.get("order_id") || sessionStorage.getItem("pending_order_id");
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center px-4 py-10 sm:p-6">
@@ -45,24 +38,23 @@ const PaymentCancelled: React.FC = () => {
         >
           <span className="w-2 h-2 rounded-full bg-amber-500" />
           <span className="text-[10px] sm:text-xs font-bold text-amber-700 tracking-wide uppercase">
-            Order Pending
+            {t("payment.cancelled.badge")}
           </span>
         </motion.div>
 
         {/* Title */}
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 mb-3">
-          Your Order Is Marked as Pending
+          {t("payment.cancelled.title")}
         </h1>
 
         {orderId && (
           <p className="text-sm font-semibold text-amber-600 mb-2">
-            Order #{orderId}
+            {t("payment.cancelled.orderId", { id: orderId })}
           </p>
         )}
 
         <p className="text-sm sm:text-base text-slate-500 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed">
-          Your payment was cancelled but your order has been saved as pending.
-          You can return to your order at any time to complete the payment.
+          {t("payment.cancelled.description")}
         </p>
 
         {/* Action Buttons */}
@@ -72,14 +64,14 @@ const PaymentCancelled: React.FC = () => {
             className="w-full sm:w-auto group flex items-center justify-center gap-2 px-6 py-3 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-all"
           >
             <Package size={16} />
-            Return to Order
+            {t("payment.cancelled.returnToOrder")}
           </button>
           <button
             onClick={() => navigate("/")}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-slate-50 transition-all"
           >
             <ArrowLeft size={16} />
-            Back to Home
+            {t("payment.cancelled.backHome")}
           </button>
         </div>
       </motion.div>

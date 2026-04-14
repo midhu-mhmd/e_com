@@ -4,6 +4,8 @@
             "personalInfo": "Personal Info",
             "myOrders": "My Orders",
             "addresses": "Addresses",
+            "reviews": "Reviews",
+            "referrals": "Referrals",
             "signOut": "Sign Out"
         },
         "auth": {
@@ -87,6 +89,62 @@
             "default": "Default",
             "setAsDefault": "Set as Default",
             "saveAddress": "Save Address"
+        },
+        "reviews": {
+            "title": "My Reviews",
+            "subtitle": "All reviews you have written",
+            "empty": "You haven’t written any reviews yet.",
+            "reviewLabel": "Review",
+            "view": "View",
+            "hide": "Hide",
+            "adminResponse": "Admin Response",
+            "edit": "Edit",
+            "cancel": "Cancel",
+            "save": "Save",
+            "saving": "Saving…",
+            "editReview": "Edit Review",
+            "addPhotos": "Add Photos (Optional)",
+            "updateComment": "Update your comment",
+            "loading": "Loading reviews…"
+        },
+        "referrals": {
+            "title": "Friends Who Refer",
+            "subtitle": "Stay Friends Forever",
+            "description": "When you refer your friend to Simak Fresh, you get 20% OFF on your next order and so does your friend. Then you both eat healthy ever after!",
+            "codeLabel": "Your Referral Code",
+            "copyCode": "Copy code",
+            "startReferring": "Start Referring, Start Earning!",
+            "steps": {
+                "one": {
+                    "title": "Invite a Friend",
+                    "desc": "Share your unique referral code with friends and family. Ask them to register on Simak Fresh."
+                },
+                "two": {
+                    "title": "Friend Makes First Purchase",
+                    "desc": "Your friend enters your referral code at checkout on their first order."
+                },
+                "three": {
+                    "title": "Both Get 20% OFF",
+                    "desc": "Your friend gets 20% OFF instantly! Once the order is delivered, you also receive a 20% discount coupon."
+                }
+            },
+            "copyLink": "Copy Link",
+            "howItWorks": "Here is How it ",
+            "works": "Works",
+            "stats": {
+                "invited": "Friends Invited",
+                "successful": "Successful",
+                "earned": "Coupons Earned"
+            },
+            "terms": {
+                "title": "Terms and Conditions",
+                "1": "Your 20% Discount Coupon is valid for 3 months from the date of issue and can be used only once.",
+                "2": "Maximum discount that can be availed is AED 20.",
+                "3": "This offer is ONLY valid in UAE.",
+                "4": "This offer is not transferable.",
+                "5": "Simak Fresh reserves the right to modify or terminate this program at any time.",
+                "6": "The referral code must be applied at checkout during the friend's first purchase."
+            }
         },
         "emirates": {
             "abu_dhabi": "Abu Dhabi",

@@ -14,15 +14,19 @@
     "orderedOn": "تم الطلب في {{date}}",
     "writeReview": "كتابة تقييم",
     "editReview": "تعديل التقييم",
-    "filterAll": "الكل"
+    "filterAll": "الكل",
+    "orderId": "رقم الطلب: {{id}}",
+    "saved": "وفرت"
   },
   "detail": {
     "back": "رجوع",
+    "orderId": "رقم الطلب: {{id}}",
     "orderTitle": "طلب #{{id}}",
     "placed": "تم تقديمه {{date}}",
     "orderTotal": "إجمالي الطلب",
     "orderedItems": "المنتجات المطلوبة",
-    "itemsCount": "{{count}} منتجات",
+    "itemsCount": "منتج واحد",
+    "itemsCount_plural": "{{count}} منتجات",
     "qty": "الكمية: {{count}}",
     "timeline": "الجدول الزمني",
     "deliveryAddress": "عنوان التوصيل",
@@ -46,7 +50,10 @@
     "error": "خطأ",
     "orderNotFound": "الطلب غير موجود",
     "errorLoad": "فشل تحميل الطلب.",
-    "returnToOrders": "العودة إلى الطلبات"
+    "returnToOrders": "العودة إلى الطلبات",
+    "retryPayment": "إعادة محاولة الدفع",
+    "processing": "جارٍ المعالجة...",
+    "online": "دفع عبر الإنترنت"
   },
   "status": {
     "pending": "قيد الانتظار",
@@ -57,11 +64,14 @@
     "completed": "مكتمل",
     "cancelled": "ملغي",
     "returned": "مُرتجع",
-    "paid": "مدفوع"
+    "paid": "مدفوع",
+    "success": "نجاح",
+    "failed": "فشل"
   },
   "review": {
     "editReview": "تعديل تقييمك",
     "rateYourPurchase": "قيّم مشترياتك",
+    "productName": "تقييم: {{name}}",
     "placeholder": "شارك تفاصيل تجربتك...",
     "addMorePhotos": "إضافة صور إضافية (اختياري)",
     "addPhotos": "إضافة صور (اختياري)",
@@ -85,5 +95,15 @@
       "excellent": "ممتاز",
       "tapToRate": "اضغط للتقييم"
     }
+  },
+  "summary": {
+    "discount": "الخصم",
+    "shipping": "الشحن",
+    "free": "مجاني",
+    "couponCode": "الكود: {{code}}"
+  },
+  "currency": {
+    "aed": "درهم",
+    "aedValue": "درهم {{value}}"
   }
 }

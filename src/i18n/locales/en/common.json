@@ -187,7 +187,15 @@
     "emptyHintAll": "We'll let you know when something important happens.",
     "emptyHintOther": "Try switching filters or check back later.",
     "markRead": "Mark as Read",
-    "delete": "Delete"
+    "delete": "Delete",
+    "open": "Open",
+    "justNow": "Just now",
+    "minAgo": "{{count}} min ago",
+    "minAgo_plural": "{{count}} mins ago",
+    "hourAgo": "{{count}} hour ago",
+    "hourAgo_plural": "{{count}} hours ago",
+    "dayAgo": "{{count}} day ago",
+    "dayAgo_plural": "{{count}} days ago"
   },
   "wishlist": {
     "title": "My Wishlist",
@@ -233,7 +241,48 @@
       "requestError": "Request Error",
       "badRequest": "400 — Bad Request",
       "serverError": "500 — Server Error",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "genericFallback": "Something went wrong. Please try again."
+    }
+  },
+  "payment": {
+    "success": {
+      "badge": "Payment Confirmed",
+      "title": "Order Placed Successfully!",
+      "orderId": "Order #{{id}}",
+      "description": "Thank you for your order! Your payment has been processed successfully. We're preparing your fresh catch now.",
+      "stepConfirmed": "Confirmed",
+      "stepPreparing": "Preparing",
+      "stepDelivered": "Delivered",
+      "viewOrders": "View My Orders",
+      "backHome": "Back to Home",
+      "redirect": "Redirecting to your orders in {{count}}s..."
+    },
+    "failed": {
+      "badge": "Payment Failed",
+      "title": "Payment Unsuccessful",
+      "orderId": "Order #{{id}}",
+      "description": "We couldn't process your payment. No amount has been charged. Please try again or use a different payment method.",
+      "reasonsTitle": "Common reasons for failure:",
+      "reasons": [
+        "Insufficient balance in your account",
+        "Card expired or incorrect details entered",
+        "Transaction declined by your bank",
+        "Network interruption during payment"
+      ],
+      "retryFallback": "Failed to retry payment. Please try again.",
+      "processing": "Processing...",
+      "tryAgain": "Try Again",
+      "contactSupport": "Contact Support",
+      "backHome": "Back to Home"
+    },
+    "cancelled": {
+      "badge": "Order Pending",
+      "title": "Your Order Is Marked as Pending",
+      "orderId": "Order #{{id}}",
+      "description": "Your payment was cancelled but your order has been saved as pending. You can return to your order at any time to complete the payment.",
+      "returnToOrder": "Return to Order",
+      "backHome": "Back to Home"
     }
   },
   "profileModal": {

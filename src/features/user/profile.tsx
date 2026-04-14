@@ -138,11 +138,11 @@ const ProfilePage: React.FC = () => {
     };
 
     const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-        { key: "profile", label: "Personal Info", icon: <User size={18} /> },
-        { key: "orders", label: "My Orders", icon: <Package size={18} /> },
-        { key: "reviews", label: "Reviews", icon: <Star size={18} /> },
-        { key: "addresses", label: "Addresses", icon: <MapPin size={18} /> },
-        { key: "referrals", label: "Referrals", icon: <Gift size={18} /> },
+        { key: "profile", label: t("profile.sidebar.personalInfo", { defaultValue: "Personal Info" }), icon: <User size={18} /> },
+        { key: "orders", label: t("profile.sidebar.myOrders", { defaultValue: "My Orders" }), icon: <Package size={18} /> },
+        { key: "reviews", label: t("profile.sidebar.reviews", { defaultValue: "Reviews" }), icon: <Star size={18} /> },
+        { key: "addresses", label: t("profile.sidebar.addresses", { defaultValue: "Addresses" }), icon: <MapPin size={18} /> },
+        { key: "referrals", label: t("profile.sidebar.referrals", { defaultValue: "Referrals" }), icon: <Gift size={18} /> },
     ];
 
     return (
@@ -687,8 +687,8 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                         <User size={20} />
                     </div>
                     <div>
-                        <h2 className="text-base md:text-lg font-bold text-slate-900">Personal Information</h2>
-                        <p className="text-[11px] md:text-xs text-slate-400">Your personal details and preferences</p>
+                        <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.personalInfo.title", { defaultValue: "Personal Information" })}</h2>
+                        <p className="text-[11px] md:text-xs text-slate-400">{t("profile.personalInfo.subtitle", { defaultValue: "Your personal details and preferences" })}</p>
                     </div>
                 </div>
 
@@ -929,8 +929,8 @@ const OrdersTab: React.FC = () => {
                         <Package size={20} />
                     </div>
                     <div>
-                        <h2 className="text-base md:text-lg font-bold text-slate-900">My Orders</h2>
-                        <p className="text-[11px] md:text-xs text-slate-400">Your recent purchases</p>
+                        <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.orders.title", { defaultValue: "My Orders" })}</h2>
+                        <p className="text-[11px] md:text-xs text-slate-400">{t("profile.orders.subtitle", { defaultValue: "Your recent purchases" })}</p>
                     </div>
                 </div>
                 <Link to="/orders" className="text-xs font-bold text-cyan-600 hover:underline flex items-center gap-1 self-end sm:self-auto">
@@ -1005,6 +1005,7 @@ const OrdersTab: React.FC = () => {
    Reviews Tab — list + edit
    ═══════════════════════════════════════════════ */
 const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
+    const { t } = useTranslation("profile");
     const [reviews, setReviews] = useState<ReviewDto[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -1096,12 +1097,12 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                     <Star size={20} />
                 </div>
                 <div>
-                    <h2 className="text-base md:text-lg font-bold text-slate-900">My Reviews</h2>
-                    <p className="text-[11px] md:text-xs text-slate-400">All reviews you have written</p>
+                    <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.reviews.title", { defaultValue: "My Reviews" })}</h2>
+                    <p className="text-[11px] md:text-xs text-slate-400">{t("profile.reviews.subtitle", { defaultValue: "All reviews you have written" })}</p>
                 </div>
             </div>
 
-            {loading && <div className="text-sm text-slate-500">Loading reviews…</div>}
+            {loading && <div className="text-sm text-slate-500">{t("profile.reviews.loading", { defaultValue: "Loading reviews…" })}</div>}
             {error && <div className="text-sm text-rose-600">{error}</div>}
             {!loading && !error && (
                 <>
@@ -1116,10 +1117,10 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                                             className="w-full flex items-center justify-between p-4"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Review</span>
+                                                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("profile.reviews.reviewLabel", { defaultValue: "Review" })}</span>
                                                 <span className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</span>
                                             </div>
-                                            <span className="text-xs font-bold text-slate-500">{isOpen ? "Hide" : "View"}</span>
+                                            <span className="text-xs font-bold text-slate-500">{isOpen ? t("profile.reviews.hide", { defaultValue: "Hide" }) : t("profile.reviews.view", { defaultValue: "View" })}</span>
                                         </button>
                                         {isOpen && (
                                             <div className="px-4 pb-4">
@@ -1152,7 +1153,7 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                                                 )}
                                                 {r.admin_response && (
                                                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">{t("profile.reviews.adminResponse", { defaultValue: "Admin Response" })}</p>
                                                         <p className="text-xs text-slate-700">{r.admin_response}</p>
                                                     </div>
                                                 )}
@@ -1161,7 +1162,7 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                                                         onClick={() => openEdit(r)}
                                                         className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
                                                     >
-                                                        Edit
+                                                        {t("profile.reviews.edit", { defaultValue: "Edit" })}
                                                     </button>
                                                 </div>
                                             </div>
@@ -1171,7 +1172,7 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                             })}
                         </div>
                     ) : (
-                        <p className="text-sm text-slate-500">You haven’t written any reviews yet.</p>
+                        <p className="text-sm text-slate-500">{t("profile.reviews.empty", { defaultValue: "You haven’t written any reviews yet." })}</p>
                     )}
                 </>
             )}
@@ -1187,7 +1188,7 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                         <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" onClick={() => setEditing(null)} />
                         <div className="relative bg-white rounded-2xl p-6 w-full max-w-sm z-10 border border-slate-200">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-bold text-slate-900">Edit Review</h3>
+                                <h3 className="text-sm font-bold text-slate-900">{t("profile.reviews.editReview", { defaultValue: "Edit Review" })}</h3>
                                 <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-700">
                                     <X size={16} />
                                 </button>
@@ -1213,10 +1214,10 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                                 rows={3}
                                 onChange={(e) => setEditComment(e.target.value)}
                                 className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-3 text-sm"
-                                placeholder="Update your comment"
+                                placeholder={t("profile.reviews.updateComment", { defaultValue: "Update your comment" })}
                             />
                             <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-2">
-                                Add Photos (Optional)
+                                {t("profile.reviews.addPhotos", { defaultValue: "Add Photos (Optional)" })}
                             </label>
                             <input
                                 type="file"
@@ -1241,14 +1242,14 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                                     className="px-3 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-700"
                                     disabled={saving}
                                 >
-                                    Cancel
+                                    {t("profile.reviews.cancel", { defaultValue: "Cancel" })}
                                 </button>
                                 <button
                                     onClick={submitEdit}
                                     className="px-3 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 disabled:opacity-50"
                                     disabled={saving}
                                 >
-                                    {saving ? "Saving…" : "Save"}
+                                    {saving ? t("profile.reviews.saving", { defaultValue: "Saving…" }) : t("profile.reviews.save", { defaultValue: "Save" })}
                                 </button>
                             </div>
                         </div>
@@ -1430,8 +1431,8 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                         <MapPin size={20} />
                     </div>
                     <div>
-                        <h2 className="text-base md:text-lg font-bold text-slate-900">Saved Addresses</h2>
-                        <p className="text-[11px] md:text-xs text-slate-400">Manage your delivery addresses</p>
+                        <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.addresses.title", { defaultValue: "Saved Addresses" })}</h2>
+                        <p className="text-[11px] md:text-xs text-slate-400">{t("profile.addresses.subtitle", { defaultValue: "Manage your delivery addresses" })}</p>
                     </div>
                 </div>
                 {!showForm && (
@@ -1583,7 +1584,7 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                     onClick={() => { setShowForm(false); resetForm(); }}
                                     className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
                                 >
-                                    Cancel
+                                    {t("profile.addresses.cancel", { defaultValue: "Cancel" })}
                                 </button>
                                 <button
                                     onClick={handleSave}
@@ -1609,7 +1610,7 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <MapPin className="text-slate-300" size={28} />
                     </div>
-                    <p className="text-slate-400 text-sm font-medium">No saved addresses</p>
+                    <p className="text-slate-400 text-sm font-medium">{t("profile.addresses.empty", { defaultValue: "No saved addresses" })}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
@@ -1624,7 +1625,7 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                 <span className="text-xs font-bold uppercase tracking-wider text-cyan-600">{addr.label?.toLowerCase() === "home" ? t("profile.addresses.home") : addr.label?.toLowerCase() === "work" ? t("profile.addresses.work") : addr.label ? t("profile.addresses.other") : ""}</span>
                                 {addr.is_default && (
                                     <span className="text-[9px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md ms-auto">
-                                        Default
+                                        {t("profile.addresses.default", { defaultValue: "Default" })}
                                     </span>
                                 )}
                             </div>
@@ -1643,7 +1644,7 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                         onClick={() => handleSetDefault(addr.id)}
                                         className="text-[11px] font-bold text-cyan-600 hover:underline inline-block"
                                     >
-                                        Set as Default
+                                        {t("profile.addresses.setAsDefault", { defaultValue: "Set as Default" })}
                                     </button>
                                 )}
                             </div>
@@ -1654,10 +1655,10 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
             {/* ConfirmModal for address deletion */}
             <ConfirmModal
                 open={deleteId !== null}
-                title="Delete Address"
-                message="Are you sure you want to delete this address? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
+                title={t("profile.addresses.deleteAddress", { defaultValue: "Delete Address" })}
+                message={t("profile.addresses.deleteConfirm", { defaultValue: "Are you sure you want to delete this address? This action cannot be undone." })}
+                confirmText={t("profile.addresses.deleteBtn", { defaultValue: "Delete" })}
+                cancelText={t("profile.addresses.cancel", { defaultValue: "Cancel" })}
                 onConfirm={confirmDeleteAddress}
                 onCancel={() => { if (!deleting) setDeleteId(null); }}
                 loading={deleting}
@@ -1675,6 +1676,7 @@ interface ReferralTabProps {
 }
 
 const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
+    const { t } = useTranslation("profile");
     const toast = useToast();
     const [copied, setCopied] = useState(false);
 
@@ -1720,22 +1722,22 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
     const steps = [
         {
             num: "01",
-            title: "Invite a Friend",
-            desc: "Share your unique referral code with friends and family. Ask them to register on Simak Fresh.",
+            title: t("profile.referrals.steps.one.title", { defaultValue: "Invite a Friend" }),
+            desc: t("profile.referrals.steps.one.desc", { defaultValue: "Share your unique referral code with friends and family. Ask them to register on Simak Fresh." }),
             img: referralInviteImg,
             gradient: "from-cyan-400 to-teal-400",
         },
         {
             num: "02",
-            title: "Friend Makes First Purchase",
-            desc: "Your friend enters your referral code at checkout on their first order.",
+            title: t("profile.referrals.steps.two.title", { defaultValue: "Friend Makes First Purchase" }),
+            desc: t("profile.referrals.steps.two.desc", { defaultValue: "Your friend enters your referral code at checkout on their first order." }),
             img: referralPurchaseImg,
             gradient: "from-violet-400 to-indigo-400",
         },
         {
             num: "03",
-            title: "Both Get 20% OFF",
-            desc: "Your friend gets 20% OFF instantly! Once the order is delivered, you also receive a 20% discount coupon.",
+            title: t("profile.referrals.steps.three.title", { defaultValue: "Both Get 20% OFF" }),
+            desc: t("profile.referrals.steps.three.desc", { defaultValue: "Your friend gets 20% OFF instantly! Once the order is delivered, you also receive a 20% discount coupon." }),
             img: referralRewardImg,
             gradient: "from-amber-400 to-orange-400",
         },
@@ -1754,13 +1756,13 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                     <Gift size={28} className="text-cyan-600" />
                 </div>
                 <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                    Friends Who Refer<br />
+                    {t("profile.referrals.title", { defaultValue: "Friends Who Refer" })}<br />
                     <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
-                        Stay Friends Forever
+                        {t("profile.referrals.subtitle", { defaultValue: "Stay Friends Forever" })}
                     </span>
                 </h2>
                 <p className="text-xs md:text-sm text-slate-500 mt-3 max-w-sm mx-auto leading-relaxed">
-                    When you refer your friend to Simak Fresh, you get <strong className="text-slate-700">20% OFF</strong> on your next order and so does your friend. Then you both eat healthy ever after!
+                    {t("profile.referrals.description", { defaultValue: "When you refer your friend to Simak Fresh, you get 20% OFF on your next order and so does your friend. Then you both eat healthy ever after!" })}
                 </p>
             </div>
 
@@ -1772,7 +1774,7 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
 
                 <div className="relative z-10">
                     <p className="text-cyan-100 text-[10px] md:text-[11px] font-bold uppercase tracking-widest mb-2">
-                        Your Referral Code
+                        {t("profile.referrals.codeLabel", { defaultValue: "Your Referral Code" })}
                     </p>
                     <div className="flex items-center gap-3 mb-4">
                         <div className="flex-1 bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-3 text-white font-mono text-lg md:text-xl font-black tracking-widest select-all">
@@ -1796,14 +1798,14 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                             className="flex-1 flex items-center justify-center gap-2 py-3 bg-white text-cyan-700 rounded-xl font-bold text-sm hover:bg-cyan-50 transition-all shadow-lg shadow-black/10 active:scale-[0.97]"
                         >
                             <Share2 size={16} />
-                            Start Referring, Start Earning!
+                            {t("profile.referrals.startReferring", { defaultValue: "Start Referring, Start Earning!" })}
                         </button>
                         <button
                             onClick={() => handleCopy(referralLink)}
                             className="flex items-center justify-center gap-2 py-3 px-4 bg-white/15 backdrop-blur-sm text-white rounded-xl font-bold text-sm hover:bg-white/25 transition-all border border-white/20"
                         >
                             <Copy size={14} />
-                            Copy Link
+                            {t("profile.referrals.copyLink", { defaultValue: "Copy Link" })}
                         </button>
                     </div>
                 </div>
@@ -1812,8 +1814,8 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
             {/* ── How it Works ── */}
             <div className="mb-8 md:mb-10">
                 <h3 className="text-center text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-wider mb-6 md:mb-8">
-                    Here is How it{" "}
-                    <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">Works</span>
+                    {t("profile.referrals.howItWorks", { defaultValue: "Here is How it Working" }).split("Working")[0]}
+                    <span className="bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">{t("profile.referrals.works", { defaultValue: "Works" })}</span>
                 </h3>
 
                 <div className="space-y-5 md:space-y-6">
@@ -1867,16 +1869,16 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                     className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-cyan-200/50 transition-all active:scale-[0.97]"
                 >
                     <Gift size={18} />
-                    Start Referring, Start Earning!
+                    {t("profile.referrals.startReferring", { defaultValue: "Start Referring, Start Earning!" })}
                 </button>
             </div>
 
             {/* ── Stats (optional quick-look) ── */}
             <div className="grid grid-cols-3 gap-3 mb-8 md:mb-10">
                 {[
-                    { icon: <Users size={18} />, label: "Friends Invited", value: "—", bg: "bg-cyan-50", color: "text-cyan-600" },
-                    { icon: <ShoppingBag size={18} />, label: "Successful", value: "—", bg: "bg-emerald-50", color: "text-emerald-600" },
-                    { icon: <Percent size={18} />, label: "Coupons Earned", value: "—", bg: "bg-amber-50", color: "text-amber-600" },
+                    { icon: <Users size={18} />, label: t("profile.referrals.stats.invited", { defaultValue: "Friends Invited" }), value: "—", bg: "bg-cyan-50", color: "text-cyan-600" },
+                    { icon: <ShoppingBag size={18} />, label: t("profile.referrals.stats.successful", { defaultValue: "Successful" }), value: "—", bg: "bg-emerald-50", color: "text-emerald-600" },
+                    { icon: <Percent size={18} />, label: t("profile.referrals.stats.earned", { defaultValue: "Coupons Earned" }), value: "—", bg: "bg-amber-50", color: "text-amber-600" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 md:p-4 text-center">
                         <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-2 ${stat.color}`}>
@@ -1892,15 +1894,15 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 md:p-5">
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <AlertCircle size={14} className="text-slate-400" />
-                    Terms and Conditions
+                    {t("profile.referrals.terms.title", { defaultValue: "Terms and Conditions" })}
                 </h4>
                 <ol className="list-decimal list-inside text-[10px] md:text-[11px] text-slate-500 space-y-1.5 leading-relaxed">
-                    <li>Your 20% Discount Coupon is valid for <strong className="text-slate-600">3 months</strong> from the date of issue and can be used only once.</li>
-                    <li>Maximum discount that can be availed is <strong className="text-slate-600">AED 20</strong>.</li>
-                    <li>This offer is <strong className="text-slate-600">ONLY valid in UAE</strong>.</li>
-                    <li>This offer is <strong className="text-slate-600">not transferable</strong>.</li>
-                    <li>Simak Fresh reserves the right to modify or terminate this program at any time.</li>
-                    <li>The referral code must be applied at checkout during the friend's <strong className="text-slate-600">first purchase</strong>.</li>
+                    <li>{t("profile.referrals.terms.1", { defaultValue: "Your 20% Discount Coupon is valid for 3 months from the date of issue and can be used only once." })}</li>
+                    <li>{t("profile.referrals.terms.2", { defaultValue: "Maximum discount that can be availed is AED 20." })}</li>
+                    <li>{t("profile.referrals.terms.3", { defaultValue: "This offer is ONLY valid in UAE." })}</li>
+                    <li>{t("profile.referrals.terms.4", { defaultValue: "This offer is not transferable." })}</li>
+                    <li>{t("profile.referrals.terms.5", { defaultValue: "Simak Fresh reserves the right to modify or terminate this program at any time." })}</li>
+                    <li>{t("profile.referrals.terms.6", { defaultValue: "The referral code must be applied at checkout during the friend's first purchase." })}</li>
                 </ol>
             </div>
         </motion.div>

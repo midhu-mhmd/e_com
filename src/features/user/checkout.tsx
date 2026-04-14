@@ -224,23 +224,28 @@ const CheckoutPage: React.FC = () => {
   const validateAddress = () => {
     const errors: Record<string, string> = {};
     if (!addressForm.full_name || addressForm.full_name.trim().length < 3) {
-      errors.full_name = "Full name must be at least 3 characters";
+      errors.full_name = t("address.errors.nameRequired", { defaultValue: "Full name must be at least 3 characters" });
     }
     const req = getPhoneRequirements(addrCountryCode);
     const digitsOnly = (addressForm.phone_number || "").replace(/[^\d]/g, "");
     if (digitsOnly.length !== req.length || (req.pattern && !req.pattern.test(digitsOnly))) {
-      errors.phone_number = `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`;
+      errors.phone_number = t("address.errors.phoneInvalid", { 
+        defaultValue: `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`,
+        name: req.name,
+        length: req.length,
+        reqPatternStr: req.pattern ? ", specific starting digits required" : ""
+      });
     }
     if (addrCountryCode === "+971" && addressForm.city) {
       const c = addressForm.city.trim().toLowerCase();
       if (!allowedUaeCities.includes(c)) {
-        errors.city = "Select a valid UAE city/emirate";
+        errors.city = t("address.errors.cityInvalid", { defaultValue: "Select a valid UAE city/emirate" });
       }
     }
-    if (!addressForm.street_address) errors.street_address = "Street address is required";
-    if (!addressForm.area) errors.area = "Area is required";
-    if (!addressForm.city) errors.city = "City is required";
-    if (!addressForm.emirate) errors.emirate = "Please select an emirate";
+    if (!addressForm.street_address) errors.street_address = t("address.errors.streetRequired", { defaultValue: "Street address is required" });
+    if (!addressForm.area) errors.area = t("address.errors.areaRequired", { defaultValue: "Area is required" });
+    if (!addressForm.city) errors.city = t("address.errors.cityRequired", { defaultValue: "City is required" });
+    if (!addressForm.emirate) errors.emirate = t("address.errors.emirateRequired", { defaultValue: "Please select an emirate" });
 
     setAddressErrors(errors);
     return Object.keys(errors).length === 0;
@@ -398,7 +403,7 @@ const CheckoutPage: React.FC = () => {
     setSummaryLoading(true);
     setSummaryError(null);
 
-      try {
+    try {
       const summary = await ordersApi.checkoutSummary({
         address_id: selectedAddressId,
         coupon_code: appliedCouponCode || undefined,
@@ -538,7 +543,7 @@ const CheckoutPage: React.FC = () => {
       setAddressErrors({});
     } catch (err: any) {
       console.error("Failed to save address", err);
-      const serverMsg = err?.response?.data?.error || "Failed to save address. Please try again.";
+      const serverMsg = err?.response?.data?.error || t("address.errors.saveFailed", { defaultValue: "Failed to save address. Please try again." });
       toast.show(serverMsg, "error");
     } finally {
       setSavingAddress(false);
@@ -562,12 +567,12 @@ const CheckoutPage: React.FC = () => {
     }
 
     if (!deliveryDate) {
-      toast.show("Please select a preferred delivery date", "error");
+      toast.show(t("alerts.selectDeliveryDate", { defaultValue: "Please select a preferred delivery date" }), "error");
       return;
     }
 
     if (!deliverySlot) {
-      toast.show("Please select a preferred delivery slot", "error");
+      toast.show(t("alerts.selectDeliverySlot", { defaultValue: "Please select a preferred delivery slot" }), "error");
       return;
     }
 
@@ -702,7 +707,7 @@ const CheckoutPage: React.FC = () => {
                           <Briefcase size={14} className="text-cyan-600" />
                         )}
                         <span className="text-xs font-bold uppercase tracking-wider text-cyan-600">
-                          {addr.label || "Address"}
+                          {addr.label || t("address.defaultLabel", { defaultValue: "Address" })}
                         </span>
                         {selectedAddressId === addr.id && (
                           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-cyan-600 text-white">
@@ -844,7 +849,7 @@ const CheckoutPage: React.FC = () => {
                               <ChevronDown size={12} className={`text-slate-400 transition-transform ${addrDropdownOpen ? "rotate-180" : ""}`} />
                             </button>
                             {addrDropdownOpen && (
-                          <div className={`absolute top-full ${isArabic ? 'right-0' : 'left-0'} mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50`}>
+                              <div className={`absolute top-full ${isArabic ? 'right-0' : 'left-0'} mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-50`}>
                                 {addressCountries.map((c) => (
                                   <button
                                     key={c.code}
@@ -928,7 +933,7 @@ const CheckoutPage: React.FC = () => {
                         onClick={() => setShowAddressForm(false)}
                         className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
                       >
-                        Cancel
+                        {t("address.cancel", { defaultValue: "Cancel" })}
                       </button>
                     </div>
                   </div>
@@ -978,7 +983,7 @@ const CheckoutPage: React.FC = () => {
                       {estimation.items_breakdown.map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between items-center text-xs">
                           <span className="text-slate-700 font-medium truncate flex-1">{item.product_name || t("delivery.fallbackProductName", { index: idx + 1, defaultValue: `Product ${idx + 1}` })}</span>
-                           <span className={`text-slate-500 ${isArabic ? 'mr-2' : 'ml-2'}`}>{t("delivery.qty", { count: item.quantity, defaultValue: `Qty: ${item.quantity}` })}</span>
+                          <span className={`text-slate-500 ${isArabic ? 'mr-2' : 'ml-2'}`}>{t("delivery.qty", { count: item.quantity, defaultValue: `Qty: ${item.quantity}` })}</span>
                           <span className={`${isArabic ? 'mr-2' : 'ml-2'} px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold`}>
                             {t("delivery.daysShort", { count: item.delivery_days, defaultValue: `${item.delivery_days}d` })}
                           </span>
@@ -1007,7 +1012,7 @@ const CheckoutPage: React.FC = () => {
                   }}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
                 />
-                <p className="text-[10px] text-slate-400">Earliest: {estimationLoading ? "…" : minDate}</p>
+                <p className="text-[10px] text-slate-400">{t("delivery.earliest", { defaultValue: "Earliest:" })} {estimationLoading ? "…" : minDate}</p>
               </div>
 
               {/* Slot */}
@@ -1119,7 +1124,7 @@ const CheckoutPage: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                 >
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-sm font-bold text-slate-500">AED</span>
+                    <span className="text-sm font-bold text-slate-500">{t("currency.aedCode", { defaultValue: "AED" })}</span>
                     {/* ✅ Updated Input with hide-arrows class and + Button */}
                     <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-500/30 transition-all overflow-hidden">
                       <input
@@ -1598,7 +1603,7 @@ const CheckoutPage: React.FC = () => {
                         setVerifyStep("otp");
                       } catch (err: any) {
                         const apiErr = err?.response?.data;
-                        const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "Failed to send OTP. Try again.");
+                        const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : t("verifyPhone.sendError", { defaultValue: "Failed to send OTP. Try again." }));
                         setVerifyError(detail);
                       } finally {
                         setSendingOtp(false);
@@ -1647,10 +1652,10 @@ const CheckoutPage: React.FC = () => {
                           const me = res?.user || (await profileApi.getMe());
                           dispatch(setUser(me));
                           setVerifyOpen(false);
-                          toast.show("Phone verified. You can now place your order.", "success");
+                          toast.show(t("verifyPhone.success", { defaultValue: "Phone verified. You can now place your order." }), "success");
                         } catch (err: any) {
                           const apiErr = err?.response?.data;
-                          const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "OTP verification failed.");
+                          const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : t("verifyPhone.verifyError", { defaultValue: "OTP verification failed." }));
                           setVerifyError(detail);
                         } finally {
                           setVerifyingOtp(false);

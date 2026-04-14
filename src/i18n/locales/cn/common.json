@@ -187,7 +187,14 @@
     "emptyHintAll": "有重要事项我们会通知您。",
     "emptyHintOther": "试着切换筛选或稍后再来。",
     "markRead": "标为已读",
-    "delete": "删除"
+    "delete": "删除",
+    "open": "打开",
+    "justNow": "刚刚",
+    "minAgo": "{{count}} 分钟前",
+    "hourAgo": "{{count}} 小时前",
+    "hourAgo_plural": "{{count}} 小时前",
+    "dayAgo": "{{count}} 天前",
+    "dayAgo_plural": "{{count}} 天前"
   },
   "wishlist": {
     "title": "我的收藏",
@@ -233,7 +240,48 @@
       "requestError": "请求错误",
       "badRequest": "400 — 错误请求",
       "serverError": "500 — 服务器错误",
-      "dismiss": "关闭"
+      "dismiss": "关闭",
+      "genericFallback": "出了点问题，请重试。"
+    }
+  },
+  "payment": {
+    "success": {
+      "badge": "支付已确认",
+      "title": "订单提交成功！",
+      "orderId": "订单 #{{id}}",
+      "description": "感谢您的订单！您的付款已成功处理。我们正在为您准备新鲜的商品。",
+      "stepConfirmed": "已确认",
+      "stepPreparing": "准备中",
+      "stepDelivered": "已送达",
+      "viewOrders": "查看我的订单",
+      "backHome": "返回首页",
+      "redirect": "{{count}} 秒后跳转到您的订单..."
+    },
+    "failed": {
+      "badge": "支付失败",
+      "title": "支付未成功",
+      "orderId": "订单 #{{id}}",
+      "description": "我们无法处理您的付款。未扣除任何金额。请重试或使用其他支付方式。",
+      "reasonsTitle": "常见失败原因：",
+      "reasons": [
+        "账户余额不足",
+        "银行卡已过期或信息有误",
+        "交易被银行拒绝",
+        "支付过程中网络中断"
+      ],
+      "retryFallback": "重试支付失败，请再试。",
+      "processing": "处理中...",
+      "tryAgain": "重试",
+      "contactSupport": "联系客服",
+      "backHome": "返回首页"
+    },
+    "cancelled": {
+      "badge": "订单待处理",
+      "title": "您的订单已标记为待处理",
+      "orderId": "订单 #{{id}}",
+      "description": "您的付款已取消，但订单已保存为待处理。您可以随时返回订单完成支付。",
+      "returnToOrder": "返回订单",
+      "backHome": "返回首页"
     }
   },
   "profileModal": {

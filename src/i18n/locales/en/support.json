@@ -63,7 +63,9 @@
   "sidebar": {
     "call": {
       "title": "Call Support",
-      "subtitle": "Speak to our team"
+      "subtitle": "Speak to our team",
+      "value": "+971 800 123 456",
+      "tel": "tel:+971800123456"
     },
     "hours": {
       "title": "Working Hours",

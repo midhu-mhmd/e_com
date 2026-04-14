@@ -14,15 +14,19 @@
     "orderedOn": "Ordered on {{date}}",
     "writeReview": "Write Review",
     "editReview": "Edit Review",
-    "filterAll": "All"
+    "filterAll": "All",
+    "orderId": "Order ID: {{id}}",
+    "saved": "SAVED"
   },
   "detail": {
     "back": "Back",
+    "orderId": "Order ID: {{id}}",
     "orderTitle": "Order #{{id}}",
     "placed": "Placed {{date}}",
     "orderTotal": "Order Total",
     "orderedItems": "Ordered Items",
-    "itemsCount": "{{count}} items",
+    "itemsCount": "{{count}} item",
+    "itemsCount_plural": "{{count}} items",
     "qty": "Qty: {{count}}",
     "timeline": "Timeline",
     "deliveryAddress": "Delivery Address",
@@ -46,7 +50,10 @@
     "error": "Error",
     "orderNotFound": "Order not found",
     "errorLoad": "Failed to load order.",
-    "returnToOrders": "Return to Orders"
+    "returnToOrders": "Return to Orders",
+    "retryPayment": "Retry Payment",
+    "processing": "Processing...",
+    "online": "Online"
   },
   "status": {
     "pending": "Pending",
@@ -57,11 +64,14 @@
     "completed": "Completed",
     "cancelled": "Cancelled",
     "returned": "Returned",
-    "paid": "Paid"
+    "paid": "Paid",
+    "success": "Success",
+    "failed": "Failed"
   },
   "review": {
     "editReview": "Edit your review",
     "rateYourPurchase": "Rate your purchase",
+    "productName": "Reviewing: {{name}}",
     "placeholder": "Share details of your experience...",
     "addMorePhotos": "Add More Photos (Optional)",
     "addPhotos": "Add Photos (Optional)",
@@ -85,5 +95,15 @@
       "excellent": "Excellent",
       "tapToRate": "Tap to rate"
     }
+  },
+  "summary": {
+    "discount": "Discount",
+    "shipping": "Shipping",
+    "free": "Free",
+    "couponCode": "Code: {{code}}"
+  },
+  "currency": {
+    "aed": "AED",
+    "aedValue": "AED {{value}}"
   }
 }

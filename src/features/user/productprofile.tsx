@@ -504,9 +504,9 @@ const ProductProfile: React.FC = () => {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <p className="font-bold text-stone-900">Available in</p>
+                  <p className="font-bold text-stone-900">{t("details.availableIn.title", { defaultValue: "Available in" })}</p>
                   <p className="text-xs text-stone-500">
-                    This product can be delivered in the following emirates.
+                    {t("details.availableIn.subtitle", { defaultValue: "This product can be delivered in the following emirates." })}
                   </p>
                 </div>
               </div>
@@ -517,7 +517,7 @@ const ProductProfile: React.FC = () => {
                     key={location}
                     className="rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 border border-cyan-100"
                   >
-                    {location}
+                    {t(`details.emirates.${location}`, { defaultValue: location })}
                   </span>
                 ))}
               </div>

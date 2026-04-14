@@ -67,6 +67,19 @@
         "title": "نضارة مضمونة",
         "subtitle": "جودة معتمدة"
       }
+    },
+    "availableIn": {
+      "title": "متوفر في",
+      "subtitle": "يمكن توصيل هذا المنتج في الإمارات التالية."
+    },
+    "emirates": {
+      "Abu Dhabi": "أبو ظبي",
+      "Dubai": "دبي",
+      "Sharjah": "الشارقة",
+      "Ajman": "عجمان",
+      "Umm Al Quwain": "أم القيوين",
+      "Ras Al Khaimah": "رأس الخيمة",
+      "Fujairah": "الفجيرة"
     }
   },
   "units": {

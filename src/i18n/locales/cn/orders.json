@@ -14,15 +14,19 @@
     "orderedOn": "下单时间 {{date}}",
     "writeReview": "写评价",
     "editReview": "编辑评价",
-    "filterAll": "全部"
+    "filterAll": "全部",
+    "orderId": "订单编号: {{id}}",
+    "saved": "已节省"
   },
   "detail": {
     "back": "返回",
+    "orderId": "订单编号: {{id}}",
     "orderTitle": "订单 #{{id}}",
     "placed": "下单于 {{date}}",
     "orderTotal": "订单总计",
     "orderedItems": "订购商品",
     "itemsCount": "{{count}} 件商品",
+    "itemsCount_plural": "{{count}} 件商品",
     "qty": "数量：{{count}}",
     "timeline": "时间线",
     "deliveryAddress": "配送地址",
@@ -46,7 +50,10 @@
     "error": "错误",
     "orderNotFound": "未找到订单",
     "errorLoad": "加载订单失败。",
-    "returnToOrders": "返回订单列表"
+    "returnToOrders": "返回订单列表",
+    "retryPayment": "重试支付",
+    "processing": "处理中...",
+    "online": "在线支付"
   },
   "status": {
     "pending": "待处理",
@@ -57,11 +64,14 @@
     "completed": "已完成",
     "cancelled": "已取消",
     "returned": "已退货",
-    "paid": "已支付"
+    "paid": "已支付",
+    "success": "成功",
+    "failed": "失败"
   },
   "review": {
     "editReview": "编辑您的评价",
     "rateYourPurchase": "为您的购买评分",
+    "productName": "正在评价: {{name}}",
     "placeholder": "分享您的体验细节...",
     "addMorePhotos": "添加更多照片（可选）",
     "addPhotos": "添加照片（可选）",
@@ -85,5 +95,15 @@
       "excellent": "优秀",
       "tapToRate": "点击评分"
     }
+  },
+  "summary": {
+    "discount": "折扣",
+    "shipping": "运费",
+    "free": "免费",
+    "couponCode": "优惠码: {{code}}"
+  },
+  "currency": {
+    "aed": "AED",
+    "aedValue": "AED {{value}}"
   }
 }

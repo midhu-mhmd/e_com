@@ -4,6 +4,8 @@
             "personalInfo": "个人信息",
             "myOrders": "我的订单",
             "addresses": "地址管理",
+            "reviews": "评价",
+            "referrals": "推荐",
             "signOut": "退出登录"
         },
         "auth": {
@@ -83,6 +85,62 @@
             "default": "默认",
             "setAsDefault": "设为默认",
             "saveAddress": "保存地址"
+        },
+        "reviews": {
+            "title": "我的评价",
+            "subtitle": "您写过的所有评价",
+            "empty": "您暂时还没有写过任何评价。",
+            "reviewLabel": "评价",
+            "view": "查看",
+            "hide": "隐藏",
+            "adminResponse": "管理员回复",
+            "edit": "编辑",
+            "cancel": "取消",
+            "save": "保存",
+            "saving": "保存中…",
+            "editReview": "编辑评价",
+            "addPhotos": "添加照片 (选填)",
+            "updateComment": "更新您的评论",
+            "loading": "加载评价中…"
+        },
+        "referrals": {
+            "title": "邀请好友",
+            "subtitle": "分享给更多朋友",
+            "description": "当您推荐朋友使用 Simak Fresh 时，您可以在下次订单中获得20%的独家折扣，您的朋友也会同样受益！",
+            "codeLabel": "您的推荐码",
+            "copyCode": "复制推荐码",
+            "startReferring": "立即分享，开始赚钱！",
+            "steps": {
+                "one": {
+                    "title": "邀请朋友",
+                    "desc": "与家人和朋友分享您的专属推荐码。邀请他们注册 Simak Fresh。"
+                },
+                "two": {
+                    "title": "朋友产生首单",
+                    "desc": "您的朋友在他们的首个订单结算时输入您的推荐码。"
+                },
+                "three": {
+                    "title": "双方各获20%折扣",
+                    "desc": "您的朋友立即获得20%的折扣！一旦订单完成派送，您也会收到一张20%的折扣券。"
+                }
+            },
+            "copyLink": "复制链接",
+            "howItWorks": "运作",
+            "works": "方式",
+            "stats": {
+                "invited": "已邀请好友",
+                "successful": "成功推荐",
+                "earned": "已获优惠券"
+            },
+            "terms": {
+                "title": "条款和条件",
+                "1": "您的 20% 折扣券从发放之日起 3 个月内有效，且仅限使用一次。",
+                "2": "最高折扣金额为 AED 20。",
+                "3": "此优惠仅在阿联酋有效。",
+                "4": "此优惠不可转让。",
+                "5": "Simak Fresh 保留随时修改或终止此计划的权利。",
+                "6": "推荐码必须在朋友的首次购买结账时使用。"
+            }
         },
         "emirates": {
             "abu_dhabi": "阿布扎比",

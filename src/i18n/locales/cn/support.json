@@ -63,7 +63,9 @@
   "sidebar": {
     "call": {
       "title": "电话客服",
-      "subtitle": "与我们的团队沟通"
+      "subtitle": "与我们的团队沟通",
+      "value": "+971 800 123 456",
+      "tel": "tel:+971800123456"
     },
     "hours": {
       "title": "工作时间",

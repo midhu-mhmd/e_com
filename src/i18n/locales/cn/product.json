@@ -67,6 +67,19 @@
         "title": "新鲜保证",
         "subtitle": "认证品质"
       }
+    },
+    "availableIn": {
+      "title": "可配送至",
+      "subtitle": "此产品可配送至以下酋长国。"
+    },
+    "emirates": {
+      "Abu Dhabi": "阿布扎比",
+      "Dubai": "迪拜",
+      "Sharjah": "沙迦",
+      "Ajman": "阿治曼",
+      "Umm Al Quwain": "乌姆盖万",
+      "Ras Al Khaimah": "拉斯海马",
+      "Fujairah": "富查伊拉"
     }
   },
   "units": {

@@ -116,89 +116,89 @@ export const AppRoutes: React.FC = () => {
     <>
       <ScrollToTop />
       <Routes>
-      {/* --- ERROR ROUTES (Outside Layouts to be full screen) --- */}
-      <Route path="/400" element={<BadRequest400 />} />
-      <Route path="/401" element={<Unauthorized401 />} />
-      <Route path="/403" element={<Forbidden403 />} />
-      <Route path="/404" element={<NotFound404 />} />
-      <Route path="/500" element={<ServerError500 />} />
-      <Route path="/network-error" element={<NetworkError />} />
+        {/* --- ERROR ROUTES (Outside Layouts to be full screen) --- */}
+        <Route path="/400" element={<BadRequest400 />} />
+        <Route path="/401" element={<Unauthorized401 />} />
+        <Route path="/403" element={<Forbidden403 />} />
+        <Route path="/404" element={<NotFound404 />} />
+        <Route path="/500" element={<ServerError500 />} />
+        <Route path="/network-error" element={<NetworkError />} />
 
-      {/* --- PAYMENT RESULT ROUTES (Protected - requires auth + valid order context) --- */}
-      <Route path="/payment" element={<PaymentRoute />}>
-        <Route path="success" element={<PaymentSuccess />} />
-        <Route path="cancelled" element={<PaymentCancelled />} />
-        <Route path="failed" element={<PaymentFailed />} />
-      </Route>
-
-      {/* --- USER ROUTES (with Navbar) --- */}
-      <Route element={<UserLayout />}>
-        {/* Public user routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<UserProductsPage />} />
-        <Route path="/products/:id" element={<ProductProfile />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/support" element={<SupportPage />} />
-
-        {/* Protected user routes — require login */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/orders" element={<OrderPage />} />
-          <Route path="/orders/:id" element={<OrderPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/notifications" element={<NotificationPage />} />
-          {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
+        {/* --- PAYMENT RESULT ROUTES (Protected - requires auth + valid order context) --- */}
+        <Route path="/payment" element={<PaymentRoute />}>
+          <Route path="success" element={<PaymentSuccess />} />
+          <Route path="cancelled" element={<PaymentCancelled />} />
+          <Route path="failed" element={<PaymentFailed />} />
         </Route>
-      </Route>
 
-      {/* --- ADMIN ROUTES (Nested) --- */}
-      {/* AdminLayout is the "Parent". It contains the Sidebar and Header */}
-      <Route path="/admin" element={<PrivateRoute roles={['admin']} />}>
-        <Route element={<AdminLayout />}>
-          {/* Redirect /admin to /admin/dashboard automatically */}
-          <Route index element={<Navigate to="dashboard" replace />} />
+        {/* --- USER ROUTES (with Navbar) --- */}
+        <Route element={<UserLayout />}>
+          {/* Public user routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<UserProductsPage />} />
+          <Route path="/products/:id" element={<ProductProfile />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/support" element={<SupportPage />} />
 
-          {/* These children will render inside the <Outlet /> of AdminLayout */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="orders" element={<OrderManagement />} />
-          <Route path="orders/:id" element={<OrderDetailsPage />} />
-          <Route path="users" element={<CustomerManagement />} />
-          <Route path="users/:id" element={<CustomerDetailsPage />} />
-          <Route path="products" element={<ProductManagement />} />
-          <Route path="products/add" element={<AddProduct />} />
-          <Route path="products/edit/:id" element={<EditProduct />} />
-          <Route path="products/:id" element={<ProductDetailsPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="reviews" element={<ReviewsManagement />} />
-          <Route path="payments" element={<PaymentManagement />} />
-          <Route path="marketing/coupons" element={<CouponManagement />} />
-          <Route path="banners" element={<BannersManagement />} />
-          <Route path="notifications" element={<AdminNotificationsPage />} />
-          <Route path="support" element={<ContactMessagesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-
-          {/* Admin delivery routes */}
-          <Route path="delivery/boys" element={<DeliveryBoysList />} />
-          <Route path="delivery/boys/:id" element={<DeliveryBoyDetailPage />} />
-          <Route path="delivery/cancellations" element={<AdminCancellationRequests />} />
+          {/* Protected user routes — require login */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders" element={<OrderPage />} />
+            <Route path="/orders/:id" element={<OrderPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<NotificationPage />} />
+            {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
+          </Route>
         </Route>
-      </Route>
 
-      {/* ─── DELIVERY BOY ROUTES ─── */}
-      <Route path="/delivery" element={<PrivateRoute roles={['delivery_boy']} />}>
-        <Route element={<DeliveryLayout />}>
-          <Route index element={<DeliveryDashboard />} />
-          <Route path="available" element={<AvailableOrders />} />
-          <Route path="my-orders" element={<MyOrders />} />
-          <Route path="orders/:id" element={<DeliveryOrderDetail />} />
+        {/* --- ADMIN ROUTES (Nested) --- */}
+        {/* AdminLayout is the "Parent". It contains the Sidebar and Header */}
+        <Route path="/admin" element={<PrivateRoute roles={['admin']} />}>
+          <Route element={<AdminLayout />}>
+            {/* Redirect /admin to /admin/dashboard automatically */}
+            <Route index element={<Navigate to="dashboard" replace />} />
+
+            {/* These children will render inside the <Outlet /> of AdminLayout */}
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="orders" element={<OrderManagement />} />
+            <Route path="orders/:id" element={<OrderDetailsPage />} />
+            <Route path="users" element={<CustomerManagement />} />
+            <Route path="users/:id" element={<CustomerDetailsPage />} />
+            <Route path="products" element={<ProductManagement />} />
+            <Route path="products/add" element={<AddProduct />} />
+            <Route path="products/edit/:id" element={<EditProduct />} />
+            <Route path="products/:id" element={<ProductDetailsPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+            <Route path="reviews" element={<ReviewsManagement />} />
+            <Route path="payments" element={<PaymentManagement />} />
+            <Route path="marketing/coupons" element={<CouponManagement />} />
+            <Route path="banners" element={<BannersManagement />} />
+            <Route path="notifications" element={<AdminNotificationsPage />} />
+            <Route path="support" element={<ContactMessagesPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+
+            {/* Admin delivery routes */}
+            <Route path="delivery/boys" element={<DeliveryBoysList />} />
+            <Route path="delivery/boys/:id" element={<DeliveryBoyDetailPage />} />
+            <Route path="delivery/cancellations" element={<AdminCancellationRequests />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* Fallback for 404 - Render the NotFound404 page */}
-      <Route path="*" element={<Navigate to="/404" replace />} />
-    </Routes>
+        {/* ─── DELIVERY BOY ROUTES ─── */}
+        <Route path="/delivery" element={<PrivateRoute roles={['delivery_boy']} />}>
+          <Route element={<DeliveryLayout />}>
+            <Route index element={<DeliveryDashboard />} />
+            <Route path="available" element={<AvailableOrders />} />
+            <Route path="my-orders" element={<MyOrders />} />
+            <Route path="orders/:id" element={<DeliveryOrderDetail />} />
+          </Route>
+        </Route>
+
+        {/* Fallback for 404 - Render the NotFound404 page */}
+        <Route path="*" element={<Navigate to="/404" replace />} />
+      </Routes>
     </>
   );
 };

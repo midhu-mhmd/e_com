@@ -119,12 +119,28 @@ const Navbar: React.FC = () => {
                             className="h-10 w-auto object-contain"
                         />
                         <div className="flex flex-col justify-center items-center text-center">
-                            <span className="text-xl font-black tracking-tight text-slate-900 uppercase leading-none">
+                            <span className="text-[18px] sm:text-[20px] font-black tracking-tighter text-cyan-950 uppercase leading-none">
                                 {t('brand.name')}
                             </span>
-                            <span className="text-[8px] sm:text-[9.5px] font-bold tracking-[0.1em] text-cyan-800/80 uppercase mt-1 leading-none">
-                                {t('brand.signature')}
-                            </span>
+                            <div className="flex items-center gap-0.5 mt-1 whitespace-nowrap">
+                                {currentLanguage === 'en' ? (
+                                    <>
+                                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.02em] text-cyan-600 uppercase">
+                                            SIGNATURE
+                                        </span>
+                                        <span className="text-[10px] sm:text-[11px] font-serif italic lowercase text-cyan-600/80 mx-0.5 leading-none">
+                                            of
+                                        </span>
+                                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.02em] text-cyan-600 uppercase">
+                                            QUALITY
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-[8px] sm:text-[9.5px] font-black tracking-[0.02em] text-cyan-600 uppercase">
+                                        {t('brand.signature')}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </Link>
 
