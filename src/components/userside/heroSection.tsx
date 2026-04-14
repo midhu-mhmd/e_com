@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBanners } from '../../hooks/queries';
 
 const Hero: React.FC = () => {
+  const { t } = useTranslation('home');
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -46,7 +48,7 @@ const Hero: React.FC = () => {
       <div className="w-full h-[420px] bg-slate-50 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin"></div>
-          <p className="mt-4 text-slate-400 font-medium">Loading amazing deals...</p>
+          <p className="mt-4 text-slate-400 font-medium">{t("hero.loading", "Loading amazing deals...")}</p>
         </div>
       </div>
     );

@@ -15,6 +15,9 @@
         "total": "Total",
         "proceedToCheckout": "Proceed to Checkout",
         "secureCheckout": "Secure Checkout",
-        "errorFetching": "Failed to load cart. Please try again."
+        "errorFetching": "Failed to load cart. Please try again.",
+        "calculatedAtCheckout": "Calculated at checkout",
+        "freeDeliveryNote": "Delivery is free for orders AED {{amount}} above.",
+        "itemsTotal": "Items total"
     }
 }

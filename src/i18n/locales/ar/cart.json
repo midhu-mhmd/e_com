@@ -15,6 +15,9 @@
         "total": "الإجمالي",
         "proceedToCheckout": "المتابعة لإتمام الطلب",
         "secureCheckout": "دفع آمن",
-        "errorFetching": "فشل تحميل العربة. يرجى المحاولة مرة أخرى."
+        "errorFetching": "فشل تحميل العربة. يرجى المحاولة مرة أخرى.",
+        "calculatedAtCheckout": "سيتم حسابه عند الدفع",
+        "freeDeliveryNote": "التوصيل مجاني للطلبيات بقيمة {{amount}} درهم فما فوق.",
+        "itemsTotal": "إجمالي الأصناف"
     }
 }

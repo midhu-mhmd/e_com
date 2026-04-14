@@ -250,5 +250,10 @@
     "skip": "Skip for now",
     "firstNameRequired": "First Name is required.",
     "saveFailed": "Failed to save details. Please try again."
+  },
+  "units": {
+    "kg": "Kg",
+    "piece": "Piece",
+    "gram100": "100g"
   }
 }

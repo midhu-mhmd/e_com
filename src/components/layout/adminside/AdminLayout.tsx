@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { logout } from '../../../features/auth/authSlice';
 import {
   LayoutDashboard,
@@ -36,8 +37,18 @@ interface NavItem {
 }
 
 const AdminLayout: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (i18n.language !== 'en') {
+      i18n.changeLanguage('en');
+    }
+    document.documentElement.lang = 'en';
+    document.documentElement.dir = 'ltr';
+    document.documentElement.classList.remove('rtl');
+  }, [i18n]);
   const { user } = useSelector((state: any) => state.auth); // Using any for state to avoid strict check if RootState import is tricky, but preferably use RootState if I import it. I'll use any as quick fix or try to import RootState. I'll use any for now to be safe against broken imports. user is any anyway.
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -102,12 +113,12 @@ const AdminLayout: React.FC = () => {
             <div className="w-8 h-8 bg-white flex items-center justify-center rounded overflow-hidden">
               <img
                 src={simakLogo}
-                alt="SIMAK FRESH"
+                alt={t('brand.name')}
                 className="h-7 w-7 object-contain"
               />
             </div>
             {(isSidebarOpen || isMobileMenuOpen) && (
-              <span className="ml-3 font-bold text-sm tracking-[0.2em] uppercase">SIMAK FRESH</span>
+              <span className="ml-3 font-bold text-sm tracking-[0.2em] uppercase">{t('brand.name')}</span>
             )}
           </div>
           <button

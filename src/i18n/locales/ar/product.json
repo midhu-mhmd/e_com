@@ -8,7 +8,10 @@
     "view": "عرض",
     "buyNow": "اشتري الآن",
     "categoryFallback": "مأكولات بحرية",
-    "descriptionFallback": "طازج وبجودة ممتازة."
+    "descriptionFallback": "طازج وبجودة ممتازة.",
+    "onlyLeft": "{{count}} فقط متبقية",
+    "lowStock": "الكمية منخفضة",
+    "inStock": "{{count}} في المخزون"
   },
   "list": {
     "searchPlaceholder": "ابحث عن مأكولات بحرية...",
@@ -46,6 +49,8 @@
       "empty": "لا توجد مراجعات بعد",
       "anonymous": "مستخدم"
     },
+    "inStockItem": "{{count}} عنصر في المخزون",
+    "inStockItems": "{{count}} عناصر في المخزون",
     "bulkOrder": {
       "title": "طلبيات الجملة",
       "subtitle": "وفر أكثر مع أسعار الجملة",
@@ -63,5 +68,10 @@
         "subtitle": "جودة معتمدة"
       }
     }
+  },
+  "units": {
+    "kg": "كيلو جرام",
+    "piece": "حبة",
+    "gram100": "100 جرام"
   }
 }

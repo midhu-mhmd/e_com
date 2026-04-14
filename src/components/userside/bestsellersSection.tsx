@@ -74,12 +74,12 @@ const ProductCard: React.FC<{
           )}
           {product.is_available && product.stock > 0 && product.stock < 7 && (
             <div className="px-2.5 py-1 bg-orange-500 text-white rounded-lg text-[10px] font-bold shadow-md">
-              Only {product.stock} left
+              {t("bestsellers.onlyLeft", { count: product.stock, defaultValue: `Only ${product.stock} left` })}
             </div>
           )}
           {product.is_available && product.stock >= 7 && product.stock < 10 && (
             <div className="px-2.5 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-bold shadow-md">
-              Low Stock
+              {t("bestsellers.lowStock", "Low Stock")}
             </div>
           )}
         </div>
@@ -169,7 +169,7 @@ const ProductCard: React.FC<{
 
           {/* Stock count — always reserve height to keep card size consistent */}
           <p className="text-[10px] text-zinc-400 font-medium h-4">
-            {product.is_available && product.stock > 0 && product.stock < 15 ? `${product.stock} in stock` : ""}
+            {product.is_available && product.stock > 0 && product.stock < 15 ? t("bestsellers.inStock", { count: product.stock, defaultValue: `${product.stock} in stock` }) : ""}
           </p>
 
           <button
@@ -226,7 +226,7 @@ const BestsellersSection: React.FC = () => {
           return;
         }
         dispatch(fetchCartRequest());
-        toast.show(`${product.name} added to cart`, "cart");
+        toast.show(t("bestsellers.addedToCart", { name: product.name, defaultValue: `${product.name} added to cart` }), "cart");
       } catch (err: any) {
         const msg = err?.response?.data?.error || "Failed to add item to cart";
         toast.show(msg, "error");
@@ -243,7 +243,7 @@ const BestsellersSection: React.FC = () => {
           return;
         }
         dispatch(fetchCartRequest());
-        toast.show(`${product.name} added to cart`, "cart");
+        toast.show(t("bestsellers.addedToCart", { name: product.name, defaultValue: `${product.name} added to cart` }), "cart");
         navigate("/checkout");
       } catch (err: any) {
         const msg = err?.response?.data?.error || "Failed to add item to cart";

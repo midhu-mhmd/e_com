@@ -76,12 +76,12 @@ const ProductCard = memo(({
                         )}
                         {product.is_available && product.stock > 0 && product.stock < 7 && (
                             <span className="px-2.5 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
-                                Only {product.stock} left
+                                {t("card.onlyLeft", { count: product.stock })}
                             </span>
                         )}
                         {product.is_available && product.stock >= 7 && product.stock < 10 && (
                             <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
-                                Low Stock
+                                {t("card.lowStock")}
                             </span>
                         )}
                     </div>
@@ -149,7 +149,7 @@ const ProductCard = memo(({
 
                         {/* Stock info — always reserve height to keep card size consistent */}
                         <p className="text-[10px] text-slate-400 font-medium h-4">
-                            {product.is_available && product.stock > 0 && product.stock < 15 ? `${product.stock} in stock` : ""}
+                            {product.is_available && product.stock > 0 && product.stock < 15 ? t("card.inStock", { count: product.stock }) : ""}
                         </p>
 
                         {/* Buy Now Button */}

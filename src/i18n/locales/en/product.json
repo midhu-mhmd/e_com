@@ -8,7 +8,10 @@
     "view": "View",
     "buyNow": "Buy Now",
     "categoryFallback": "Seafood",
-    "descriptionFallback": "Fresh and premium quality."
+    "descriptionFallback": "Fresh and premium quality.",
+    "onlyLeft": "Only {{count}} left",
+    "lowStock": "Low Stock",
+    "inStock": "{{count}} in stock"
   },
   "list": {
     "searchPlaceholder": "Search seafood...",
@@ -46,6 +49,8 @@
       "empty": "No reviews yet",
       "anonymous": "Anonymous"
     },
+    "inStockItem": "{{count}} item in stock",
+    "inStockItems": "{{count}} items in stock",
     "bulkOrder": {
       "title": "Bulk Order",
       "subtitle": "Save more with bulk pricing",
@@ -63,5 +68,10 @@
         "subtitle": "Certified Quality"
       }
     }
+  },
+  "units": {
+    "kg": "Kg",
+    "piece": "Piece",
+    "gram100": "100g"
   }
 }

@@ -9,6 +9,7 @@ import { cartsApi } from "../admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
 import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
+import BackendData from "../../components/ui/BackendData";
 import { API_BASE_URL } from "../../config/constants";
 import {
   extractProductLocationValues,
@@ -142,7 +143,7 @@ const ProductProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div dir="ltr" className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 bg-slate-200 rounded-full mb-4" />
           <div className="h-4 bg-slate-200 rounded w-32" />
@@ -153,7 +154,7 @@ const ProductProfile: React.FC = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <div dir="ltr" className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <p className="text-cyan-500 font-bold mb-4">{error || t("details.notFound")}</p>
         <button
           onClick={() => navigate("/products")}
@@ -170,11 +171,11 @@ const ProductProfile: React.FC = () => {
     : 0;
 
   const unitLabel = product.unit === "kg"
-    ? "Kg"
+    ? t("units.kg")
     : product.unit === "piece"
-      ? "Piece"
+      ? t("units.piece")
       : product.unit === "Gram"
-        ? "100g"
+        ? t("units.gram100")
         : t("details.perUnitFallback");
 
   const availableLocations = extractProductLocationValues(
@@ -209,7 +210,7 @@ const ProductProfile: React.FC = () => {
   const activeMedia = selectedMedia || mediaList[0] || null;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-stone-800 pb-20">
+    <div dir="ltr" className="min-h-screen bg-white font-sans text-stone-800 pb-20">
       {/* Back */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <button
@@ -309,7 +310,7 @@ const ProductProfile: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-bold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md">
-                {product.category_name}
+                <BackendData value={product.category_name} />
               </span>
 
               {product.average_rating > 0 && (
@@ -325,8 +326,8 @@ const ProductProfile: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-black text-stone-900 leading-tight">{product.name}</h1>
-            <p className="text-stone-500 leading-relaxed text-lg">{product.description}</p>
+            <h1 className="text-4xl md:text-5xl font-black text-stone-900 leading-tight"><BackendData value={product.name} /></h1>
+            <p className="text-stone-500 leading-relaxed text-lg"><BackendData value={product.description} /></p>
           </div>
 
           {/* Price block */}
@@ -384,7 +385,7 @@ const ProductProfile: React.FC = () => {
               {/* Stock count */}
               {product.is_available && product.stock > 0 && product.stock < 15 && (
                 <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
-                  {product.stock} {product.stock === 1 ? "item" : "items"} in stock
+                  {product.stock === 1 ? t("details.inStockItem", { count: product.stock }) : t("details.inStockItems", { count: product.stock })}
                 </p>
               )}
             </div>

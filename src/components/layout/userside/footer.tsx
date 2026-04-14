@@ -225,7 +225,7 @@ const Footer: React.FC = () => {
                     </div>
 
                     <p className="text-xs text-cyan-200/60">
-                        © {year} SIMAK FRESH. {t("footer.rights")}
+                        © {year} {t('brand.name')}. {t("footer.rights")}
                     </p>
 
                     <div className="flex items-center gap-4">

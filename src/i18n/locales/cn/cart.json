@@ -15,6 +15,9 @@
         "total": "总计",
         "proceedToCheckout": "去结算",
         "secureCheckout": "安全结算",
-        "errorFetching": "加载购物车失败。请再试一次。"
+        "errorFetching": "加载购物车失败。请再试一次。",
+        "calculatedAtCheckout": "结算时计算",
+        "freeDeliveryNote": "订单金额满 AED {{amount}} 免运费。",
+        "itemsTotal": "商品总价"
     }
 }

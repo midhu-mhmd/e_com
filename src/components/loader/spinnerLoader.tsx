@@ -46,9 +46,9 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
     return (
         <div
             ref={containerRef}
-            className="fixed inset-0 z-9999 flex items-center justify-center bg-white"
+            className="fixed inset-0 z-9999 flex items-center justify-center bg-white w-screen h-screen"
         >
-            <div className="flex flex-col items-center gap-5">
+            <div className="flex flex-col items-center justify-center gap-8">
                 {/* Brand logo icon */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -56,12 +56,7 @@ const InitialLoader = ({ label: _label }: { label?: string }) => {
                     transition={{ duration: 0.4, ease: "easeOut" }}
                     className="relative"
                 >
-                    <motion.div
-                        className="w-80 h-48 flex items-center justify-center"
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                        <LogoAnimated className="w-full h-full" />
-                    </motion.div>
+                    <LogoAnimated className="w-48 h-28 object-contain" />
                 </motion.div>
 
                 {/* Animated brand text */}

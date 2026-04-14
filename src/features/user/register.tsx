@@ -293,7 +293,7 @@ const RegisterWithOtp: React.FC = () => {
             {step === "input" && (
               <form onSubmit={onSendOtp} className="mt-6 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field label={t("auth.firstName", "First Name")}> 
+                  <Field label={t("auth.firstName", "First Name")}>
                     <div className="relative">
                       <User size={16} className={`absolute ${isArabic ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400`} />
                       <input
@@ -327,7 +327,7 @@ const RegisterWithOtp: React.FC = () => {
 
                 </div>
 
-                <Field label={t("auth.referralCode", "Referral Code (optional)")}> 
+                <Field label={t("auth.referralCode", "Referral Code (optional)")}>
                   <input
                     type="text"
                     value={referralCode}

@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/Toast";
 import { tokenManager } from "../../services/api";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
+import BackendData from "../../components/ui/BackendData";
 import { useTranslation } from "react-i18next";
 
 /* ═══════════════════════════════════════════════
@@ -191,12 +192,12 @@ const ProfilePage: React.FC = () => {
                                     <h2 className="text-base md:text-lg font-bold text-slate-900">{fullName}</h2>
                                     <div className="flex items-center gap-2 text-[11px] md:text-xs text-slate-400">
                                         <Phone size={12} />
-                                        <span>{displayUser?.phone_number || "Not set"}</span>
+                                        <span><BackendData value={displayUser?.phone_number || "Not set"} /></span>
                                     </div>
                                     {displayUser?.email && (
                                         <div className="flex items-center gap-2 text-[11px] md:text-xs text-slate-400">
                                             <Mail size={12} className="shrink-0" />
-                                            <span className="truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[220px]">{displayUser.email}</span>
+                                            <span className="truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[220px]"><BackendData value={displayUser.email} /></span>
                                         </div>
                                     )}
                                 </div>
@@ -828,7 +829,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                                 type="date"
                                 value={dob}
                                 onChange={(e) => setDob(e.target.value)}
-                                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 10); return d.toISOString().slice(0,10); })()}
+                                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 10); return d.toISOString().slice(0, 10); })()}
                                 min="1900-01-01"
                                 className="w-full ps-11 pe-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:border-slate-300 outline-none"
                             />
@@ -1109,64 +1110,65 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
                             {reviews.map((r) => {
                                 const isOpen = expandedId === r.id;
                                 return (
-                                <div key={r.id} className="border border-slate-200 rounded-2xl bg-white">
-                                    <button
-                                        onClick={() => setExpandedId(isOpen ? null : r.id)}
-                                        className="w-full flex items-center justify-between p-4"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Review</span>
-                                            <span className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</span>
-                                        </div>
-                                        <span className="text-xs font-bold text-slate-500">{isOpen ? "Hide" : "View"}</span>
-                                    </button>
-                                    {isOpen && (
-                                        <div className="px-4 pb-4">
-                                            <div className="flex items-center gap-1 mb-2">
-                                                {Array.from({ length: 5 }).map((_, i) => (
-                                                    <Star key={i} size={16} className={i < r.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
-                                                ))}
+                                    <div key={r.id} className="border border-slate-200 rounded-2xl bg-white">
+                                        <button
+                                            onClick={() => setExpandedId(isOpen ? null : r.id)}
+                                            className="w-full flex items-center justify-between p-4"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Review</span>
+                                                <span className="text-sm font-bold text-slate-900">{r.product_name || `#${r.product}`}</span>
                                             </div>
-                                            <p className="text-sm text-slate-700 mb-3">{r.comment}</p>
-                                            {Array.isArray(r.images) && r.images.length > 0 && (
-                                                <div className="flex gap-2 flex-wrap mb-3">
-                                                    {r.images.slice(0, 6).map((entry: any, idx: number) => {
-                                                        const raw = typeof entry === "string" ? entry : entry?.image;
-                                                        const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
-                                                        const url = normalizeMedia(cleaned);
-                                                        return (
-                                                        <button
-                                                            key={idx}
-                                                            type="button"
-                                                            onClick={() => setViewerUrl(url)}
-                                                            className="group relative"
-                                                            aria-label="Expand image"
-                                                        >
-                                                            <img src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
-                                                            <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                                        </button>
-                                                        );
-                                                    })}
+                                            <span className="text-xs font-bold text-slate-500">{isOpen ? "Hide" : "View"}</span>
+                                        </button>
+                                        {isOpen && (
+                                            <div className="px-4 pb-4">
+                                                <div className="flex items-center gap-1 mb-2">
+                                                    {Array.from({ length: 5 }).map((_, i) => (
+                                                        <Star key={i} size={16} className={i < r.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"} />
+                                                    ))}
                                                 </div>
-                                            )}
-                                            {r.admin_response && (
-                                                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
-                                                    <p className="text-xs text-slate-700">{r.admin_response}</p>
+                                                <p className="text-sm text-slate-700 mb-3">{r.comment}</p>
+                                                {Array.isArray(r.images) && r.images.length > 0 && (
+                                                    <div className="flex gap-2 flex-wrap mb-3">
+                                                        {r.images.slice(0, 6).map((entry: any, idx: number) => {
+                                                            const raw = typeof entry === "string" ? entry : entry?.image;
+                                                            const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
+                                                            const url = normalizeMedia(cleaned);
+                                                            return (
+                                                                <button
+                                                                    key={idx}
+                                                                    type="button"
+                                                                    onClick={() => setViewerUrl(url)}
+                                                                    className="group relative"
+                                                                    aria-label="Expand image"
+                                                                >
+                                                                    <img src={url} alt="review" className="w-14 h-14 rounded-md object-cover border border-slate-200" />
+                                                                    <span className="absolute inset-0 rounded-md bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                                {r.admin_response && (
+                                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 mb-1">Admin Response</p>
+                                                        <p className="text-xs text-slate-700">{r.admin_response}</p>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-end">
+                                                    <button
+                                                        onClick={() => openEdit(r)}
+                                                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                                                    >
+                                                        Edit
+                                                    </button>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center justify-end">
-                                                <button
-                                                    onClick={() => openEdit(r)}
-                                                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
-                                                >
-                                                    Edit
-                                                </button>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )})}
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     ) : (
                         <p className="text-sm text-slate-500">You haven’t written any reviews yet.</p>
@@ -1778,11 +1780,10 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                         </div>
                         <button
                             onClick={() => handleCopy(referralCode)}
-                            className={`p-3 rounded-xl font-bold text-sm transition-all ${
-                                copied
+                            className={`p-3 rounded-xl font-bold text-sm transition-all ${copied
                                     ? "bg-emerald-400 text-white"
                                     : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
-                            }`}
+                                }`}
                             title="Copy code"
                         >
                             {copied ? <CheckCircle size={20} /> : <Copy size={20} />}

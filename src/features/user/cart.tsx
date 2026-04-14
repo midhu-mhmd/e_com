@@ -186,15 +186,15 @@ const CartPage: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-sm text-stone-500">
                                 <span>{t('cart.shipping')}</span>
-                                <span className="font-bold text-stone-500">Calculated at checkout</span>
+                                <span className="font-bold text-stone-500">{t('cart.calculatedAtCheckout')}</span>
                             </div>
                             <p className="text-xs text-stone-400 italic">
-                                Delivery is free for orders AED 40 above.
+                                {t('cart.freeDeliveryNote', { amount: '40' })}
                             </p>
                         </div>
 
                         <div className="flex justify-between items-end">
-                            <span className="text-sm font-bold text-stone-900">Items total</span>
+                            <span className="text-sm font-bold text-stone-900">{t('cart.itemsTotal')}</span>
                             <span className="text-2xl font-black text-cyan-900">AED {cartTotal.toFixed(2)}</span>
                         </div>
 

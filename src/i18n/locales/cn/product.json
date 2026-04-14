@@ -8,7 +8,10 @@
     "view": "查看",
     "buyNow": "立即购买",
     "categoryFallback": "海鲜",
-    "descriptionFallback": "新鲜优质，品质保障。"
+    "descriptionFallback": "新鲜优质，品质保障。",
+    "onlyLeft": "仅剩 {{count}} 件",
+    "lowStock": "库存不足",
+    "inStock": "{{count}} 件有货"
   },
   "list": {
     "searchPlaceholder": "搜索海鲜...",
@@ -46,6 +49,15 @@
       "empty": "暂无评价",
       "anonymous": "用户"
     },
+    "inStockItem": "{{count}} 件有货",
+    "inStockItems": "{{count}} 件有货",
+    "bulkOrder": {
+      "title": "批量订单",
+      "subtitle": "批量采购更优惠",
+      "description": "寻求大批量采购？请联系我们获取特殊价格和快速配送。",
+      "minOrder": "最小订单：{{count}} 件",
+      "getQuote": "通过 WhatsApp 联系我们"
+    },
     "meta": {
       "fastDelivery": {
         "title": "快速送达",
@@ -56,5 +68,10 @@
         "subtitle": "认证品质"
       }
     }
-  } 
+  },
+  "units": {
+    "kg": "公斤",
+    "piece": "个",
+    "gram100": "100克"
+  }
 }

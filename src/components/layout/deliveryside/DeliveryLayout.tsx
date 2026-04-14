@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import { logout } from "../../../features/auth/authSlice";
 import {
   LayoutDashboard,
@@ -21,6 +22,7 @@ interface NavItem {
 }
 
 const DeliveryLayout: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -50,10 +52,10 @@ const DeliveryLayout: React.FC = () => {
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 flex items-center justify-center">
-              <img src={simakLogo} alt="SIMAK" className="h-7 w-7 object-contain" />
+              <img src={simakLogo} alt={t('brand.name')} className="h-7 w-7 object-contain" />
             </div>
             <div>
-              <p className="text-xs font-bold tracking-wide uppercase leading-none">SIMAK FRESH</p>
+              <p className="text-xs font-bold tracking-wide uppercase leading-none">{t('brand.name')}</p>
               <p className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
                 <Truck size={9} /> Delivery Portal
               </p>

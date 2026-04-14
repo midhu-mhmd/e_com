@@ -138,7 +138,7 @@ const OffersSection: React.FC = () => {
                             <button
                                 onClick={() => scroll("left")}
                                 className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white/90 backdrop-blur-sm shadow-lg rounded-full text-zinc-600 hover:text-cyan-600 hover:bg-white hover:scale-110 active:scale-95 transition-all lg:hidden"
-                                aria-label="Scroll left"
+                                aria-label={t("offers.scrollLeft", "Scroll left")}
                             >
                                 <ChevronLeft size={20} className="rtl-flip" />
                             </button>
@@ -149,7 +149,7 @@ const OffersSection: React.FC = () => {
                             <button
                                 onClick={() => scroll("right")}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2.5 bg-white/90 backdrop-blur-sm shadow-lg rounded-full text-zinc-600 hover:text-cyan-600 hover:bg-white hover:scale-110 active:scale-95 transition-all lg:hidden"
-                                aria-label="Scroll right"
+                                aria-label={t("offers.scrollRight", "Scroll right")}
                             >
                                 <ChevronRight size={20} className="rtl-flip" />
                             </button>

@@ -6,7 +6,7 @@
     "support": "客服支持"
   },
   "brand": {
-    "name": "西马克鲜",
+    "name": "西马克 新鲜",
     "signature": "品质标志",
     "subtitle": "在线海鲜市场"
   },
@@ -64,7 +64,7 @@
     "welcomeBack": "欢迎回来",
     "member": "会员",
     "viewProfile": "查看资料",
-    "welcomeBrand": "欢迎来到 SIMAK FRESH",
+    "welcomeBrand": "欢迎来到 西马克 新鲜",
     "loginRegister": "登录 / 注册",
     "shop": "购物",
     "account": "账户"
@@ -250,5 +250,10 @@
     "skip": "暂时跳过",
     "firstNameRequired": "名字是必填的。",
     "saveFailed": "保存失败，请重试。"
+  },
+  "units": {
+    "kg": "公斤",
+    "piece": "件",
+    "gram100": "100克"
   }
 }

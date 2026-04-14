@@ -170,7 +170,7 @@ const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({ isOpen,
                             ) : (
                                 <div className="text-center py-2">
                                     <p className="text-sm text-slate-600">
-                                        Welcome, <span className="font-bold text-slate-900">{user.first_name} {user.last_name || ""}</span>
+                                        {t("profileModal.welcome", "Welcome,")} <span className="font-bold text-slate-900">{user.first_name} {user.last_name || ""}</span>
                                     </p>
                                 </div>
                             )}

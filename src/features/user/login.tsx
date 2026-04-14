@@ -358,7 +358,7 @@ const Login: React.FC = () => {
                       <input
                         type="email"
                         required
-                          placeholder={t("auth.emailPlaceholder", "Email Address")}
+                        placeholder={t("auth.emailPlaceholder", "Email Address")}
                         value={localValue}
                         onFocus={() => setFocused("id")}
                         onBlur={() => setFocused(null)}
@@ -499,19 +499,19 @@ const Login: React.FC = () => {
             </div>
 
             <div className="mt-4">
-                <GoogleLogin
-                  onSuccess={(credentialResponse) => {
-                    if (credentialResponse.credential) {
-                      dispatch(googleLogin({
-                        credential: credentialResponse.credential,
-                      }));
-                    }
-                  }}
-                  onError={() => {
-                    dispatch(authError("Google sign-in was cancelled or failed." as any));
-                  }}
-                  width="100%"
-                />
+              <GoogleLogin
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential) {
+                    dispatch(googleLogin({
+                      credential: credentialResponse.credential,
+                    }));
+                  }
+                }}
+                onError={() => {
+                  dispatch(authError("Google sign-in was cancelled or failed." as any));
+                }}
+                width="100%"
+              />
             </div>
           </div>
         </div>

@@ -122,5 +122,81 @@
     "umm_al_quwain": "Umm Al Quwain",
     "ras_al_khaimah": "Ras Al Khaimah",
     "fujairah": "Fujairah"
+  },
+  "fields": {
+    "pinLocation": "Pin Your Location",
+    "addressType": "Address Type",
+    "phone": "Phone",
+    "emirate": "Emirate",
+    "cancel": "Cancel",
+    "digits": "digits",
+    "enterOtp": "Enter OTP",
+    "otpPlaceholder": "6 digits",
+    "editPhone": "Edit Phone"
+  },
+  "delivery": {
+    "title": "Delivery Preferences",
+    "date": "Preferred Date",
+    "slot": "Delivery Slot",
+    "slots": {
+      "morning": "Morning (8 AM – 12 PM)",
+      "afternoon": "Afternoon (12 PM – 5 PM)",
+      "evening": "Evening (5 PM – 9 PM)"
+    },
+    "notes": "Delivery Notes",
+    "notesPlaceholder": "Ring the bell, leave at the door, etc.",
+    "loading": "Loading delivery estimates...",
+    "window": "Estimated Delivery Window",
+    "sameDay": "Same day delivery",
+    "dayDelivery": "{{count}} day delivery time",
+    "daysDelivery": "{{count}} days delivery time",
+    "availableToday": "Available for delivery today",
+    "minDateTomorrow": "Minimum delivery date is tomorrow",
+    "minDateInDays": "Minimum delivery date is in {{count}} days",
+    "productsDeliveryTimes": "Products Delivery Times",
+    "fallbackProductName": "Product {{index}}",
+    "qty": "Qty: {{count}}",
+    "daysShort": "{{count}}d",
+    "checkingSlots": "Checking slots...",
+    "noSlotsForDate": "No available slots for this date. Please select a different date.",
+    "fulfillmentHelper": "Delivery time based on order quantity. Larger orders may take longer due to fulfillment requirements."
+  },
+  "tip": {
+    "title": "Add a Tip",
+    "noTip": "No Tip",
+    "custom": "Custom",
+    "addPointFive": "Add 0.5 AED"
+  },
+  "summary": {
+    "title": "Order Summary",
+    "updating": "Updating",
+    "qtyPrice": "{{qty}} x AED {{price}}",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "tip": "Tip",
+    "free": "Free",
+    "total": "Total",
+    "selectAddressHint": "Select a delivery address to calculate the final delivery charge.",
+    "selectDateHint": "Choose your delivery date to preview the final total and delivery charge.",
+    "afterDiscount": "After Discount",
+    "deliveryRule": "Delivery is free for orders AED 40 above.",
+    "calculatedAtCheckout": "Calculated at checkout"
+  },
+  "verifyPhone": {
+    "title": "Verify Phone Number",
+    "subtitle": "Only users with a verified phone can place orders.",
+    "helper": "Verify your phone number to place an order. This helps prevent fake orders.",
+    "button": "Verify Phone",
+    "sending": "Sending...",
+    "sendOtp": "Send OTP",
+    "verifying": "Verifying...",
+    "verifyAndContinue": "Verify & Continue"
+  },
+  "coupons": {
+    "applyToOrder": "Apply {{badge}} to this order.",
+    "availableCoupon": "Available coupon",
+    "loading": "Loading available coupons...",
+    "empty": "No coupons are available right now.",
+    "enterToApply": "Enter a coupon code to apply it."
   }
 }
