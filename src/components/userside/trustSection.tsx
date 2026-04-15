@@ -5,6 +5,8 @@ import { LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { productsApi, type CategoryDto } from "../../features/admin/products/productApi";
 
+import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+
 const ShopByCategorySection: React.FC = () => {
   const { t } = useTranslation("home");
 
@@ -16,7 +18,7 @@ const ShopByCategorySection: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#f8f9fa] py-3 px-4 sm:px-6 lg:px-8">
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative mx-auto  ">
         {/* Header */}
         <div className="mb-5">
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-50 rounded-full mb-3">
@@ -76,16 +78,15 @@ const CategoryCard: React.FC<{ category: CategoryDto; index: number }> = ({
   return (
     <div
       ref={ref}
-      className={`shrink-0 w-20 sm:w-auto transition-all duration-500 ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      }`}
+      className={`shrink-0 w-20 sm:w-auto transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
       style={{ transitionDelay: `${index * 80}ms` }}
     >
       <Link
         to={`/products?category=${encodeURIComponent(category.slug)}`}
         className="group block text-center"
       >
-        <div className="aspect-square rounded-[22%] overflow-hidden bg-white border border-zinc-100 shadow-sm group-hover:shadow-lg group-hover:-translate-y-0.5 transition-all duration-300">
+        <div className="aspect-square rounded-[22%] overflow-hidden bg-zinc-50 border border-zinc-100 shadow-sm group-hover:shadow-lg group-hover:-translate-y-0.5 transition-all duration-300">
           {category.image ? (
             <img
               src={category.image}
@@ -94,8 +95,8 @@ const CategoryCard: React.FC<{ category: CategoryDto; index: number }> = ({
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-zinc-50">
-              <LayoutGrid size={28} className="text-zinc-300" />
+            <div className="w-full h-full flex items-center justify-center bg-zinc-900 p-4">
+              <img src={logo} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" alt="Logo fallback" />
             </div>
           )}
         </div>

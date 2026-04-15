@@ -13,6 +13,8 @@ import {
     selectCartError,
 } from '../admin/cart/cartSlice';
 
+import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+
 const CartPage: React.FC = () => {
     const { t } = useTranslation('cart');
     const navigate = useNavigate();
@@ -83,7 +85,7 @@ const CartPage: React.FC = () => {
         <div className="min-h-screen bg-stone-50 font-sans text-stone-800 pb-20">
             {/* Header */}
             <div className="bg-cyan-950 border-b border-cyan-900 sticky top-0 z-20 shadow-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+                <div className="  mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                     <h1 className="text-xl font-black text-white flex items-center gap-2">
                         <ShoppingBag size={20} className="text-yellow-500" /> {t('cart.title', { count: cartItems.length })}
                     </h1>
@@ -96,7 +98,7 @@ const CartPage: React.FC = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <main className="  mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
                 {/* Cart Items List */}
                 <div className="lg:col-span-2 space-y-4">
                     <AnimatePresence>
@@ -110,12 +112,18 @@ const CartPage: React.FC = () => {
                                 className="bg-white rounded-2xl p-4 border border-stone-200 flex gap-4 hover:shadow-lg transition-shadow"
                             >
                                 {/* Image */}
-                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={item.image || "https://via.placeholder.com/100"}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover"
-                                    />
+                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    {item.image ? (
+                                        <img
+                                            src={item.image}
+                                            alt={item.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-slate-900 p-4">
+                                            <img src={logo} className="w-full h-full object-contain" alt="Logo fallback" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Details */}

@@ -55,6 +55,11 @@ html[lang="cn"], html[lang="zh"] {
   font-family: 'Noto Sans SC', 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Apple Garamond utility */
+.font-garamond {
+  font-family: 'Apple Garamond', Georgia, serif;
+}
+
 /* Hide scrollbar for horizontal scroll containers */
 .scrollbar-hide {
   -ms-overflow-style: none;

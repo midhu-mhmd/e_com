@@ -220,13 +220,13 @@ const BannersManagement: React.FC = () => {
                                             {banner.is_active ? "Active" : "Paused"}
                                         </span>
                                         <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white">
-                                            {banner.position === 'home_hero' ? 'HERO' : 
-                                             banner.position === 'home_banner' ? 'HOME BANNER' : 
-                                             banner.position === 'category_banner' ? 'CATEGORY BANNER' :
-                                             banner.position === 'popup' ? 'POPUP' :
-                                             banner.position === 'announcement' ? 'ANNOUNCEMENT' :
-                                             banner.position === 'home_offer_card' ? 'OFFER CARD' : 
-                                             String(banner.position || "HOME HERO").toUpperCase().replace('_', ' ')}
+                                            {banner.position === 'home_hero' ? 'HERO' :
+                                                banner.position === 'home_banner' ? 'HOME BANNER' :
+                                                    banner.position === 'category_banner' ? 'CATEGORY BANNER' :
+                                                        banner.position === 'popup' ? 'POPUP' :
+                                                            banner.position === 'announcement' ? 'ANNOUNCEMENT' :
+                                                                banner.position === 'home_offer_card' ? 'OFFER CARD' :
+                                                                    String(banner.position || "HOME HERO").toUpperCase().replace('_', ' ')}
                                         </span>
                                     </div>
 
@@ -599,7 +599,7 @@ const BannersManagement: React.FC = () => {
                                             )}
                                             {previewBanner.cta_text && (
                                                 <button
-                                                    onClick={() => {}}
+                                                    onClick={() => { }}
                                                     className="group relative px-6 py-3 bg-cyan-600 text-white rounded-full font-bold text-sm sm:text-base shadow-lg shadow-cyan-600/30 overflow-hidden"
                                                 >
                                                     <span className="relative z-10 flex items-center gap-2">

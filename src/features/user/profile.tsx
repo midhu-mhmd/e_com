@@ -147,7 +147,7 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#F8FAFB] font-sans">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8 lg:py-12">
+            <div className="  mx-auto px-4 sm:px-6 py-6 md:py-8 lg:py-12">
                 <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[300px_1fr] gap-6 lg:gap-8">
 
                     {/* ═══════ LEFT SIDEBAR ═══════ */}
@@ -1783,8 +1783,8 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                         <button
                             onClick={() => handleCopy(referralCode)}
                             className={`p-3 rounded-xl font-bold text-sm transition-all ${copied
-                                    ? "bg-emerald-400 text-white"
-                                    : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                                ? "bg-emerald-400 text-white"
+                                : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                                 }`}
                             title="Copy code"
                         >

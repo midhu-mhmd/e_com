@@ -180,7 +180,7 @@ const SupportPage: React.FC = () => {
                     <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
                     <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" />
                 </div>
-                <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
+                <div className="relative   mx-auto px-6 py-20 md:py-28 text-center">
                     <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-[10px] font-black uppercase tracking-[0.3em] text-white/90 mb-6">
                         <Headphones size={14} /> {t("hero.badge")}
                     </span>
@@ -194,7 +194,7 @@ const SupportPage: React.FC = () => {
             </section>
 
             {/* ─── Main Content ─── */}
-            <div className="max-w-6xl mx-auto px-6 -mt-10 pb-20 relative z-10">
+            <div className="  mx-auto px-6 -mt-10 pb-20 relative z-10">
                 <div className="grid lg:grid-cols-3 gap-6">
                     {/* ─── Contact Form (spans 2 cols on large) ─── */}
                     <div className="lg:col-span-2 bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 p-8 md:p-10">

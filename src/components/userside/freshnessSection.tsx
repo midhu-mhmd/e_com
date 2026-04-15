@@ -4,7 +4,6 @@ import {
     Timer,
     Anchor,
     Award,
-    ArrowRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -14,80 +13,76 @@ const FreshnessSection: React.FC = () => {
 
     const promises = [
         {
-            icon: <Anchor size={22} />,
+            icon: <Anchor size={20} />,
             title: t("freshness.promises.0.title"),
             desc: t("freshness.promises.0.desc"),
             stat: t("freshness.promises.0.stat"),
             statLabel: t("freshness.promises.0.statLabel"),
+            accent: "bg-cyan-600",
         },
         {
-            icon: <Snowflake size={22} />,
+            icon: <Snowflake size={20} />,
             title: t("freshness.promises.1.title"),
             desc: t("freshness.promises.1.desc"),
             stat: t("freshness.promises.1.stat"),
             statLabel: t("freshness.promises.1.statLabel"),
+            accent: "bg-cyan-500",
         },
         {
-            icon: <Timer size={22} />,
+            icon: <Timer size={20} />,
             title: t("freshness.promises.2.title"),
             desc: t("freshness.promises.2.desc"),
             stat: t("freshness.promises.2.stat"),
             statLabel: t("freshness.promises.2.statLabel"),
+            accent: "bg-cyan-600",
         },
         {
-            icon: <Award size={22} />,
+            icon: <Award size={20} />,
             title: t("freshness.promises.3.title"),
             desc: t("freshness.promises.3.desc"),
             stat: t("freshness.promises.3.stat"),
             statLabel: t("freshness.promises.3.statLabel"),
+            accent: "bg-cyan-500",
         },
     ];
 
-
     return (
-        <section className="relative bg-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section className="relative bg-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
             {/* Background decoration */}
-            <div className="pointer-events-none absolute top-20 right-0 w-[500px] h-[500px] bg-cyan-50/30 rounded-full blur-3xl" />
-            <div className="pointer-events-none absolute bottom-10 left-0 w-[400px] h-[400px] bg-yellow-50/20 rounded-full blur-3xl" />
+            <div className="pointer-events-none absolute top-0 right-0 w-72 sm:w-[500px] h-72 sm:h-[500px] bg-cyan-50/40 rounded-full blur-3xl" />
+            <div className="pointer-events-none absolute bottom-0 left-0 w-60 sm:w-[400px] h-60 sm:h-[400px] bg-yellow-50/30 rounded-full blur-3xl" />
 
-            <div className="relative mx-auto max-w-7xl">
+            <div className="relative mx-auto">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-50 border border-cyan-100 rounded-full mb-4">
-                        <Snowflake size={14} className="text-cyan-500" />
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-cyan-600">
+                <div className="text-center mb-6 sm:mb-10">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-50 border border-cyan-100 rounded-full mb-3 sm:mb-4">
+                        <Snowflake size={13} className="text-cyan-500" />
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-cyan-600">
                             {t("freshness.kicker")}
                         </span>
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 tracking-tight">
+
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-900 tracking-tight leading-tight">
                         {t("freshness.title")}{" "}
-                        <span className="text-cyan-600">
-                            {t("freshness.titleHighlight")}
-                        </span>
+                        <span className="text-cyan-600">{t("freshness.titleHighlight")}</span>
                     </h2>
-                    <p className="mt-4 text-zinc-500 text-sm max-w-lg mx-auto leading-relaxed">
+
+                    <p className="mt-3 text-zinc-500 text-xs sm:text-sm max-w-xs sm:max-w-lg mx-auto leading-relaxed">
                         {t("freshness.subtitle")}
                     </p>
                 </div>
 
-                {/* Promise Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+                {/* Promise Cards — 2 col mobile / 2 col tablet / 4 col desktop */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                     {promises.map((p, i) => (
                         <PromiseCard key={i} promise={p} index={i} />
                     ))}
                 </div>
 
-                <div className="text-center mt-10">
-                    <div className="inline-flex flex-col sm:flex-row items-center gap-3 px-6 py-4 sm:py-3 bg-yellow-50 border border-yellow-100 rounded-2xl w-full sm:w-auto">
-                        <div className="flex items-center gap-3">
-                            <Snowflake size={18} className="text-yellow-600" />
-                            <span className="text-sm font-bold text-zinc-700">
-                                {t("freshness.footerCTA")}
-                            </span>
-                        </div>
-                        <ArrowRight size={16} className="text-yellow-500 hidden sm:block" />
-                    </div>
-                </div>
+                {/* Footer note */}
+                <p className="mt-6 sm:mt-8 text-center text-[11px] sm:text-xs text-zinc-400 font-medium">
+                    {t("freshness.footerCTA")}
+                </p>
             </div>
         </section>
     );
@@ -100,6 +95,7 @@ interface PromiseData {
     desc: string;
     stat: string;
     statLabel: string;
+    accent: string;
 }
 
 const PromiseCard: React.FC<{ promise: PromiseData; index: number }> = ({
@@ -114,7 +110,7 @@ const PromiseCard: React.FC<{ promise: PromiseData; index: number }> = ({
         if (!el) return;
         const obs = new IntersectionObserver(
             ([e]) => { if (e.isIntersecting) setVisible(true); },
-            { threshold: 0.15 }
+            { threshold: 0.1 }
         );
         obs.observe(el);
         return () => obs.disconnect();
@@ -123,23 +119,36 @@ const PromiseCard: React.FC<{ promise: PromiseData; index: number }> = ({
     return (
         <div
             ref={ref}
-            className={`group relative bg-white border border-zinc-100 rounded-2xl p-6 flex flex-col items-center text-center sm:items-start sm:text-left hover:shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-default ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-            style={{ transitionDelay: `${index * 100}ms` }}
+            className={`group flex flex-col bg-white border border-zinc-100 rounded-2xl p-4 sm:p-5 lg:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 cursor-default ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
+            style={{ transitionDelay: `${index * 90}ms` }}
         >
             {/* Icon */}
-            <div className="w-11 h-11 rounded-xl bg-cyan-600 text-white flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform duration-300 sm:mx-0">
+            <div
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${promise.accent} text-white flex items-center justify-center shadow-md mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300 shrink-0`}
+            >
                 {promise.icon}
             </div>
 
-            <h3 className="text-sm font-bold text-zinc-900 mb-1.5">{promise.title}</h3>
-            <p className="text-xs text-zinc-500 leading-relaxed mb-4">{promise.desc}</p>
+            {/* Title */}
+            <h3 className="text-xs sm:text-sm font-bold text-zinc-900 leading-snug mb-1">
+                {promise.title}
+            </h3>
 
-            <div className="pt-4 border-t border-zinc-100 flex items-baseline gap-2">
-                <span className="text-xl font-extrabold text-yellow-500">
+            {/* Desc — only on md+ */}
+            <p className="hidden md:block text-xs text-zinc-500 leading-relaxed flex-1 mb-3">
+                {promise.desc}
+            </p>
+
+            {/* Stat */}
+            <div className="mt-auto pt-3 border-t border-zinc-100">
+                <span className="block text-xl sm:text-2xl lg:text-3xl font-black text-yellow-500 leading-none">
                     {promise.stat}
                 </span>
-                <span className="text-[10px] text-zinc-400 font-medium">{promise.statLabel}</span>
+                <span className="block text-[10px] sm:text-xs text-zinc-400 font-medium mt-1 leading-tight">
+                    {promise.statLabel}
+                </span>
             </div>
         </div>
     );

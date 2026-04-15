@@ -84,7 +84,7 @@ const Hero: React.FC = () => {
   return (
     <div className="w-full bg-white font-sans text-slate-800 select-none pb-4">
       {/* ═══ HERO CAROUSEL ═══════════════════════ */}
-      <section className="relative w-full max-w-7xl mx-auto px-0 sm:px-4 pt-2 sm:pt-4 group/carousel">
+      <section className="relative w-full  mx-auto px-0 sm:px-4 pt-2 sm:pt-4 group/carousel">
         <div
           className="relative h-[300px] sm:h-[360px] md:h-[420px] w-full overflow-hidden sm:rounded-[2rem] shadow-xl shadow-slate-200"
         >

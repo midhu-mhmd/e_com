@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
         <footer className="bg-cyan-950 text-cyan-200/80">
             {/* Newsletter Banner */}
             <div className="px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-                <div className="mx-auto max-w-7xl">
+                <div className="mx-auto  ">
                     <div className="bg-cyan-900 border border-cyan-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
                         <div>
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
 
             {/* Main Footer Grid */}
             <div className="px-4 sm:px-6 lg:px-8 pb-6">
-                <div className="mx-auto max-w-7xl">
+                <div className="mx-auto  ">
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
                         {/* Brand Column */}
                         <div className="col-span-2 sm:col-span-3 lg:col-span-1">
@@ -218,7 +218,7 @@ const Footer: React.FC = () => {
 
             {/* Bottom Bar */}
             <div className="border-t border-cyan-900">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="mx-auto   px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2 text-xs text-cyan-200/60">
                         <ShieldCheck size={14} className="text-yellow-500" />
                         <span>{t("footer.secure")}</span>

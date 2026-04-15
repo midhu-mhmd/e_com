@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
   const isLoading = ordersStatus === "loading" || productsStatus === "loading";
 
   return (
-    <div className="min-h-screen text-[#121212] font-sans pb-12 sm:px-6 lg:px-10">
+    <div className="min-h-screen text-[#121212] font-sans pb-12 ">
       {/* --- PAGE HEADER --- */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-black">Dashboard</h1>
@@ -445,11 +445,10 @@ const RevenueChart = ({
               <button
                 key={opt.key}
                 onClick={() => onPeriodChange(opt.key)}
-                className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
-                  chartPeriod === opt.key
-                    ? "bg-white text-black shadow-sm"
-                    : "text-[#71717A] hover:text-black"
-                }`}
+                className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${chartPeriod === opt.key
+                  ? "bg-white text-black shadow-sm"
+                  : "text-[#71717A] hover:text-black"
+                  }`}
               >
                 {opt.label}
               </button>

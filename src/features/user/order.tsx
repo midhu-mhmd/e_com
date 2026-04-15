@@ -513,7 +513,7 @@ const OrderList: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#F0F2F5] font-sans text-slate-900 pb-24 top-0 pt-0">
             {/* Minimal Header Space */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-8">
+            <div className="  mx-auto px-4 sm:px-6 pt-12 pb-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">{t("list.title")}</h1>
@@ -547,7 +547,7 @@ const OrderList: React.FC = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6">
+            <main className="  mx-auto px-4 sm:px-6">
                 {/* Content */}
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -734,10 +734,10 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#F0F2F5] font-sans pb-24 pt-12">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
+                <div className="  mx-auto px-4 sm:px-6 mb-8">
                     <div className="h-10 bg-slate-200 rounded-xl w-32 animate-pulse" />
                 </div>
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-6 animate-pulse">
+                <div className="  mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-6 animate-pulse">
                     <div className="md:col-span-12 h-40 bg-white rounded-4xl" />
                     <div className="md:col-span-8 h-96 bg-white rounded-4xl" />
                     <div className="md:col-span-4 h-96 bg-white rounded-4xl" />
@@ -830,13 +830,13 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
     return (
         <div className="min-h-screen bg-[#F0F2F5] font-sans pb-24 pt-8">
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8">
+            <div className="  mx-auto px-4 sm:px-6 mb-8">
                 <button onClick={() => navigate("/orders")} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white rounded-full text-slate-900 font-bold hover:shadow-md hover:-translate-y-0.5 transition-all">
                     <ArrowLeft size={18} /> {t("detail.back")}
                 </button>
             </div>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6">
+            <main className="  mx-auto px-4 sm:px-6">
 
                 {/* Bento Grid layout */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -901,35 +901,36 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                             {order.items.map((item) => {
                                 const pid = (item as any).product?.id || item.product || (item as any).product_id;
                                 return (
-                                <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-4 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                                    <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
-                                        {item.product_image ? (
-                                            <img
-                                                src={item.product_image}
-                                                alt={item.product_name}
-                                                className="w-full h-full object-cover cursor-pointer"
-                                                onClick={() => pid ? navigate(`/products/${pid}`) : undefined}
-                                            />
-                                        ) : (
-                                            <Package size={32} className="text-slate-300" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 flex flex-col justify-center">
-                                        <h3
-                                            className="text-lg font-bold text-slate-900 mb-1 line-clamp-2"
-                                        >
-                                            {item.product_name}
-                                        </h3>
-                                        <div className="flex items-center gap-3 mt-2">
-                                            <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">{t("detail.qty", { count: item.quantity })}</span>
-                                            <span className="text-sm font-semibold text-slate-500">{t("currency.aedValue", { value: parseFloat(item.price).toFixed(2) })}</span>
+                                    <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-4 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
+                                        <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                                            {item.product_image ? (
+                                                <img
+                                                    src={item.product_image}
+                                                    alt={item.product_name}
+                                                    className="w-full h-full object-cover cursor-pointer"
+                                                    onClick={() => pid ? navigate(`/products/${pid}`) : undefined}
+                                                />
+                                            ) : (
+                                                <Package size={32} className="text-slate-300" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-center">
+                                            <h3
+                                                className="text-lg font-bold text-slate-900 mb-1 line-clamp-2"
+                                            >
+                                                {item.product_name}
+                                            </h3>
+                                            <div className="flex items-center gap-3 mt-2">
+                                                <span className="bg-slate-200 px-3 py-1 rounded-lg text-sm font-bold text-slate-700">{t("detail.qty", { count: item.quantity })}</span>
+                                                <span className="text-sm font-semibold text-slate-500">{t("currency.aedValue", { value: parseFloat(item.price).toFixed(2) })}</span>
+                                            </div>
+                                        </div>
+                                        <div className="sm:self-center">
+                                            <p className="text-xl font-black text-slate-900">{t("currency.aedValue", { value: parseFloat(item.subtotal).toFixed(2) })}</p>
                                         </div>
                                     </div>
-                                    <div className="sm:self-center">
-                                        <p className="text-xl font-black text-slate-900">{t("currency.aedValue", { value: parseFloat(item.subtotal).toFixed(2) })}</p>
-                                    </div>
-                                </div>
-                            )})}
+                                )
+                            })}
                         </div>
                     </section>
 
@@ -1264,7 +1265,7 @@ const OrderDetail: React.FC<{ orderId: number }> = ({ orderId }) => {
                                     <div className="flex justify-between items-center">
                                         <span>{t("detail.timeSlot")}</span>
                                         <span className="text-white text-base">
-                                            {order.preferred_delivery_slot_details 
+                                            {order.preferred_delivery_slot_details
                                                 ? `${order.preferred_delivery_slot_details.start_time_display} - ${order.preferred_delivery_slot_details.end_time_display} (${order.preferred_delivery_slot_details.name})`
                                                 : order.preferred_delivery_slot
                                             }

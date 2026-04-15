@@ -13,6 +13,8 @@ import { useInfiniteProducts } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
 
+import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+
 /** Main image field → feature gallery image → first gallery image */
 const getProductImage = (p: ProductDto): string => {
     if (p.image) return p.image;
@@ -21,144 +23,147 @@ const getProductImage = (p: ProductDto): string => {
     return p.images?.[0]?.image || "";
 };
 
-// --- Extracted Memoized Product Card ---
 const ProductCard = memo(({
     product,
     onAddToCart,
-    onBuyNow
+    onBuyNow,
+    index,
 }: {
     product: ProductDto;
     onAddToCart: (e: React.MouseEvent, p: ProductDto) => void;
     onBuyNow: (e: React.MouseEvent, p: ProductDto) => void;
+    index: number;
 }) => {
     const { t } = useTranslation("product");
     const unitDisplay =
-        product.unit === "kg"
-            ? "Kg"
-            : product.unit === "piece"
-                ? "Piece"
-                : product.unit === "Gram"
-                    ? "100g"
+        product.unit === "kg" ? "Kg"
+            : product.unit === "piece" ? "Pc"
+                : product.unit === "Gram" ? "100g"
                     : "";
+
+    const mainImage = getProductImage(product);
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className="group relative bg-white rounded-[2rem] p-3 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 border border-slate-100 hover:border-slate-200 h-full"
+            transition={{ duration: 0.42, delay: (index % 8) * 0.055, ease: [0.23, 1, 0.32, 1] }}
+            whileHover={{ y: -5 }}
+            className="group relative bg-white rounded-2xl sm:rounded-[2rem] p-2 sm:p-3 shadow-[0_2px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_14px_44px_rgba(0,0,0,0.12)] transition-all duration-300 border border-slate-100 hover:border-slate-200 flex flex-col hover:z-10"
         >
-            <Link to={`/products/${product.id}`} className="block h-full flex flex-col">
-                {/* Image Container with aspect-ratio to prevent Layout Shift */}
-                <div className="relative aspect-[3/4] bg-slate-50 rounded-[1.5rem] overflow-hidden mb-4 isolate">
-                    <img
-                        src={getProductImage(product) || "https://via.placeholder.com/400x500?text=Fresh+Catch"}
-                        alt={product.name}
-                        loading="lazy" // Native Lazy Loading
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
+            <Link to={`/products/${product.id}`} className="flex flex-col flex-1">
+                <div className="relative aspect-[3/4] bg-slate-50 rounded-xl sm:rounded-[1.5rem] overflow-hidden mb-2 sm:mb-3 isolate">
+                    {mainImage ? (
+                        <img
+                            src={mainImage}
+                            alt={product.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-107 transition-transform duration-700 ease-out"
+                        />
+                    ) : (
+                        <div className="w-full h-full p-6 sm:p-8 bg-slate-900 flex items-center justify-center">
+                            <img src={logo} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" alt="Logo fallback" />
+                        </div>
+                    )}
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Badges */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                    <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-2 z-10">
                         {product.discount_price && (
-                            <span className="px-2.5 py-1 bg-rose-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
+                            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-rose-500 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-md sm:rounded-lg shadow-sm">
                                 {t("card.sale")}
                             </span>
                         )}
                         {product.average_rating > 4.5 && (
-                            <span className="px-2.5 py-1 bg-amber-400 text-black text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1">
-                                <Star size={10} fill="black" /> {t("card.topRated")}
+                            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-amber-400 text-black text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-md sm:rounded-lg shadow-sm flex items-center gap-1">
+                                <Star size={9} fill="black" /> {t("card.topRated")}
                             </span>
                         )}
                         {product.is_available && product.stock > 0 && product.stock < 7 && (
-                            <span className="px-2.5 py-1 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
+                            <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-orange-500 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-md sm:rounded-lg shadow-sm">
                                 {t("card.onlyLeft", { count: product.stock })}
                             </span>
                         )}
-                        {product.is_available && product.stock >= 7 && product.stock < 10 && (
-                            <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-sm">
-                                {t("card.lowStock")}
-                            </span>
-                        )}
                     </div>
 
-                    {/* Quick Action Buttons */}
-                    <div className="absolute bottom-3 right-3 flex flex-col gap-2 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-20">
-                        <button
-                            onClick={(e) => onAddToCart(e, product)}
-                            disabled={!product.is_available || product.stock === 0}
-                            className="w-10 h-10 bg-white shadow-xl text-slate-900 rounded-full flex items-center justify-center hover:bg-cyan-600 hover:text-white transition-all duration-300 disabled:opacity-50"
-                            title={t("card.addToCart")}
-                        >
-                            <ShoppingCart size={18} />
-                        </button>
+                    <button
+                        onClick={(e) => onAddToCart(e, product)}
+                        disabled={!product.is_available || product.stock === 0}
+                        title={t("card.addToCart")}
+                        className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 sm:bg-white shadow-lg text-slate-900 rounded-full flex items-center justify-center hover:bg-cyan-600 hover:text-white transition-all duration-300 disabled:opacity-40 sm:translate-y-10 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100 z-20"
+                    >
+                        <ShoppingCart size={14} className="sm:hidden" />
+                        <ShoppingCart size={17} className="hidden sm:block" />
+                    </button>
 
-                    </div>
-
-                    {/* Out of Stock Overlay */}
                     {(!product.is_available || product.stock === 0) && (
-                        <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[1px] flex items-center justify-center z-10">
-                            <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-xl">
-                                <span className="text-slate-900 text-xs font-black uppercase tracking-widest">{t("card.outOfStock")}</span>
+                        <div className="absolute inset-0 bg-slate-900/15 backdrop-blur-[1px] flex items-center justify-center z-10">
+                            <div className="bg-white/95 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl shadow-xl">
+                                <span className="text-slate-900 text-[10px] sm:text-xs font-black uppercase tracking-widest">{t("card.outOfStock")}</span>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Content */}
-                <div className="px-2 pb-2 flex-grow flex flex-col">
-                    <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md">
+                <div className="px-1 sm:px-2 pb-1 sm:pb-2 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between mb-1 gap-1">
+                        <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[62%]">
                             {product.category_name || t("card.categoryFallback")}
                         </span>
-                        <div className="flex items-center gap-1">
-                            <Star size={12} className="text-amber-400 fill-amber-400" />
-                            <span className="text-xs font-bold text-slate-700">{product.average_rating ? Number(product.average_rating).toFixed(1) : t("card.new")}</span>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                            <Star size={10} className="text-amber-400 fill-amber-400" />
+                            <span className="text-[10px] font-bold text-slate-700">{product.average_rating ? Number(product.average_rating).toFixed(1) : t("card.new")}</span>
                         </div>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900 leading-snug mb-1 line-clamp-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug mb-1 line-clamp-2">
                         {product.name}
                     </h3>
-                    <p className="text-xs text-slate-500 mb-4 line-clamp-1">{product.description || t("card.descriptionFallback")}</p>
 
-                    <div className="mt-auto pt-3 border-t border-slate-50 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex flex-col">
+                    <div className="hidden sm:block h-9 relative group/desc mb-3 cursor-default">
+                        <p className="text-xs text-slate-500 leading-[1.5] line-clamp-2 select-none">
+                            {product.description || t("card.descriptionFallback")}
+                        </p>
+                        {product.description && product.description.length > 60 && (
+                            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-900 text-white text-[11px] leading-relaxed rounded-xl px-3 py-2.5 shadow-xl opacity-0 group-hover/desc:opacity-100 transition-opacity duration-200 z-50">
+                                {product.description}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-slate-900" />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-auto pt-2 border-t border-slate-50 space-y-2">
+                        <div className="flex items-end justify-between gap-1">
+                            <div className="flex flex-col min-w-0">
                                 {product.discount_price ? (
                                     <>
-                                        <span className="text-[10px] text-slate-400 line-through font-medium">AED {Number(product.price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
-                                        <span className="text-lg font-black text-slate-900">AED {Number(product.discount_price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
+                                        <span className="text-[9px] sm:text-[10px] text-slate-400 line-through font-medium leading-none mb-0.5">AED {Number(product.price).toFixed(0)}{unitDisplay ? `/${unitDisplay}` : ""}</span>
+                                        <span className="text-sm sm:text-base font-black text-slate-900 leading-tight"><span className="text-yellow-500 text-[10px] sm:text-xs font-bold">AED </span>{Number(product.discount_price).toFixed(2)}{unitDisplay ? <span className="text-[9px] font-semibold text-slate-500">/{unitDisplay}</span> : ""}</span>
                                     </>
                                 ) : (
-                                    <span className="text-lg font-black text-slate-900">AED {Number(product.price).toFixed(2)}{unitDisplay ? ` / ${unitDisplay}` : ""}</span>
+                                    <span className="text-sm sm:text-base font-black text-slate-900 leading-tight"><span className="text-yellow-500 text-[10px] sm:text-xs font-bold">AED </span>{Number(product.price).toFixed(2)}{unitDisplay ? <span className="text-[9px] font-semibold text-slate-500">/{unitDisplay}</span> : ""}</span>
                                 )}
                             </div>
-
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 group/btn">
-                                <span className="hidden sm:inline-block opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-slate-500">{t("card.view")}</span>
-                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
-                                    <ArrowRight size={14} />
+                            <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-slate-900 shrink-0">
+                                <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-slate-400 text-[11px]">{t("card.view")}</span>
+                                <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300">
+                                    <ArrowRight size={13} />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Stock info — always reserve height to keep card size consistent */}
-                        <p className="text-[10px] text-slate-400 font-medium h-4">
+                        <p className="hidden sm:block text-[10px] text-slate-400 font-medium h-3.5">
                             {product.is_available && product.stock > 0 && product.stock < 15 ? t("card.inStock", { count: product.stock }) : ""}
                         </p>
 
-                        {/* Buy Now Button */}
                         <button
                             onClick={(e) => onBuyNow(e, product)}
                             disabled={!product.is_available || product.stock === 0}
-                            className="w-full py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-2 sm:py-2.5 bg-cyan-600 text-white text-[10px] sm:text-xs font-bold rounded-xl hover:bg-cyan-700 transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Zap size={14} />
+                            <Zap size={11} className="sm:hidden fill-current" />
+                            <Zap size={13} className="hidden sm:block fill-current" />
                             {t("card.buyNow")}
                         </button>
                     </div>
@@ -170,7 +175,7 @@ const ProductCard = memo(({
 
 const UserProductsPage: React.FC = () => {
     const { t } = useTranslation("product");
-    const { isArabic } = useLanguageToggle();
+    useLanguageToggle();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const requireAuth = useRequireAuth();
@@ -263,11 +268,11 @@ const UserProductsPage: React.FC = () => {
     }, [dispatch, navigate, requireAuth, toast]);
 
     return (
-        <div dir="ltr" className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
+        <div dir="ltr" className="min-h-screen bg-slate-50 text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
 
             {/* ─── Static Filter Bar ─── */}
             <div className="relative z-30 bg-white border-b border-slate-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+                <div className="  mx-auto px-4 sm:px-6 py-4">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
 
                         {/* Search Input */}
@@ -287,7 +292,7 @@ const UserProductsPage: React.FC = () => {
             </div>
 
             {/* ─── Product Grid ─── */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <main className="  mx-auto px-4 sm:px-6 py-8">
                 {loading && products.length === 0 ? (
                     <div className="flex items-center justify-center min-h-[50vh]">
                         <ShrimpLoader />
@@ -318,12 +323,13 @@ const UserProductsPage: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                             <AnimatePresence mode="popLayout">
-                                {products.map((product) => (
+                                {products.map((product, index) => (
                                     <ProductCard
                                         key={product.id}
                                         product={product}
+                                        index={index}
                                         onAddToCart={handleAddToCart}
                                         onBuyNow={handleBuyNow}
                                     />
