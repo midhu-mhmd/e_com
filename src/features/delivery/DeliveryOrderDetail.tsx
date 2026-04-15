@@ -37,22 +37,23 @@ function ConfirmModal({
   loading?: boolean;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
-        <p className="text-sm text-gray-700">{message}</p>
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl scale-in-center">
+        <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight">Wait a moment</h3>
+        <p className="text-sm text-gray-500 mb-8 leading-relaxed">{message}</p>
+        <div className="flex flex-col gap-3">
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-black transition-colors disabled:opacity-60"
+            className="w-full py-4 rounded-2xl bg-gray-900 text-white text-xs font-black tracking-widest uppercase hover:bg-black transition-all shadow-lg shadow-gray-200 disabled:opacity-60"
           >
-            {loading ? <Loader2 size={14} className="animate-spin mx-auto" /> : "Confirm"}
+            {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "PROCEED"}
+          </button>
+          <button
+            onClick={onCancel}
+            className="w-full py-4 rounded-2xl border border-gray-100 text-xs font-black tracking-widest uppercase text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+          >
+            NOT NOW
           </button>
         </div>
       </div>
@@ -72,32 +73,32 @@ function CancelRequestModal({
 }) {
   const [reason, setReason] = useState("");
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
-        <h3 className="font-semibold text-gray-800">Request Cancellation</h3>
-        <p className="text-xs text-gray-500">
-          Explain why you can't complete this delivery. Admin will review your request.
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl scale-in-center">
+        <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight tracking-tight">Request Cancellation</h3>
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+          Briefly explain why this delivery cannot be completed.
         </p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Customer unreachable, wrong address, etc."
+          placeholder="e.g., Customer unreachable or incorrect address"
           rows={3}
-          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+          className="w-full rounded-2xl bg-gray-50 border-0 px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none transition-all"
         />
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Back
-          </button>
+        <div className="flex flex-col gap-3 mt-8">
           <button
             onClick={() => reason.trim() && onSubmit(reason.trim())}
             disabled={loading || !reason.trim()}
-            className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-60"
+            className="w-full py-4 rounded-2xl bg-red-500 text-white text-xs font-black tracking-widest uppercase hover:bg-red-600 transition-all shadow-lg shadow-red-100 disabled:opacity-40"
           >
-            {loading ? <Loader2 size={14} className="animate-spin mx-auto" /> : "Submit Request"}
+            {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "SUBMIT REQUEST"}
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full py-4 rounded-2xl border border-gray-100 text-xs font-black tracking-widest uppercase text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all"
+          >
+            GO BACK
           </button>
         </div>
       </div>
@@ -139,53 +140,57 @@ function ProofModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
-        <h3 className="font-semibold text-gray-800">Confirm Delivery</h3>
-        <p className="text-xs text-gray-500">Upload a proof-of-delivery photo to complete this order.</p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl scale-in-center overflow-y-auto max-h-[90vh] no-scrollbar">
+        <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight tracking-tight">Confirm Delivery</h3>
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">Please capture a photo as proof of successful delivery.</p>
 
         {/* Image upload */}
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full h-32 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-cyan-300 hover:text-cyan-500 transition-colors overflow-hidden"
+          className="w-full h-48 rounded-3xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-3 text-gray-400 hover:border-emerald-300 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all duration-500 overflow-hidden group shadow-inner"
         >
           {preview ? (
-            <img src={preview} alt="proof" className="w-full h-full object-cover rounded-xl" />
+            <img src={preview} alt="proof" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           ) : (
             <>
-              <ImageIcon size={24} />
-              <span className="text-xs">Tap to upload photo</span>
+              <div className="p-4 bg-white rounded-2xl shadow-sm text-gray-300 group-hover:text-emerald-500 group-hover:scale-110 transition-all duration-500">
+                <ImageIcon size={32} />
+              </div>
+              <span className="text-[10px] font-black tracking-widest uppercase">Tap to Capture</span>
             </>
           )}
         </button>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
 
-        <input
-          value={sigName}
-          onChange={(e) => setSigName(e.target.value)}
-          placeholder="Recipient name (optional)"
-          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        />
-        <input
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notes (optional)"
-          className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        />
+        <div className="mt-6 space-y-3">
+          <input
+            value={sigName}
+            onChange={(e) => setSigName(e.target.value)}
+            placeholder="RECIPIENT NAME (OPTIONAL)"
+            className="w-full rounded-2xl bg-gray-50 border-0 px-4 py-4 text-[10px] font-black tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          />
+          <input
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="ADDITIONAL NOTES (OPTIONAL)"
+            className="w-full rounded-2xl bg-gray-50 border-0 px-4 py-4 text-[10px] font-black tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          />
+        </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Back
-          </button>
+        <div className="flex flex-col gap-3 mt-8">
           <button
             onClick={handleSubmit}
             disabled={loading || !imageFile}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+            className="w-full py-4 rounded-2xl bg-emerald-600 text-white text-xs font-black tracking-widest uppercase hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-40"
           >
-            {loading ? <Loader2 size={14} className="animate-spin mx-auto" /> : "Mark Delivered"}
+            {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "COMPLETE DELIVERY"}
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full py-4 rounded-2xl border border-gray-100 text-xs font-black tracking-widest uppercase text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all"
+          >
+            GO BACK
           </button>
         </div>
       </div>
@@ -339,7 +344,7 @@ const DeliveryOrderDetail: React.FC = () => {
         />
       )}
 
-      <div className="space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4 w-full pb-6">
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
@@ -351,185 +356,171 @@ const DeliveryOrderDetail: React.FC = () => {
         {/* Toast */}
         {toast && (
           <div
-            className={`px-4 py-3 rounded-xl text-sm font-medium ${
-              toast.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+            className={`px-4 py-3 rounded-xl text-sm font-medium ${toast.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+              }`}
           >
             {toast.msg}
           </div>
         )}
 
         {/* Order header */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-base font-bold text-gray-800">Order #{order.id}</h1>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                STATUS_COLOR[order.status] ?? "bg-gray-100 text-gray-600"
-              }`}
-            >
+        <div className="bg-white border border-gray-100 p-10">
+          <div className="flex justify-between items-start mb-10">
+            <div>
+              <h1 className="text-5xl font-black tracking-tighter text-gray-900 leading-none">
+                #{order.id}
+              </h1>
+              <p className="text-[10px] font-black tracking-[0.4em] text-gray-400 uppercase mt-4">
+                LOGistics / Order ID
+              </p>
+            </div>
+            <span className="px-5 py-2 border-2 border-black text-[10px] font-black tracking-[0.2em] uppercase">
               {order.status}
             </span>
           </div>
-          <p className="text-xs text-gray-400">
-            Placed {new Date(order.created_at).toLocaleDateString()}
-          </p>
-
-          {cancelReq?.status === "PENDING" && (
-            <div className="mt-3 flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2.5 text-xs text-orange-700">
-              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Cancellation request pending review</p>
-                <p className="text-orange-500 mt-0.5">{cancelReq.reason}</p>
-              </div>
+          <div className="flex gap-12 border-t border-gray-100 pt-8">
+            <div>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Created</p>
+              <p className="text-xs font-bold text-gray-900 uppercase">{new Date(order.created_at).toLocaleDateString()}</p>
             </div>
-          )}
-          {cancelReq?.status === "REJECTED" && (
-            <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 text-xs text-red-600">
-              Cancellation rejected: {cancelReq.review_notes || "No notes provided."}
+            <div>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Settlement</p>
+              <p className="text-xs font-bold text-gray-900 uppercase">AED {order.total_amount}</p>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Delivery address */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Deliver to</h2>
-          <div className="flex items-start gap-3">
-            <MapPin size={16} className="text-gray-400 mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-sm text-gray-800">{addr.full_name}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {addr.street_address}, {addr.area}, {addr.city}, {addr.emirate}
-              </p>
-              {addr.phone_number && (
+        {/* Info Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-l border-r border-b border-gray-100">
+          {/* Destination */}
+          <div className="p-10 border-b border-gray-100 md:border-b-0 md:border-r border-gray-100">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8">
+              Ship-to Destination
+            </h2>
+            <p className="text-2xl font-black text-gray-900 tracking-tight uppercase leading-none mb-4">
+              {addr.full_name}
+            </p>
+            <p className="text-xs font-bold text-gray-500 leading-relaxed uppercase max-w-xs">
+              {addr.street_address}, {addr.area}, {addr.city}, {addr.emirate}
+            </p>
+            <div className="mt-10 flex flex-col gap-2">
+              <a
+                href={`tel:${addr.phone_number}`}
+                className="w-full py-4 border border-black text-center text-[9px] font-black tracking-[0.3em] uppercase hover:bg-black hover:text-white transition-all"
+              >
+                CALL CUSTOMER
+              </a>
+              {addr.latitude && (
                 <a
-                  href={`tel:${addr.phone_number}`}
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs text-cyan-600 font-medium"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-4 border border-black text-center text-[9px] font-black tracking-[0.3em] uppercase hover:bg-black hover:text-white transition-all"
                 >
-                  <Phone size={12} /> {addr.phone_number}
+                  MAP NAVIGATION
                 </a>
               )}
             </div>
           </div>
 
-          {addr.latitude && addr.longitude && (
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-cyan-200 text-cyan-700 text-sm font-semibold hover:bg-cyan-50 transition-colors"
-            >
-              <Navigation size={14} /> Get Directions
-            </a>
-          )}
+          {/* Logistics Tracking */}
+          <div className="p-10">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8">
+              Logistics Chain
+            </h2>
+            <div className="space-y-6">
+              <div className="pb-4 border-b border-gray-50">
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Phase</p>
+                <p className="text-sm font-bold text-gray-900 uppercase tracking-tighter">{assignment?.status.replace("_", " ") || "UNASSIGNED"}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Time Assigned</p>
+                <p className="text-sm font-bold text-gray-900 uppercase tracking-tighter">{assignment ? new Date(assignment.assigned_at).toLocaleString() : "---"}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Items */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-4 space-y-3">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Items ({order.items?.length ?? 0})
+        <div className="bg-white border-l border-r border-b border-gray-100 p-10">
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-10">
+            Shipment Manifest
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-8">
             {order.items?.map((item) => (
-              <div key={item.id} className="flex items-center gap-3">
-                {item.product_image ? (
-                  <img
-                    src={item.product_image}
-                    alt={item.product_name}
-                    className="w-10 h-10 rounded-lg object-cover border border-gray-100"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center">
-                    <Package size={14} className="text-gray-300" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">{item.product_name}</p>
-                  <p className="text-xs text-gray-400">
-                    Qty {item.quantity} · AED {item.price}
+              <div key={item.id} className="flex justify-between items-center group/item">
+                <div>
+                  <p className="text-sm font-black text-gray-900 uppercase tracking-tighter mb-1">{item.product_name}</p>
+                  <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 uppercase">
+                    UNIT COST / AED {item.price}
                   </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-black text-gray-900 uppercase">QTY {item.quantity}</p>
+                  <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 uppercase">SUBTOTAL AED {Number(item.price) * item.quantity}</p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="border-t border-gray-50 pt-3 flex items-center justify-between text-sm font-bold text-gray-800">
-            <span>Total</span>
-            <span>AED {order.total_amount}</span>
+          <div className="mt-12 pt-10 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[10px] font-black tracking-[0.4em] uppercase text-gray-400">Final Settlement</span>
+            <span className="text-4xl font-black text-gray-900 tracking-tighter">AED {order.total_amount}</span>
           </div>
         </div>
 
-        {/* Assignment status */}
-        {assignment && (
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 space-y-2">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Assignment</h2>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Status</span>
-              <span className="font-semibold text-gray-800">{assignment.status.replace("_", " ")}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Assigned at</span>
-              <span className="text-gray-700">{new Date(assignment.assigned_at).toLocaleString()}</span>
-            </div>
-            {assignment.delivered_at && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Delivered at</span>
-                <span className="text-gray-700">{new Date(assignment.delivered_at).toLocaleString()}</span>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Proof of delivery */}
         {hasProof && (
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-600" />
-              <h2 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Proof of Delivery</h2>
+          <div className="bg-black text-white p-10">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-10 text-gray-500">
+              Handover Authorization
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
+              {order.delivery_proof!.proof_image && (
+                <div className="border border-white/20 p-2">
+                  <img
+                    src={order.delivery_proof!.proof_image}
+                    alt="delivery proof"
+                    className="w-full grayscale hover:grayscale-0 transition-all duration-700"
+                  />
+                </div>
+              )}
+              <div className="pb-2">
+                <p className="text-[9px] font-black tracking-[0.2em] text-gray-500 uppercase mb-2">Released To</p>
+                <p className="text-3xl font-black tracking-tighter uppercase leading-none">{order.delivery_proof!.signature_name || "AUTHORIZED RECEIVER"}</p>
+              </div>
             </div>
-            {order.delivery_proof!.proof_image && (
-              <img
-                src={order.delivery_proof!.proof_image}
-                alt="delivery proof"
-                className="w-full rounded-xl border border-gray-100 object-cover max-h-48"
-              />
-            )}
-            {order.delivery_proof!.signature_name && (
-              <p className="text-xs text-gray-500">
-                Received by: <span className="font-medium text-gray-700">{order.delivery_proof!.signature_name}</span>
-              </p>
-            )}
           </div>
         )}
 
         {/* Action buttons */}
-        <div className="space-y-2 pt-1">
+        <div className="flex flex-col gap-2 py-10">
           {canShip && (
             <button
               onClick={() => setShowShipConfirm(true)}
               disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-60"
+              className="w-full py-5 bg-black text-white text-[10px] font-black tracking-[0.4em] uppercase border-2 border-black hover:bg-white hover:text-black transition-all"
             >
-              <Truck size={16} /> Mark as Shipped
+              INITIALIZE SHIPMENT
             </button>
           )}
           {canDeliver && (
             <button
               onClick={() => setShowProofModal(true)}
               disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+              className="w-full py-5 bg-black text-white text-[10px] font-black tracking-[0.4em] uppercase border-2 border-black hover:bg-white hover:text-black transition-all"
             >
-              <CheckCircle2 size={16} /> Confirm Delivery
+              ACKNOWLEDGE COMPLETION
             </button>
           )}
           {canRequestCancel && (
             <button
               onClick={() => setShowCancelModal(true)}
               disabled={actionLoading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border border-red-200 text-red-500 font-semibold hover:bg-red-50 transition-colors disabled:opacity-60"
+              className="w-full py-5 border border-gray-200 text-gray-300 text-[10px] font-black tracking-[0.4em] uppercase hover:border-red-500 hover:text-red-500 transition-all"
             >
-              <AlertTriangle size={16} /> Request Cancellation
+              ABORT DELIVERY TASK
             </button>
           )}
         </div>

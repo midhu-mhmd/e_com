@@ -36,17 +36,21 @@ function KpiCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 flex flex-col gap-2 ${
-        highlight ? "border-cyan-200 bg-cyan-50" : "border-gray-100 bg-white"
-      }`}
+      className={`relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3 group transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl ${highlight
+        ? "border-cyan-100 bg-gradient-to-br from-cyan-50 to-blue-50 shadow-cyan-100/40"
+        : "border-gray-100 bg-white shadow-sm hover:border-gray-200 hover:shadow-gray-200/50"
+        }`}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">{label}</span>
-        <span className={`${highlight ? "text-cyan-600" : "text-gray-400"}`}>{icon}</span>
+      <div className="flex items-center justify-between z-10">
+        <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">{label}</span>
+        <span className={`p-1.5 rounded-lg transition-transform duration-500 group-hover:scale-110 ${highlight ? "bg-cyan-100/50 text-cyan-600" : "bg-gray-50 text-gray-400"}`}>{icon}</span>
       </div>
-      <p className={`text-2xl font-bold ${highlight ? "text-cyan-700" : "text-gray-800"}`}>
+      <p className={`text-2xl font-black tracking-tight z-10 ${highlight ? "text-cyan-900" : "text-gray-900"}`}>
         {value}
       </p>
+      {highlight && (
+        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-cyan-400/10 rounded-full blur-2xl group-hover:bg-cyan-400/20 transition-all duration-500" />
+      )}
     </div>
   );
 }
@@ -103,32 +107,36 @@ const DeliveryDashboard: React.FC = () => {
   const recent = data?.recent_assigned_orders ?? [];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* ─── Greeting ─── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">
-            Hello, {user?.full_name?.split(" ")[0] || "Driver"} 👋
+      {/* ─── Greeting ─── */}
+      <div className="flex items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-cyan-50 to-transparent rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/3" />
+
+        <div className="relative z-10">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+            Hello, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">{user?.full_name?.split(" ")[0] || "Driver"}</span> 👋
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
             {(profile?.assigned_emirates_display?.length ?? 0) > 0
-              ? `Covering: ${profile!.assigned_emirates_display.join(", ")}`
-              : "No emirates assigned yet"}
+              ? `${profile!.assigned_emirates_display.join(", ")}`
+              : "No region assigned"}
           </p>
         </div>
         <div
-          className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-            profile?.is_available
-              ? "bg-green-50 text-green-700"
-              : "bg-gray-100 text-gray-500"
-          }`}
+          className={`relative z-10 px-2.5 py-1 rounded-lg text-[9px] font-black tracking-widest shadow-sm flex items-center gap-1.5 ${profile?.is_available
+            ? "bg-green-50 text-green-700 border border-green-100"
+            : "bg-gray-50 text-gray-500 border border-gray-100"
+            }`}
         >
-          {profile?.is_available ? "● Available" : "○ Unavailable"}
+          <span className={`w-1 h-1 rounded-full ${profile?.is_available ? "bg-green-500 animate-pulse" : "bg-gray-400"}`} />
+          {profile?.is_available ? "AVAILABLE" : "OFFLINE"}
         </div>
       </div>
 
       {/* ─── KPI cards ─── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <KpiCard
           label="Pending assigned"
           value={kpi?.pending_assigned_orders ?? 0}
@@ -153,20 +161,20 @@ const DeliveryDashboard: React.FC = () => {
       </div>
 
       {/* ─── Quick actions ─── */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Link
           to="/delivery/available"
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 transition-colors"
+          className="group flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-[10px] font-black tracking-widest uppercase shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:-translate-y-0.5 transition-all duration-300"
         >
-          <Package size={16} />
-          Pick up order
+          <Package size={16} className="group-hover:rotate-12 transition-transform duration-300" />
+          Pick Up New Order
         </Link>
         <Link
           to="/delivery/my-orders"
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors"
+          className="group flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-[10px] font-black tracking-widest uppercase shadow-sm hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
         >
-          <Truck size={16} />
-          My deliveries
+          <Truck size={16} className="text-gray-400 group-hover:translate-x-1 transition-all duration-300" />
+          My Deliveries
         </Link>
       </div>
 
@@ -179,29 +187,43 @@ const DeliveryDashboard: React.FC = () => {
               See all <ChevronRight size={12} />
             </Link>
           </div>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recent.slice(0, 5).map((order) => (
               <Link
                 key={order.id}
                 to={`/delivery/orders/${order.id}`}
-                className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-cyan-200 transition-colors"
+                className="group relative bg-white border border-gray-100 shadow-sm rounded-2xl p-5 flex flex-col gap-3 hover:border-cyan-200 hover:shadow-xl hover:shadow-cyan-100/30 hover:-translate-y-1 transition-all duration-500 ease-out overflow-hidden"
               >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold text-gray-800">Order #{order.id}</span>
-                  <span className="text-xs text-gray-400">
-                    {order.shipping_address_details?.emirate} · {order.items?.length} item
-                    {order.items?.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
+                {/* Decorative glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -translate-y-1/2 translate-x-1/3" />
+
+                <div className="flex items-start justify-between relative z-10">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xl font-black tracking-tight text-gray-800 group-hover:text-cyan-700 transition-colors">
+                      #{order.id}
+                    </span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
+                      RECENT ASSIGNMENT
+                    </span>
+                  </div>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      STATUS_COLOR[order.status] ?? "bg-gray-100 text-gray-600"
-                    }`}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-black tracking-wide uppercase shadow-sm border ${STATUS_COLOR[order.status] || "bg-gray-50 text-gray-600 border-gray-100"
+                      }`}
                   >
                     {order.status}
                   </span>
-                  <ChevronRight size={14} className="text-gray-300" />
+                </div>
+
+                <div className="flex items-start gap-3 text-sm text-gray-600 relative z-10 mt-auto">
+                  <div className="mt-0.5 p-1.5 bg-gray-50 rounded-full group-hover:bg-cyan-50 transition-colors duration-300">
+                    <MapPin size={14} className="text-gray-400 group-hover:text-cyan-500 transition-colors" />
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium leading-relaxed group-hover:text-gray-800 transition-colors">
+                    {order.shipping_address_details?.emirate} · {order.items?.length} item{order.items?.length !== 1 ? "s" : ""}
+                  </p>
+                  <div className="ml-auto w-9 h-9 rounded-2xl bg-gray-50 group-hover:bg-gray-900 group-hover:scale-110 flex items-center justify-center transition-all duration-500 shadow-sm">
+                    <ChevronRight size={18} className="text-gray-400 group-hover:text-white transition-colors" />
+                  </div>
                 </div>
               </Link>
             ))}
