@@ -1783,8 +1783,8 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                         <button
                             onClick={() => handleCopy(referralCode)}
                             className={`p-3 rounded-xl font-bold text-sm transition-all ${copied
-                                    ? "bg-emerald-400 text-white"
-                                    : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+                                ? "bg-emerald-400 text-white"
+                                : "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
                                 }`}
                             title="Copy code"
                         >

@@ -49,6 +49,7 @@ import DeliveryDashboard from '../features/delivery/DeliveryDashboard';
 import AvailableOrders from '../features/delivery/AvailableOrders';
 import MyOrders from '../features/delivery/MyOrders';
 import DeliveryOrderDetail from '../features/delivery/DeliveryOrderDetail';
+import DeliveryProfile from '../features/delivery/DeliveryProfile';
 
 // Admin delivery components
 import DeliveryBoysList from '../features/admin/delivery/DeliveryBoysList';
@@ -193,6 +194,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="available" element={<AvailableOrders />} />
             <Route path="my-orders" element={<MyOrders />} />
             <Route path="orders/:id" element={<DeliveryOrderDetail />} />
+            <Route path="profile" element={<DeliveryProfile />} />
           </Route>
         </Route>
 
