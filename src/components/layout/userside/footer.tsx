@@ -90,13 +90,13 @@ const Footer: React.FC = () => {
 
                             {/* Contact */}
                             <div className="space-y-2.5 mb-6">
-                                <a href="tel:+919876543210" className="flex items-center gap-2.5 text-xs hover:text-yellow-400 transition-colors">
+                                <a href="tel:+971545446111" className="flex items-center gap-2.5 text-xs hover:text-yellow-400 transition-colors">
                                     <Phone size={13} className="text-cyan-300" />
-                                    +91 98765 43210
+                                    +971 545 446 111
                                 </a>
-                                <a href="mailto:hello@simakfresh.ae" className="flex items-center gap-2.5 text-xs hover:text-yellow-400 transition-colors">
+                                <a href="mailto:support@simakfresh.ae" className="flex items-center gap-2.5 text-xs hover:text-yellow-400 transition-colors">
                                     <Mail size={13} className="text-cyan-300" />
-                                    hello@simakfresh.ae
+                                    support@simakfresh.ae
                                 </a>
                                 <div className="flex items-center gap-2.5 text-xs hover:text-yellow-400 transition-colors">
                                     <MapPin size={13} className="text-cyan-300 shrink-0" />

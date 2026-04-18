@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback, memo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, memo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, Star, Filter, ArrowRight, Zap, Loader2 } from "lucide-react";
-import { useAppDispatch, useRequireAuth } from "../../hooks";
+import { Search, ShoppingCart, Star, Filter, ArrowRight, Zap, Loader2, Bell } from "lucide-react";
+import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../admin/cart/cartSlice";
 import { cartsApi } from "../admin/cart/cartApi";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useInfiniteProducts } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
+import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
 /** Main image field → feature gallery image → first gallery image */
 const getProductImage = (p: ProductDto): string => {
@@ -25,11 +26,13 @@ const getProductImage = (p: ProductDto): string => {
 const ProductCard = memo(({
     product,
     onAddToCart,
-    onBuyNow
+    onBuyNow,
+    onNotifyMe,
 }: {
     product: ProductDto;
     onAddToCart: (e: React.MouseEvent, p: ProductDto) => void;
     onBuyNow: (e: React.MouseEvent, p: ProductDto) => void;
+    onNotifyMe: (e: React.MouseEvent, p: ProductDto) => void;
 }) => {
     const { t } = useTranslation("product");
     const unitDisplay =
@@ -40,6 +43,7 @@ const ProductCard = memo(({
                 : product.unit === "Gram"
                     ? "100g"
                     : "";
+    const isOutOfStock = !product.is_available || product.stock === 0;
 
     return (
         <motion.div
@@ -109,8 +113,8 @@ const ProductCard = memo(({
                     )}
                 </div>
 
-                {/* Content */}
-                <div className="px-2 pb-2 flex-grow flex flex-col">
+                {/* Content - Force LTR for English data */}
+                <div className="px-2 pb-2 flex-grow flex flex-col text-left" dir="ltr">
                     <div className="mb-1 flex items-center justify-between">
                         <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md">
                             {product.category_name || t("card.categoryFallback")}
@@ -154,12 +158,11 @@ const ProductCard = memo(({
 
                         {/* Buy Now Button */}
                         <button
-                            onClick={(e) => onBuyNow(e, product)}
-                            disabled={!product.is_available || product.stock === 0}
-                            className="w-full py-2.5 bg-cyan-600 text-white text-xs font-bold rounded-xl hover:bg-cyan-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={(e) => (isOutOfStock ? onNotifyMe(e, product) : onBuyNow(e, product))}
+                            className={`w-full py-2.5 text-white text-xs font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98] ${isOutOfStock ? "bg-amber-500 hover:bg-amber-600" : "bg-cyan-600 hover:bg-cyan-700"}`}
                         >
-                            <Zap size={14} />
-                            {t("card.buyNow")}
+                            {isOutOfStock ? <Bell size={14} /> : <Zap size={14} />}
+                            {isOutOfStock ? t("card.notifyMe") : t("card.buyNow")}
                         </button>
                     </div>
                 </div>
@@ -205,7 +208,7 @@ const UserProductsPage: React.FC = () => {
     // ✅ TanStack Infinite Query — Load More pagination
     const filters = {
         ...(debouncedSearch && { search: debouncedSearch, q: debouncedSearch }),
-        ...(category && { category }),
+        ...(category && (isNaN(Number(category)) ? { category_slug: category } : { category })),
     };
     const {
         data,
@@ -216,10 +219,29 @@ const UserProductsPage: React.FC = () => {
         isFetchingNextPage,
     } = useInfiniteProducts(filters, LIMIT);
 
-    const products = data?.pages.flatMap(page => page.results) || [];
+    const products = useMemo(() => data?.pages.flatMap(page => page.results) || [], [data]);
     const totalCount = data?.pages[0]?.count || 0;
     const error = isError ? t("list.errorLoading") : null;
     const toast = useToast();
+    const authUserId = useAppSelector((state) => state.auth.user?.id);
+
+    useEffect(() => {
+        if (!products.length) return;
+
+        const alerts = processRestockAlerts(products, authUserId, (product) => ({
+            title: t("details.restockBackInStock", {
+                name: product.name,
+                defaultValue: `${product.name} is back in stock now.`,
+            }),
+            message: t("details.restockBackInStock", {
+                name: product.name,
+                defaultValue: `${product.name} is back in stock now.`,
+            }),
+            actionUrl: `/products/${product.id}`,
+        }));
+
+        alerts.forEach((alert) => toast.show(alert.message, "success"));
+    }, [authUserId, products, t, toast]);
 
     const handleAddToCart = useCallback((e: React.MouseEvent, product: ProductDto) => {
         e.preventDefault();
@@ -261,6 +283,22 @@ const UserProductsPage: React.FC = () => {
             }
         })();
     }, [dispatch, navigate, requireAuth, toast]);
+
+    const handleNotifyMe = useCallback((e: React.MouseEvent, product: ProductDto) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        requireAuth(() => {
+            subscribeToRestock(product, authUserId);
+            toast.show(
+                t("details.restockSubscribed", {
+                    name: product.name,
+                    defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+                }),
+                "success"
+            );
+        })();
+    }, [authUserId, requireAuth, t, toast]);
 
     return (
         <div dir="ltr" className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
@@ -326,6 +364,7 @@ const UserProductsPage: React.FC = () => {
                                         product={product}
                                         onAddToCart={handleAddToCart}
                                         onBuyNow={handleBuyNow}
+                                        onNotifyMe={handleNotifyMe}
                                     />
                                 ))}
                             </AnimatePresence>

@@ -214,35 +214,25 @@ const AddProduct: React.FC = () => {
         // Main image
         if (mainImage) fd.append("image", mainImage);
 
-        // Product images — each image is a separate entry
-        let imgIdx = 0;
-        imageRows.forEach((row) => {
-            if (row.file) {
-                fd.append(`product_images[${imgIdx}]image`, row.file);
-                fd.append(`product_images[${imgIdx}]is_feature`, row.is_feature ? "True" : "False");
-                imgIdx++;
-            }
-        });
-
-        // Product videos — each video is a separate entry
-        let vidIdx = 0;
-        videoRows.forEach((row) => {
-            if (row.file || row.video_url) {
-                if (row.file) fd.append(`product_videos[${vidIdx}]video_file`, row.file);
-                if (row.video_url)
-                    fd.append(`product_videos[${vidIdx}]video_url`, row.video_url);
-                fd.append(`product_videos[${vidIdx}]title`, row.title);
-                vidIdx++;
-            }
-        });
-
-        // Delivery and Discount Tiers
-        fd.append("delivery_tiers", JSON.stringify(deliveryTiers));
-        fd.append("discount_tiers", JSON.stringify(discountTiers));
+        // Prepare additional data for orchestration in Saga
+        const additionalData = {
+            images: imageRows
+                .filter((r) => r.file)
+                .map((r) => ({ file: r.file, is_feature: r.is_feature })),
+            videos: videoRows
+                .filter((r) => r.file || r.video_url)
+                .map((r) => ({
+                    file: r.file,
+                    video_url: r.video_url,
+                    title: r.title,
+                })),
+            deliveryTiers,
+            discountTiers,
+        };
 
         submitted.current = true;
         // @ts-ignore
-        dispatch(productsActions.createProductRequest(fd));
+        dispatch(productsActions.createProductRequest({ formData: fd, ...additionalData }));
     };
 
     /* ── Lifecycle ── */

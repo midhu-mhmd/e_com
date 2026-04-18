@@ -17,7 +17,8 @@ const Hero: React.FC = () => {
   const banners = useMemo(() => {
     if (!allBanners) return [];
     return allBanners.filter(b => {
-      const isHomeBanner = b.position === 'home_banner';
+      // Show both 'home_hero' (admin default) and 'home_banner' types in the carousel
+      const isHomeBanner = b.position === 'home_banner' || b.position === 'home_hero';
       return b.is_active && isHomeBanner;
     });
   }, [allBanners]);

@@ -25,16 +25,16 @@ export interface BannerDto {
 
 // ✅ Helper to convert relative image paths to absolute URLs + sanitize quotes/backticks
 const getAbsoluteImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) return '';
-  const cleanedRaw = String(imagePath).trim().replace(/^['"`]+|['"`]+$/g, "");
-  if (!cleanedRaw) return '';
-  if (cleanedRaw.startsWith('http')) return cleanedRaw;
-  const cleanPath = cleanedRaw.startsWith('/') ? cleanedRaw : `/${cleanedRaw}`;
-  const baseUrl = API_BASE_URL || '/api';
-  const apiDomain = import.meta.env.VITE_API_DOMAIN || window.location.origin;
-  
-  // Construct full URL: domain + api base path + image path
-  return `${apiDomain}${baseUrl}${cleanPath}`;
+    if (!imagePath) return '';
+    const cleanedRaw = String(imagePath).trim().replace(/^['"`]+|['"`]+$/g, "");
+    if (!cleanedRaw) return '';
+    if (cleanedRaw.startsWith('http')) return cleanedRaw;
+    const cleanPath = cleanedRaw.startsWith('/') ? cleanedRaw : `/${cleanedRaw}`;
+    const baseUrl = API_BASE_URL || '/api';
+    const apiDomain = import.meta.env.VITE_API_DOMAIN || window.location.origin;
+
+    // Construct full URL: domain + api base path + image path
+    return `${apiDomain}${baseUrl}${cleanPath}`;
 };
 
 export const bannerApi = {
@@ -91,7 +91,7 @@ export const bannerApi = {
     create: async (payload: FormData): Promise<BannerDto> => {
         // Map frontend field names to backend field names
         const backendPayload = new FormData();
-        
+
         for (const [key, value] of payload.entries()) {
             // Map field names to backend expectations
             if (key === 'subtitle') {
@@ -131,7 +131,7 @@ export const bannerApi = {
 
     update: async (id: number, payload: FormData | Partial<BannerDto>): Promise<BannerDto> => {
         let backendPayload: FormData | Partial<BannerDto>;
-        
+
         if (payload instanceof FormData) {
             // Map frontend field names to backend field names
             backendPayload = new FormData();
