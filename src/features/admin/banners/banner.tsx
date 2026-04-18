@@ -15,7 +15,8 @@ import {
     CheckCircle2,
     AlertCircle,
     GripVertical,
-    Eye
+    Eye,
+    Calendar
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,11 +31,12 @@ const BannersManagement: React.FC = () => {
         key: "",
         title: "",
         subtitle: "",
+        description: "",
         tag: "",
         highlight: "",
         cta: "",
         is_active: true,
-        position: "home_hero",
+        position: "home_banner",
         sort_order: 0,
         start_at: "",
         end_at: "",
@@ -54,12 +56,11 @@ const BannersManagement: React.FC = () => {
         setFormData({
             key: "",
             title: "",
-            subtitle: "",
-            tag: "",
+            subtitle: "",            description: "",            tag: "",
             highlight: "",
             cta: "",
             is_active: true,
-            position: "home_hero",
+            position: "home_banner",
             sort_order: 0,
             start_at: "",
             end_at: "",
@@ -78,11 +79,12 @@ const BannersManagement: React.FC = () => {
                 key: banner.key || "",
                 title: banner.title || "",
                 subtitle: banner.subtitle || "",
+                description: banner.description || "",
                 tag: banner.tag || "",
                 highlight: banner.highlight || "",
                 cta: banner.cta_text || "",
                 is_active: banner.is_active,
-                position: banner.position || "home_hero",
+                position: banner.position === "home_hero" ? "home_banner" : (banner.position || "home_banner"),
                 sort_order: banner.order || 0,
                 start_at: banner.start_at || "",
                 end_at: banner.end_at || "",
@@ -119,6 +121,7 @@ const BannersManagement: React.FC = () => {
         data.append("key", String(formData.key || ""));
         data.append("title", String(formData.title || ""));
         if (formData.subtitle) data.append("subtitle", String(formData.subtitle));
+        if (formData.description) data.append("description", String(formData.description));
         if (formData.tag) data.append("tag", String(formData.tag));
         if (formData.highlight) data.append("highlight", String(formData.highlight));
         if (formData.cta) data.append("cta", String(formData.cta));
@@ -220,13 +223,9 @@ const BannersManagement: React.FC = () => {
                                             {banner.is_active ? "Active" : "Paused"}
                                         </span>
                                         <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white">
-                                            {banner.position === 'home_hero' ? 'HERO' :
-                                                banner.position === 'home_banner' ? 'HOME BANNER' :
-                                                    banner.position === 'category_banner' ? 'CATEGORY BANNER' :
-                                                        banner.position === 'popup' ? 'POPUP' :
-                                                            banner.position === 'announcement' ? 'ANNOUNCEMENT' :
-                                                                banner.position === 'home_offer_card' ? 'OFFER CARD' :
-                                                                    String(banner.position || "HOME HERO").toUpperCase().replace('_', ' ')}
+                                            {banner.position === 'home_banner' ? 'HOME BANNER' :
+                                                banner.position === 'popup' ? 'POPUP' :
+                                                    String(banner.position || "HOME BANNER").toUpperCase().replace('_', ' ')}
                                         </span>
                                     </div>
 
@@ -246,6 +245,24 @@ const BannersManagement: React.FC = () => {
                                     <div className="absolute bottom-6 left-6 right-6">
                                         {banner.tag && <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-1">{banner.tag}</p>}
                                         <h3 className="text-xl font-black text-white line-clamp-1">{banner.title}</h3>
+                                        
+                                        {/* Date Badges */}
+                                        {(banner.start_at || banner.end_at) && (
+                                            <div className="flex gap-2 mt-2">
+                                                {banner.start_at && (
+                                                    <span className="flex items-center gap-1 text-[9px] font-bold text-slate-300 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                                                        <Calendar size={10} />
+                                                        S: {new Date(banner.start_at).toLocaleDateString()}
+                                                    </span>
+                                                )}
+                                                {banner.end_at && (
+                                                    <span className="flex items-center gap-1 text-[9px] font-bold text-slate-300 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                                                        <Calendar size={10} />
+                                                        E: {new Date(banner.end_at).toLocaleDateString()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -344,12 +361,22 @@ const BannersManagement: React.FC = () => {
 
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Subtitle</label>
-                                            <textarea
-                                                rows={2}
+                                            <input
                                                 value={formData.subtitle}
                                                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                                                 className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-medium placeholder:text-slate-300"
-                                                placeholder="Short description under the title..."
+                                                placeholder="Short subtitle..."
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Description</label>
+                                            <textarea
+                                                rows={3}
+                                                value={formData.description}
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-medium placeholder:text-slate-300"
+                                                placeholder="Full description..."
                                             />
                                         </div>
 
@@ -391,12 +418,8 @@ const BannersManagement: React.FC = () => {
                                                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                                                     className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-black outline-none transition-all font-bold appearance-none cursor-pointer"
                                                 >
-                                                    <option value="home_hero">Home Hero Carousel</option>
                                                     <option value="home_banner">Home Banner</option>
-                                                    <option value="category_banner">Category Banner</option>
                                                     <option value="popup">Popup</option>
-                                                    <option value="announcement">Announcement</option>
-                                                    <option value="home_offer_card">Home Offer Card (Small)</option>
                                                 </select>
                                             </div>
                                         </div>

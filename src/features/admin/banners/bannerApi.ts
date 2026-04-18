@@ -6,6 +6,7 @@ export interface BannerDto {
     key: string;
     title: string;
     subtitle?: string | null;
+    description?: string | null;
     tag?: string | null;
     highlight?: string | null;
     cta_text?: string | null;
@@ -19,6 +20,8 @@ export interface BannerDto {
     link?: string; // Standard API field
     image?: string; // Standard API field
     position?: string; // Standard API field
+    start_at?: string | null;
+    end_at?: string | null;
     created_at?: string;
     updated_at?: string;
 }
@@ -37,6 +40,11 @@ const getAbsoluteImageUrl = (imagePath: string | null | undefined): string => {
     return `${apiDomain}${baseUrl}${cleanPath}`;
 };
 
+const normalizeBannerPosition = (position?: string | null): string => {
+    if (position === 'home_hero' || !position) return 'home_banner';
+    return position;
+};
+
 export const bannerApi = {
     list: async (): Promise<BannerDto[]> => {
         const response = await api.get<{ results: any[] }>("/marketing/media/");
@@ -46,7 +54,8 @@ export const bannerApi = {
             id: item.id,
             key: item.key,
             title: item.title,
-            subtitle: item.description || item.subtitle || null,
+            subtitle: item.subtitle || null,
+            description: item.description || null,
             tag: item.tag || null,
             highlight: typeof item.highlight === "string" ? item.highlight : (item.highlight ? String(item.highlight) : null),
             cta_text: item.cta || item.cta_text || null,
@@ -57,7 +66,9 @@ export const bannerApi = {
             old_price_text: item.old_price_text || null,
             is_active: item.is_active ?? true,
             order: item.sort_order ?? item.order ?? item.id,
-            position: item.position || 'home_hero',
+            position: normalizeBannerPosition(item.position),
+            start_at: item.start_at || null,
+            end_at: item.end_at || null,
             created_at: item.created_at,
             updated_at: item.updated_at,
         }));
@@ -71,7 +82,8 @@ export const bannerApi = {
             id: item.id,
             key: item.key,
             title: item.title,
-            subtitle: item.description || item.subtitle || null,
+            subtitle: item.subtitle || null,
+            description: item.description || null,
             tag: item.tag || null,
             highlight: typeof item.highlight === "string" ? item.highlight : (item.highlight ? String(item.highlight) : null),
             cta_text: item.cta || item.cta_text || null,
@@ -82,7 +94,9 @@ export const bannerApi = {
             old_price_text: item.old_price_text || null,
             is_active: item.is_active ?? true,
             order: item.sort_order ?? item.order ?? item.id,
-            position: item.position || 'home_hero',
+            position: normalizeBannerPosition(item.position),
+            start_at: item.start_at || null,
+            end_at: item.end_at || null,
             created_at: item.created_at,
             updated_at: item.updated_at,
         };
@@ -95,11 +109,19 @@ export const bannerApi = {
         for (const [key, value] of payload.entries()) {
             // Map field names to backend expectations
             if (key === 'subtitle') {
+                backendPayload.append('subtitle', value);
+            } else if (key === 'description') {
                 backendPayload.append('description', value);
             } else if (key === 'desktop_image') {
                 backendPayload.append('image_desktop', value);
             } else if (key === 'mobile_image') {
                 backendPayload.append('image_mobile', value);
+            } else if (key === 'cta') {
+                backendPayload.append('cta', value);
+            } else if (key === 'sort_order') {
+                backendPayload.append('sort_order', value);
+            } else if (key === 'position') {
+                backendPayload.append('position', normalizeBannerPosition(String(value)));
             } else {
                 backendPayload.append(key, value);
             }
@@ -112,10 +134,11 @@ export const bannerApi = {
             id: item.id,
             key: item.key,
             title: item.title,
-            subtitle: item.description || item.subtitle || null,
+            subtitle: item.subtitle || null,
+            description: item.description || null,
             tag: item.tag || null,
             highlight: item.highlight || null,
-            cta_text: item.cta_text || null,
+            cta_text: item.cta || item.cta_text || null,
             cta_link: item.link || item.cta_link || null,
             desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
             mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
@@ -123,7 +146,9 @@ export const bannerApi = {
             old_price_text: item.old_price_text || null,
             is_active: item.is_active ?? true,
             order: item.sort_order ?? item.order ?? item.id,
-            position: item.position || 'home_hero',
+            position: normalizeBannerPosition(item.position),
+            start_at: item.start_at || null,
+            end_at: item.end_at || null,
             created_at: item.created_at,
             updated_at: item.updated_at,
         };
@@ -137,11 +162,17 @@ export const bannerApi = {
             backendPayload = new FormData();
             for (const [key, value] of payload.entries()) {
                 if (key === 'subtitle') {
+                    backendPayload.append('subtitle', value);
+                } else if (key === 'description') {
                     backendPayload.append('description', value);
                 } else if (key === 'desktop_image') {
                     backendPayload.append('image_desktop', value);
                 } else if (key === 'mobile_image') {
                     backendPayload.append('image_mobile', value);
+                } else if (key === 'cta') {
+                    backendPayload.append('cta', value);
+                } else if (key === 'sort_order') {
+                    backendPayload.append('sort_order', value);
                 } else {
                     backendPayload.append(key, value);
                 }
@@ -151,11 +182,19 @@ export const bannerApi = {
             backendPayload = {};
             for (const [key, value] of Object.entries(payload)) {
                 if (key === 'subtitle') {
+                    (backendPayload as any)['subtitle'] = value;
+                } else if (key === 'description') {
                     (backendPayload as any)['description'] = value;
                 } else if (key === 'desktop_image') {
                     (backendPayload as any)['image_desktop'] = value;
                 } else if (key === 'mobile_image') {
                     (backendPayload as any)['image_mobile'] = value;
+                } else if (key === 'cta') {
+                    (backendPayload as any)['cta'] = value;
+                } else if (key === 'sort_order') {
+                    (backendPayload as any)['sort_order'] = value;
+                } else if (key === 'position') {
+                    (backendPayload as any)['position'] = normalizeBannerPosition(String(value));
                 } else {
                     (backendPayload as any)[key] = value;
                 }
@@ -169,10 +208,11 @@ export const bannerApi = {
             id: item.id,
             key: item.key,
             title: item.title,
-            subtitle: item.description || item.subtitle || null,
+            subtitle: item.subtitle || null,
+            description: item.description || null,
             tag: item.tag || null,
             highlight: item.highlight || null,
-            cta_text: item.cta_text || null,
+            cta_text: item.cta || item.cta_text || null,
             cta_link: item.link || item.cta_link || null,
             desktop_image: getAbsoluteImageUrl(item.image_desktop || item.image || item.desktop_image),
             mobile_image: getAbsoluteImageUrl(item.image_mobile || item.mobile_image),
@@ -180,7 +220,9 @@ export const bannerApi = {
             old_price_text: item.old_price_text || null,
             is_active: item.is_active ?? true,
             order: item.sort_order ?? item.order ?? item.id,
-            position: item.position || 'home_hero',
+            position: item.position || 'home_banner',
+            start_at: item.start_at || null,
+            end_at: item.end_at || null,
             created_at: item.created_at,
             updated_at: item.updated_at,
         };
