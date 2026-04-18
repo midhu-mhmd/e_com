@@ -92,9 +92,8 @@ export const customersApi = {
   /** GET /users/ — active users */
   list: async (params?: CustomersQuery): Promise<{ results: UserDto[]; count: number }> => {
     const { page: _page, ...requestParams } = params ?? {};
-    // Always enforce limit=10 in the query
     const res = await api.get<{ results: UserDto[]; count: number }>("/users/", {
-      params: { ...requestParams, limit: 10 },
+      params: { limit: 10, ...requestParams },
     });
     return res.data;
   },
@@ -103,7 +102,7 @@ export const customersApi = {
   listAll: async (params?: CustomersQuery): Promise<{ results: UserDto[]; count: number }> => {
     const { page: _page, ...requestParams } = params ?? {};
     const res = await api.get<{ results: UserDto[]; count: number }>("/users/all/", {
-      params: requestParams,
+      params: { limit: 10, ...requestParams },
     });
     return res.data;
   },

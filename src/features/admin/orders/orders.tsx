@@ -65,7 +65,7 @@ interface ColumnDef {
   label: string;
   icon?: React.ReactNode;
   defaultVisible: boolean;
-  alwaysVisible?: boolean; // cannot be toggled off
+  alwaysVisible?: boolean;
 }
 
 const COLUMNS: ColumnDef[] = [
@@ -115,8 +115,10 @@ const OrderManagement: React.FC = () => {
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
   const [transactionIdFilter, setTransactionIdFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
+  const [limit, setLimit] = useState(10);
+
   const debouncedSearch = useDebounce(searchTerm, 500);
+  const debouncedCustomer = useDebounce(customerFilter, 500);
 
   // Analytics state
   const [anaLoading, setAnaLoading] = useState(true);
@@ -132,7 +134,6 @@ const OrderManagement: React.FC = () => {
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const columnsRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) {
@@ -151,20 +152,27 @@ const OrderManagement: React.FC = () => {
 
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
+  // Reset to page 1 when server-side filters change
+  useEffect(() => { setPage(1); }, [debouncedSearch, debouncedCustomer, statusFilter]);
+
+  // Main API Fetch Effect — search + customer + status go to the server (same as product page)
   useEffect(() => {
     const offset = (page - 1) * limit;
+    // Combine search bar and customer column filter: customer takes priority if set
+    const q = debouncedCustomer || debouncedSearch || undefined;
     dispatch(
       ordersActions.fetchOrdersRequest({
-        q: debouncedSearch || undefined,
+        q,
+        search: q,
         status: statusFilter === "All" ? undefined : statusFilter,
         page,
         limit,
         offset,
       })
     );
-  }, [dispatch, debouncedSearch, statusFilter, page, limit]);
+  }, [dispatch, debouncedSearch, debouncedCustomer, statusFilter, page, limit]);
 
-  // Fetch dashboard analytics for orders page
+  // Fetch dashboard analytics
   useEffect(() => {
     if (!FEATURE_ORDERS_ANALYTICS) return;
     const fetchAna = async () => {
@@ -213,14 +221,10 @@ const OrderManagement: React.FC = () => {
     setPage(1);
   };
 
-  // Keep only filters the backend does not currently expose client-side.
+  // Apply local filters on current page data (same pattern as product page)
+  // Note: customerFilter is server-side, so not included here
   const filteredOrders = useMemo(() => {
     let result = orders;
-    if (customerFilter) {
-      result = result.filter((o) =>
-        (o.shippingAddress.fullName || "").toLowerCase().includes(customerFilter.toLowerCase())
-      );
-    }
     if (cityFilter) {
       result = result.filter((o) =>
         o.shippingAddress.city.toLowerCase().includes(cityFilter.toLowerCase())
@@ -233,7 +237,7 @@ const OrderManagement: React.FC = () => {
     }
     if (deliverySlotFilter) {
       result = result.filter((o) =>
-        String(o.deliverySlot ?? "").toLowerCase().includes(deliverySlotFilter.toLowerCase())
+        String(o.deliverySlot || "").toLowerCase().includes(deliverySlotFilter.toLowerCase())
       );
     }
     if (paymentMethodFilter) {
@@ -247,11 +251,9 @@ const OrderManagement: React.FC = () => {
       );
     }
     return result;
-  }, [orders, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter, customerFilter]);
+  }, [orders, cityFilter, deliveryDateFilter, deliverySlotFilter, paymentMethodFilter, transactionIdFilter]);
 
-  const hasServerFilters = !!(debouncedSearch || statusFilter !== "All");
-  const displayedOrders = hasServerFilters ? orders : filteredOrders;
-
+  const displayedOrders = filteredOrders;
 
   // Order counts from API
   const [orderCounts, setOrderCounts] = useState({
@@ -290,7 +292,6 @@ const OrderManagement: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Unique slots from data for dropdown
   const uniqueSlots = useMemo(() =>
     [...new Set(orders.map((o) => o.deliverySlot).filter(Boolean) as string[])],
     [orders]
@@ -300,10 +301,9 @@ const OrderManagement: React.FC = () => {
   const visibleStart = totalCount === 0 ? 0 : (page - 1) * limit + 1;
   const visibleEnd = totalCount === 0 ? 0 : Math.min((page - 1) * limit + displayedOrders.length, totalCount);
 
-  // Export handler
   const handleExport = () => {
     const headers = ["Order ID", "Customer", "Items", "Total", "Status", "Date", "Payment", "Payment Method"];
-    const rows = displayedOrders.map(o => [
+    const rows = orders.map(o => [
       o.orderNumber,
       o.shippingAddress.fullName || "",
       o.items.length,
@@ -325,7 +325,7 @@ const OrderManagement: React.FC = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `orders_export_${new Date().toISOString().split('T')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -358,7 +358,6 @@ const OrderManagement: React.FC = () => {
             <div className="p-6 text-sm text-rose-600">{anaError}</div>
           ) : analytics ? (
             <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* KPI Cards */}
               <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 gap-4">
                 <KpiCard icon={<ShoppingBag size={16} />} label="Total Orders" value={String(analytics.total_orders)} />
                 <KpiCard icon={<DollarSign size={16} />} label="Revenue" value={`AED ${Number(analytics.total_revenue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`} />
@@ -366,7 +365,6 @@ const OrderManagement: React.FC = () => {
                 <KpiCard icon={<LineChart size={16} />} label="Avg Order" value={`AED ${Number(analytics.average_order_value || 0).toFixed(2)}`} />
               </div>
 
-              {/* Revenue Trend */}
               <div className="lg:col-span-5 bg-[#FAFAFA] border border-[#EEEEEE] rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#71717A]"><LineChart size={14} /> Revenue (last 30d)</div>
@@ -376,7 +374,6 @@ const OrderManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Status Breakdown */}
               <div className="lg:col-span-4 bg-white border border-[#EEEEEE] rounded-2xl p-5">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><PieChart size={14} /> Orders by Status</div>
                 <StatusBars items={(analytics.orders_by_status || []).map((s: any) => ({
@@ -385,7 +382,6 @@ const OrderManagement: React.FC = () => {
                 }))} />
               </div>
 
-              {/* Top Products */}
               {Array.isArray(analytics.top_products) && analytics.top_products.length > 0 && (
                 <div className="lg:col-span-12 bg-white border border-[#EEEEEE] rounded-2xl p-5">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#71717A] mb-3"><BarChart3 size={14} /> Top Products</div>
@@ -455,7 +451,7 @@ const OrderManagement: React.FC = () => {
       {/* --- TABLE --- */}
       <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
         {/* Status Tabs */}
-        <div className="px-4 pt-4 flex items-center gap-1.5 border-b border-[#EEEEEE] overflow-x-auto scrollbar-none snap-x active:cursor-grabbing pb-0">
+        <div className="px-4 pt-4 flex items-center gap-1.5 border-b border-[#EEEEEE] overflow-x-auto overflow-y-hidden scrollbar-none snap-x active:cursor-grabbing pb-0">
           {([
             { key: "All" as const, label: "All" },
             { key: "PENDING" as const, label: "Pending" },
@@ -467,12 +463,11 @@ const OrderManagement: React.FC = () => {
           ] as { key: FilterOrderStatus; label: string }[]).map((tab) => (
             <button
               key={tab.key}
-              onClick={() => { setStatusFilter(tab.key); setPage(1); }}
-              className={`text-[11px] font-bold px-4 py-2.5 border-b-2 transition-all duration-200 -mb-px whitespace-nowrap snap-start ${
-                statusFilter === tab.key
-                  ? "border-black text-black"
-                  : "border-transparent text-[#71717A] hover:text-[#18181B]"
-              }`}
+              onClick={() => setStatusFilter(tab.key)}
+              className={`text-[11px] font-bold px-4 py-2.5 border-b-2 transition-all duration-200 -mb-px whitespace-nowrap snap-start ${statusFilter === tab.key
+                ? "border-black text-black"
+                : "border-transparent text-[#71717A] hover:text-[#18181B]"
+                }`}
             >
               {tab.label}
             </button>
@@ -503,7 +498,6 @@ const OrderManagement: React.FC = () => {
               <Filter size={14} /> {isFilterOpen ? "Hide Filters" : "Show Filters"}
             </button>
 
-            {/* Column Visibility Dropdown */}
             <div className="relative" ref={columnsRef}>
               <button
                 onClick={() => setIsColumnsOpen(!isColumnsOpen)}
@@ -549,7 +543,7 @@ const OrderManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Loading / Error */}
+        {/* Loading / Error states */}
         {status === "loading" && orders.length === 0 && (
           <div className="p-6 text-sm text-[#71717A]">Loading orders…</div>
         )}
@@ -594,7 +588,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="Customer..."
                         value={customerFilter}
-                        onChange={(e) => { setCustomerFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setCustomerFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -609,7 +603,6 @@ const OrderManagement: React.FC = () => {
                       <div className="text-[10px] text-[#A1A1AA] font-medium italic">—</div>
                     </td>
                   )}
-
                   {isVisible("payment") && (
                     <td className="px-5 py-3">
                       <div className="text-[10px] text-[#A1A1AA] font-medium italic">—</div>
@@ -619,7 +612,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={statusFilter}
-                        onChange={(e) => { setStatusFilter(e.target.value as FilterOrderStatus); setPage(1); }}
+                        onChange={(e) => setStatusFilter(e.target.value as FilterOrderStatus)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="All">All Status</option>
@@ -637,7 +630,7 @@ const OrderManagement: React.FC = () => {
                       <input
                         type="date"
                         value={deliveryDateFilter}
-                        onChange={(e) => { setDeliveryDateFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setDeliveryDateFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -646,7 +639,7 @@ const OrderManagement: React.FC = () => {
                     <td className="px-5 py-3">
                       <select
                         value={deliverySlotFilter}
-                        onChange={(e) => { setDeliverySlotFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setDeliverySlotFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none cursor-pointer focus:bg-white focus:border-[#EEEEEE]"
                       >
                         <option value="">All Slots</option>
@@ -662,7 +655,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="City..."
                         value={cityFilter}
-                        onChange={(e) => { setCityFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setCityFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -673,7 +666,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="Pay method..."
                         value={paymentMethodFilter}
-                        onChange={(e) => { setPaymentMethodFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setPaymentMethodFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -684,7 +677,7 @@ const OrderManagement: React.FC = () => {
                         type="text"
                         placeholder="TXN ID..."
                         value={transactionIdFilter}
-                        onChange={(e) => { setTransactionIdFilter(e.target.value); setPage(1); }}
+                        onChange={(e) => setTransactionIdFilter(e.target.value)}
                         className="w-full p-2 bg-[#F9F9F9] border border-transparent rounded-md text-[11px] outline-none focus:bg-white focus:border-[#EEEEEE]"
                       />
                     </td>
@@ -865,10 +858,7 @@ const OrderManagement: React.FC = () => {
             </div>
             <select
               value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
+              onChange={(e) => setLimit(Number(e.target.value))}
               className="p-1.5 bg-[#F9F9F9] border border-[#EEEEEE] rounded-lg text-xs outline-none focus:border-[#D4D4D8]"
             >
               <option value={5}>5 / page</option>
@@ -909,7 +899,7 @@ const OrderManagement: React.FC = () => {
   );
 };
 
-/* --- SMALL SUBCOMPONENTS (local) --- */
+/* --- SUBCOMPONENTS --- */
 const KpiCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
   <div className="bg-white border border-[#EEEEEE] rounded-2xl p-4">
     <div className="flex items-center justify-between">
@@ -1027,7 +1017,6 @@ const OrderDetailsPanel = ({
         onClick={onClose}
       />
       <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-        {/* Header */}
         <div className="p-6 border-b border-[#EEEEEE] flex justify-between items-center bg-white sticky top-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gray-900 text-white rounded-xl">
@@ -1048,9 +1037,7 @@ const OrderDetailsPanel = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Status Banner + Admin Update Form */}
           <div className="bg-[#FAFAFA] p-4 rounded-xl border border-[#EEEEEE] space-y-4">
             <div className="flex justify-between items-center">
               <div>
@@ -1067,7 +1054,6 @@ const OrderDetailsPanel = ({
               </button>
             </div>
 
-            {/* Admin Status Update Form */}
             {isStatusOpen && (
               <div className="border-t border-[#EEEEEE] pt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div>
@@ -1098,7 +1084,7 @@ const OrderDetailsPanel = ({
                   <textarea
                     value={statusNotes}
                     onChange={(e) => setStatusNotes(e.target.value)}
-                    placeholder="e.g. Handed over to courier, Customer requested reschedule..."
+                    placeholder="e.g. Handed over to courier..."
                     rows={2}
                     className="w-full p-3 bg-white border border-[#EEEEEE] rounded-lg text-xs outline-none resize-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition-all placeholder:text-gray-300"
                   />
@@ -1110,13 +1096,12 @@ const OrderDetailsPanel = ({
                   className="w-full py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   <Send size={12} />
-                  {isUpdating ? 'Updating...' : selectedStatus ? `Update to \"${selectedStatus}\"` : 'Select a status above'}
+                  {isUpdating ? 'Updating...' : selectedStatus ? `Update to "${selectedStatus}"` : 'Select a status above'}
                 </button>
               </div>
             )}
           </div>
 
-          {/* Customer & Shipping Info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <InfoField label="Customer" value={order.shippingAddress.fullName || "—"} />
             <InfoField label="Phone" value={order.shippingAddress.phoneNumber || "—"} />
@@ -1136,41 +1121,20 @@ const OrderDetailsPanel = ({
                 year: "numeric",
               })}
             />
-            {order.deliveryDate && (
-              <InfoField
-                label="Delivery Date"
-                value={new Date(order.deliveryDate).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              />
-            )}
-            {order.deliverySlot && (
-              <InfoField label="Delivery Slot" value={String(order.deliverySlot)} />
-            )}
-            {order.payment?.transactionId && (
-              <InfoField label="Transaction ID" value={order.payment.transactionId} />
-            )}
           </div>
 
-          {/* Order Items */}
           <div className="space-y-4">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2">
               Purchased Items
             </h4>
             {order.items?.length > 0 ? (
               order.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center py-3 border-b border-dashed border-[#EEEEEE] last:border-0"
-                >
+                <div key={item.id} className="flex justify-between items-center py-3 border-b border-dashed border-[#EEEEEE] last:border-0">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[#F4F4F5] flex items-center justify-center">
                       <Package size={16} className="text-[#A1A1AA]" />
                     </div>
                     <div>
-                      {/* Ensure productName and other fields prevent crash if missing properties on item */}
                       <p className="text-xs font-bold">{item.productName || "Unknown Product"}</p>
                       <p className="text-[10px] text-[#A1A1AA]">
                         Qty: {item.quantity || 0} · AED {(item.price || 0).toFixed(2)}/ea
@@ -1186,7 +1150,6 @@ const OrderDetailsPanel = ({
               <p className="text-xs text-[#A1A1AA] italic">No items in this order.</p>
             )}
 
-            {/* Summary */}
             <div className="pt-4 space-y-2 border-t border-[#EEEEEE]">
               <div className="flex justify-between items-center pt-1">
                 <span className="text-sm font-bold">Total Amount</span>
@@ -1196,54 +1159,13 @@ const OrderDetailsPanel = ({
               </div>
             </div>
           </div>
-
-          {/* Delivery Notes */}
-          {order.deliveryNotes && (
-            <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2">
-                Delivery Notes
-              </h4>
-              <p className="text-xs text-[#52525B] bg-[#FAFAFA] p-3 rounded-lg border border-[#EEEEEE]">
-                {order.deliveryNotes}
-              </p>
-            </div>
-          )}
-
-          {/* Status History */}
-          {order.statusHistory?.length > 0 && (
-            <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 border-b border-[#EEEEEE] pb-2">
-                Status History
-              </h4>
-              <div className="space-y-3">
-                {order.statusHistory.map((entry, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-[#18181B]">{entry.status}</p>
-                      <p className="text-[10px] text-[#A1A1AA]">
-                        {entry.notes} ·{" "}
-                        {entry.createdAt ? new Date(entry.createdAt).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }) : "-"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </>
   );
 };
 
-/* ── SUB-COMPONENTS ── */
+/* ── BADGE COMPONENTS ── */
 function OrderStatusBadge({ status }: { status: OrderStatus }) {
   const styles: Record<OrderStatus, string> = {
     PENDING: "bg-gray-50 text-gray-600 border-gray-200",
@@ -1262,9 +1184,7 @@ function OrderStatusBadge({ status }: { status: OrderStatus }) {
     CANCELLED: "bg-rose-500",
   };
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dots[status]}`} />
       {status}
     </span>
@@ -1280,23 +1200,13 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
     Failed: "bg-rose-50 text-rose-600 border-rose-100",
   };
   return (
-    <span
-      className={`text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}
-    >
+    <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full uppercase border ${styles[status]}`}>
       {status}
     </span>
   );
 }
 
-function InfoField({
-  label,
-  value,
-  children,
-}: {
-  label: string;
-  value?: string;
-  children?: React.ReactNode;
-}) {
+function InfoField({ label, value, children }: { label: string; value?: string | number; children?: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide">{label}</p>
@@ -1305,17 +1215,7 @@ function InfoField({
   );
 }
 
-function QuickStat({
-  label,
-  value,
-  sub,
-  icon,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  icon: React.ReactNode;
-}) {
+function QuickStat({ label, value, sub, icon }: { label: string; value: string; sub: string; icon: React.ReactNode }) {
   return (
     <div className="p-5 bg-white border border-[#EEEEEE] rounded-2xl shadow-sm hover:border-[#D4D4D8] transition-colors">
       <div className="flex items-center justify-between">

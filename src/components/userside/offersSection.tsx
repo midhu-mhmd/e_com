@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
     Tag,
     Copy,
@@ -359,13 +360,13 @@ const BannerCTA: React.FC<{ bannerOffer: any }> = ({ bannerOffer }) => {
                     </h3>
                     <p className="text-sm text-zinc-400">{bannerOffer.subtitle}</p>
                 </div>
-                <button
-                    onClick={() => bannerOffer.cta_link && (window.location.href = bannerOffer.cta_link)}
+                <Link
+                    to={bannerOffer.cta_link || "/products"}
                     className="group flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-cyan-900 rounded-2xl text-sm font-bold shadow-xl hover:shadow-2xl hover:bg-zinc-50 transition-all duration-300 active:scale-[0.98] shrink-0 w-full sm:w-auto"
                 >
                     {bannerOffer.cta}
                     <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-                </button>
+                </Link>
             </div>
         </div>
     );

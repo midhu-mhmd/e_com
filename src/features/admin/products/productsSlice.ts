@@ -26,8 +26,8 @@ export interface Product {
     averageRating: number;
     totalReviews: number;
     expectedDeliveryTime: string | null;
-    discountTiers: { id?: number; minQuantity: number; discountPrice: number }[];
-    deliveryTiers: { id?: number; name: string; cost: number; estimatedDays: string }[];
+    discountTiers: { id?: number; minQuantity: number; discountPercentage: number }[];
+    deliveryTiers: { id?: number; minQuantity: number; deliveryDays: number }[];
     createdAt: string;
     updatedAt: string;
 }

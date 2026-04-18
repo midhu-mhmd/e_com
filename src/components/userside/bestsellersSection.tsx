@@ -1,16 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Star, ShoppingCart, Flame, Eye, Sparkles, Zap } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Star, ShoppingCart, Flame, Eye, Sparkles, Zap, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useRequireAuth } from "../../hooks";
+import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../../features/admin/cart/cartSlice";
 import { cartsApi } from "../../features/admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
 import { type ProductDto } from "../../features/admin/products/productApi";
 import { useBestsellers } from "../../hooks/queries";
 import { useToast } from "../ui/Toast";
-import InfiniteScrollTrack from "../ui/InfiniteScrollTrack";
-
-import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
 /* ── Product Card ── */
 const ProductCard: React.FC<{
@@ -20,9 +18,11 @@ const ProductCard: React.FC<{
   index: number;
   onAddToCart: () => void;
   onDirectBuy: () => void;
+  onNotifyMe: () => void;
   onQuickView: () => void;
-}> = ({ product, image, discount, index, onAddToCart, onDirectBuy, onQuickView }) => {
+}> = ({ product, image, discount, index, onAddToCart, onDirectBuy, onNotifyMe, onQuickView }) => {
   const { t } = useTranslation("home");
+  const isOutOfStock = !product.is_available || product.stock === 0;
 
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -46,7 +46,7 @@ const ProductCard: React.FC<{
     <div
       ref={ref}
       onClick={onQuickView}
-      className={`group relative flex flex-col h-full min-w-[260px] max-w-[260px] sm:min-w-[280px] sm:max-w-[280px] bg-white rounded-2xl border border-zinc-100 overflow-hidden shadow-[0_2px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.13)] hover:-translate-y-1 transition-all duration-500 cursor-pointer ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      className={`group relative flex flex-col h-full min-w-[280px] max-w-[280px] bg-white rounded-2xl border border-zinc-100 overflow-hidden snap-start transition-all duration-500 hover:shadow-xl hover:-translate-y-1 cursor-pointer ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
       style={{ transitionDelay: `${index * 60}ms` }}
     >
@@ -110,8 +110,8 @@ const ProductCard: React.FC<{
         </div>
       </div>
 
-      {/* Details Section */}
-      <div className="p-5 flex-1 flex flex-col">
+      {/* Details Section - Force LTR for English content */}
+      <div className="p-5 flex-1 flex flex-col text-left" dir="ltr">
 
         {/* ✅ FIXED: Category (Left) & Rating (Right) */}
         <div className="flex items-center justify-between mb-2 h-4">
@@ -180,13 +180,13 @@ const ProductCard: React.FC<{
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDirectBuy();
+              if (isOutOfStock) onNotifyMe();
+              else onDirectBuy();
             }}
-            disabled={!product.is_available || product.stock === 0}
-            className="w-full py-2.5 rounded-xl bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 text-xs font-bold flex items-center justify-center gap-2"
+            className={`w-full py-2.5 rounded-xl text-white transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 text-xs font-bold flex items-center justify-center gap-2 ${isOutOfStock ? "bg-amber-500 hover:bg-amber-600" : "bg-cyan-600 hover:bg-cyan-700"}`}
           >
-            <Zap size={14} className="fill-current" />
-            {t("bestsellers.buyNow", "Buy Now")}
+            {isOutOfStock ? <Bell size={14} /> : <Zap size={14} className="fill-current" />}
+            {isOutOfStock ? t("bestsellers.notifyMe") : t("bestsellers.buyNow", "Buy Now")}
           </button>
         </div>
       </div>
@@ -199,11 +199,12 @@ const BestsellersSection: React.FC = () => {
   const { t } = useTranslation("home");
 
   const { data, isLoading: loading } = useBestsellers();
-  const products = data?.results || [];
+  const products = useMemo(() => data?.results || [], [data]);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
+  const authUserId = useAppSelector((state) => state.auth.user?.id);
 
   const getProductImage = (p: ProductDto) => {
     if (p.image) return p.image;
@@ -220,6 +221,24 @@ const BestsellersSection: React.FC = () => {
   };
 
   const toast = useToast();
+
+  useEffect(() => {
+    if (!products.length) return;
+
+    const alerts = processRestockAlerts(products, authUserId, (product) => ({
+      title: t("bestsellers.restockBackInStock", {
+        name: product.name,
+        defaultValue: `${product.name} is back in stock now.`,
+      }),
+      message: t("bestsellers.restockBackInStock", {
+        name: product.name,
+        defaultValue: `${product.name} is back in stock now.`,
+      }),
+      actionUrl: `/products/${product.id}`,
+    }));
+
+    alerts.forEach((alert) => toast.show(alert.message, "success"));
+  }, [authUserId, products, t, toast]);
 
   const handleAddToCart = (product: ProductDto) => {
     requireAuth(async () => {
@@ -253,6 +272,19 @@ const BestsellersSection: React.FC = () => {
         const msg = err?.response?.data?.error || "Failed to add item to cart";
         toast.show(msg, "error");
       }
+    })();
+  };
+
+  const handleNotifyMe = (product: ProductDto) => {
+    requireAuth(() => {
+      subscribeToRestock(product, authUserId);
+      toast.show(
+        t("bestsellers.restockSubscribed", {
+          name: product.name,
+          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+        }),
+        "success"
+      );
     })();
   };
 
@@ -328,6 +360,7 @@ const BestsellersSection: React.FC = () => {
                 index={i}
                 onAddToCart={() => handleAddToCart(product)}
                 onDirectBuy={() => handleDirectBuy(product)}
+                onNotifyMe={() => handleNotifyMe(product)}
                 onQuickView={() => navigate(`/products/${product.id}`)}
               />
             )}

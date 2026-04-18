@@ -35,18 +35,15 @@ function mapDto(dto: ProductDto) {
     discountTiers: dto.discount_tiers.map((t) => ({
       id: t.id,
       minQuantity: t.min_quantity,
-      discountPrice: t.discount_price ? parseFloat(t.discount_price) : null,
       discountPercentage: t.discount_percentage !== undefined && t.discount_percentage !== null
         ? parseFloat(String(t.discount_percentage))
-        : null,
+        : 0,
     })),
     deliveryTiers: dto.delivery_tiers.map((t) => ({
       id: t.id,
-      name: t.name || `${t.min_quantity}+`,
-      cost: t.cost ? parseFloat(t.cost) : null,
-      estimatedDays: t.estimated_days || `${t.delivery_days} days`,
       minQuantity: t.min_quantity,
-      deliveryDays: t.delivery_days,
+      deliveryDays: t.delivery_days || 0,
+      name: `${t.min_quantity}+ units`,
     })),
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
@@ -277,17 +274,12 @@ const ProductDetailsPage: React.FC = () => {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 flex items-center gap-2"><Tag size={12} /> Discount Tiers</p>
                     <div className="space-y-2">
-                      {product.discountTiers.map((t) => {
-                        const right = t.discountPercentage !== null && !isNaN(t.discountPercentage)
-                          ? `${t.discountPercentage}%`
-                          : (t.discountPrice !== null ? `${t.discountPrice}` : "—");
-                        return (
-                          <div key={t.id ?? `${t.minQuantity}-dp`} className="flex items-center justify-between text-sm">
-                            <span>{t.minQuantity}+ units</span>
-                            <span className="font-bold">{right}</span>
-                          </div>
-                        );
-                      })}
+                      {product.discountTiers.map((t) => (
+                        <div key={t.id ?? `${t.minQuantity}-dp`} className="flex items-center justify-between text-sm">
+                          <span>{t.minQuantity}+ units</span>
+                          <span className="font-bold">{t.discountPercentage}%</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -295,15 +287,12 @@ const ProductDetailsPage: React.FC = () => {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 flex items-center gap-2"><Truck size={12} /> Delivery Tiers</p>
                     <div className="space-y-2">
-                      {product.deliveryTiers.map((t) => {
-                        const right = t.deliveryDays ? `${t.deliveryDays} days` : (t.estimatedDays || "—");
-                        return (
-                          <div key={t.id ?? `${t.minQuantity}-dl`} className="flex items-center justify-between text-sm">
-                            <span>{t.minQuantity ? `${t.minQuantity}+ units` : t.name}</span>
-                            <span className="font-bold">{right}</span>
-                          </div>
-                        );
-                      })}
+                      {product.deliveryTiers.map((t) => (
+                        <div key={t.id ?? `${t.minQuantity}-dl`} className="flex items-center justify-between text-sm">
+                          <span>{t.minQuantity}+ units</span>
+                          <span className="font-bold">{t.deliveryDays} days</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

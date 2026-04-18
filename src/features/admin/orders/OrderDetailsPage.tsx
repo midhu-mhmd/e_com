@@ -60,7 +60,7 @@ type Order = {
   deliveryCharge: number;
   tipAmount: number;
   deliveryDate: string | null;
-  deliverySlot: string | null;
+  deliverySlot: string | number | null;
   deliveryNotes: string | null;
   items: OrderItem[];
   statusHistory: StatusHistoryEntry[];
@@ -136,7 +136,7 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
   );
 }
 
-function InfoField({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+function InfoField({ label, value, children }: { label: string; value?: string | number; children?: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide">{label}</p>
@@ -311,11 +311,7 @@ const OrderDetailsPage: React.FC = () => {
     downloadBlob(blob, `receipt_${order.orderNumber}.pdf`);
   }, [order]);
 
-  const handleDownloadImage = useCallback(async () => {
-    if (!order) return;
-    const blob = await ordersApi.receiptImage(order.id);
-    downloadBlob(blob, `receipt_${order.orderNumber}.png`);
-  }, [order]);
+
 
   const handleDownloadAdminReceipt = useCallback(async () => {
     if (!order) return;
@@ -371,13 +367,7 @@ const OrderDetailsPage: React.FC = () => {
                     >
                       <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (PDF)</span>
                     </button>
-                    <button
-                      onClick={handleDownloadImage}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
-                      title="Payment receipt Image"
-                    >
-                      <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (IMG)</span>
-                    </button>
+
                   </>
                 )}
               </div>

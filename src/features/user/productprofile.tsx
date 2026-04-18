@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin } from "lucide-react";
-import { useAppDispatch, useRequireAuth } from "../../hooks";
+import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin, Bell } from "lucide-react";
+import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../admin/cart/cartSlice";
 import { cartsApi } from "../admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import {
   extractProductLocationValues,
   getProductLocationLabel,
 } from "../admin/products/productLocationOptions";
+import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
@@ -73,6 +74,7 @@ const ProductProfile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const requireAuth = useRequireAuth();
+  const authUserId = useAppSelector((state) => state.auth.user?.id);
 
   const productId = id ? parseInt(id) : undefined;
   const { data: product = null, isLoading: loading, isError } = useProductDetails(productId);
@@ -97,6 +99,24 @@ const ProductProfile: React.FC = () => {
   }, [product]);
 
   const toast = useToast();
+
+  React.useEffect(() => {
+    if (!product) return;
+
+    const alerts = processRestockAlerts([product], authUserId, (restockedProduct) => ({
+      title: t("details.restockBackInStock", {
+        name: restockedProduct.name,
+        defaultValue: `${restockedProduct.name} is back in stock now.`,
+      }),
+      message: t("details.restockBackInStock", {
+        name: restockedProduct.name,
+        defaultValue: `${restockedProduct.name} is back in stock now.`,
+      }),
+      actionUrl: `/products/${restockedProduct.id}`,
+    }));
+
+    alerts.forEach((alert) => toast.show(alert.message, "success"));
+  }, [authUserId, product, t, toast]);
 
   const checkWishlist = () => {
     if (!product) return;
@@ -198,6 +218,22 @@ const ProductProfile: React.FC = () => {
     })();
   };
 
+  const handleNotifyMe = () => {
+    if (!product) return;
+
+    requireAuth(() => {
+      subscribeToRestock(product, authUserId);
+      toast.show(
+        t("details.restockSubscribed", {
+          name: product.name,
+          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+        }),
+        "success"
+      );
+    })();
+  };
+
+  // Determine what to show in the main viewer
   const activeMedia = selectedMedia || mediaList[0] || null;
 
   return (
@@ -370,23 +406,48 @@ const ProductProfile: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden flex-shrink-0">
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => addItemToCart("cart")}
+              disabled={!product.is_available || product.stock === 0}
+              className="flex-1 py-4 bg-stone-900 text-white text-base font-black rounded-2xl hover:bg-stone-800 shadow-xl shadow-stone-900/10 hover:shadow-stone-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+            >
+              <ShoppingCart size={22} />
+              {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
+            </button>
+
+            {product.is_available && product.stock > 0 ? (
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors"
-                aria-label={t("details.qtyDecrease")}
+                onClick={() => addItemToCart("checkout")}
+                className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
               >
-                <Minus size={15} />
+                <Zap size={22} />
+                {t("details.buyNow")}
               </button>
-              <span className="text-sm font-black w-8 text-center text-stone-900">{quantity}</span>
+            ) : (
               <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="w-9 h-9 flex items-center justify-center text-stone-600 hover:bg-stone-50 active:bg-stone-100 transition-colors"
-                aria-label={t("details.qtyIncrease")}
+                onClick={handleNotifyMe}
+                className="flex-1 py-4 bg-amber-500 text-white text-base font-black rounded-2xl hover:bg-amber-600 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
               >
-                <Plus size={15} />
+                <Bell size={22} />
+                {t("details.notifyMe")}
               </button>
-            </div>
+            )}
+
+            <motion.button
+              onClick={toggleWishlist}
+              whileTap={{ scale: 0.8 }}
+              animate={{ scale: isWishlisted ? [1, 1.2, 1] : 1 }}
+              transition={{ duration: 0.3 }}
+              className={`p-4 border-2 rounded-2xl transition-all ${isWishlisted
+                ? "bg-cyan-50 border-cyan-100 text-cyan-600"
+                : "bg-white border-stone-100 text-stone-400 hover:text-cyan-500 hover:border-cyan-100 hover:bg-cyan-50"
+                }`}
+              aria-label={isWishlisted ? t("details.removeWishlist") : t("details.addWishlist")}
+            >
+              <Heart size={24} fill={isWishlisted ? "currentColor" : "none"} />
+            </motion.button>
           </div>
 
           {product.is_available && product.stock > 0 && product.stock < 15 && (

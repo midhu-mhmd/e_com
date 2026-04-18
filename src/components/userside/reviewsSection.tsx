@@ -78,7 +78,24 @@ const ReviewsSection: React.FC = () => {
                                     />
                                 ))}
                             </div>
-                            <p className="text-[10px] text-zinc-400 mt-1">{displayReviews.length} {t("reviews.reviewsLabel")}</p>
+                        </div>
+
+                        {/* Arrows */}
+                        <div className="hidden sm:flex items-center gap-2">
+                            <button
+                                onClick={() => scroll("left")}
+                                disabled={!canScrollLeft}
+                                className="p-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                <ChevronLeft size={18} className="rtl-flip" />
+                            </button>
+                            <button
+                                onClick={() => scroll("right")}
+                                disabled={!canScrollRight}
+                                className="p-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                <ChevronRight size={18} className="rtl-flip" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -170,49 +187,50 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
             {/* Quote icon */}
             <Quote
                 size={32}
-                className="absolute top-4 right-4 text-zinc-100 group-hover:text-yellow-100 transition-colors"
+                className="absolute top-4 start-4 text-zinc-100 group-hover:text-yellow-100 transition-colors"
             />
 
-            {/* Stars */}
-            <div className="flex items-center gap-0.5 mb-4">
-                {[...Array(5)].map((_, i) => (
-                    <Star
-                        key={i}
-                        size={14}
-                        className={i < review.rating ? "fill-amber-400 text-amber-400" : "text-zinc-200"}
-                    />
-                ))}
-            </div>
-
-            {/* Comment */}
-            <p className="text-sm text-zinc-600 leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 italic">
-                "{review.comment}"
-            </p>
-
-            {/* Images hidden on Home as requested */}
-
-            {/* Product tag */}
-            {review.product_name && (
-                <div className="inline-flex px-2.5 py-1 bg-zinc-50 border border-zinc-100 rounded-lg mb-4">
-                    <span className="text-[10px] font-bold text-zinc-500">
-                        🐟 {review.product_name}
-                    </span>
+            {/* Content Section - Force LTR for English comments */}
+            <div dir="ltr" className="text-left">
+                {/* Stars */}
+                <div className="flex items-center gap-0.5 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                        <Star
+                            key={i}
+                            size={14}
+                            className={i < review.rating ? "fill-amber-400 text-amber-400" : "text-zinc-200"}
+                        />
+                    ))}
                 </div>
-            )}
 
-            {/* Author */}
-            <div className="flex items-center gap-3 pt-4 border-t border-zinc-100">
-                <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-xs font-bold`}>
-                    {initials}
-                </div>
-                <div>
-                    <p className="text-xs font-bold text-zinc-900">{name}</p>
-                    <p className="text-[10px] text-zinc-400">{timeAgo}</p>
-                </div>
-                <div className="ml-auto">
-                    <span className="text-[9px] font-bold text-cyan-500 bg-cyan-50 px-2 py-0.5 rounded">
-                        {t("reviews.verified")}
-                    </span>
+                {/* Comment */}
+                <p className="text-sm text-zinc-600 leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 italic">
+                    "{review.comment}"
+                </p>
+
+                {/* Product tag */}
+                {review.product_name && (
+                    <div className="inline-flex px-2.5 py-1 bg-zinc-50 border border-zinc-100 rounded-lg mb-4">
+                        <span className="text-[10px] font-bold text-zinc-500">
+                            🐟 {review.product_name}
+                        </span>
+                    </div>
+                )}
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-4 border-t border-zinc-100">
+                    <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center text-xs font-bold`}>
+                        {initials}
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-zinc-900">{name}</p>
+                        <p className="text-[10px] text-zinc-400">{timeAgo}</p>
+                    </div>
+                    <div className="ms-auto">
+                        <span className="text-[9px] font-bold text-cyan-500 bg-cyan-50 px-2 py-0.5 rounded">
+                            {t("reviews.verified")}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

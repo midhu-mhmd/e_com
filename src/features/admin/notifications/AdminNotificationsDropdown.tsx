@@ -199,7 +199,13 @@ const AdminNotificationsDropdown: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                 {notification.action_url && (
                                                     <button
-                                                        onClick={(e) => { e.stopPropagation(); openAction(notification.action_url); }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!notification.is_read) {
+                                                                handleMarkAsRead(notification.id);
+                                                            }
+                                                            openAction(notification.action_url);
+                                                        }}
                                                         className="px-2.5 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors"
                                                     >
                                                         Open

@@ -19,7 +19,7 @@ import NotificationPage from '../features/user/notification';
 import Navbar from '../components/layout/userside/navbar';
 import Footer from '../components/layout/userside/footer';
 import OrderPage from '../features/user/order';
-import ProfilePage from '../features/user/profile';
+import ProfilePage, { ReferralPage, CouponsPage } from '../features/user/profile';
 import SupportPage from '../features/user/support';
 // import WishlistPage from '../features/user/wishlist';
 
@@ -49,6 +49,7 @@ import DeliveryDashboard from '../features/delivery/DeliveryDashboard';
 import AvailableOrders from '../features/delivery/AvailableOrders';
 import MyOrders from '../features/delivery/MyOrders';
 import DeliveryOrderDetail from '../features/delivery/DeliveryOrderDetail';
+import DeliveryProfile from '../features/delivery/DeliveryProfile';
 
 // Admin delivery components
 import DeliveryBoysList from '../features/admin/delivery/DeliveryBoysList';
@@ -148,6 +149,8 @@ export const AppRoutes: React.FC = () => {
             <Route path="/orders" element={<OrderPage />} />
             <Route path="/orders/:id" element={<OrderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/referrals" element={<ReferralPage />} />
+            <Route path="/profile/coupons" element={<CouponsPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
           </Route>
@@ -193,6 +196,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="available" element={<AvailableOrders />} />
             <Route path="my-orders" element={<MyOrders />} />
             <Route path="orders/:id" element={<DeliveryOrderDetail />} />
+            <Route path="profile" element={<DeliveryProfile />} />
           </Route>
         </Route>
 

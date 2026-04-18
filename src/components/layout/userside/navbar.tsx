@@ -69,7 +69,7 @@ const Navbar: React.FC = () => {
                         </Link>
                         <span className="hidden md:flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer">
                             <Phone size={12} className="text-yellow-400" />
-                            +91 90470 11110
+                            +971 545 446 111
                         </span>
                     </div>
 

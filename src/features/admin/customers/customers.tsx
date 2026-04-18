@@ -993,31 +993,9 @@ const CustomerManagement: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
+  // Apply local filters on current page data (only for fields not handled by server)
   const filteredCustomers = useMemo(() => {
     let result = customers;
-
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          (c.email && c.email.toLowerCase().includes(q)) ||
-          (c.phone && c.phone.toLowerCase().includes(q))
-      );
-    }
-
-    if (statusFilter !== "All") {
-      result = result.filter((c) => c.status === statusFilter);
-    }
-
-    if (roleFilter !== "All") {
-      result = result.filter((c) => c.role === roleFilter);
-    }
-
-    if (verifiedFilter === "email") result = result.filter((c) => c.isEmailVerified);
-    else if (verifiedFilter === "phone") result = result.filter((c) => c.isPhoneVerified);
-    else if (verifiedFilter === "both") result = result.filter((c) => c.isEmailVerified && c.isPhoneVerified);
-    else if (verifiedFilter === "none") result = result.filter((c) => !c.isEmailVerified && !c.isPhoneVerified);
 
     if (phoneFilter) {
       const pf = phoneFilter.toLowerCase();
@@ -1025,7 +1003,7 @@ const CustomerManagement: React.FC = () => {
     }
 
     return result;
-  }, [customers, verifiedFilter, phoneFilter, debouncedSearch, statusFilter, roleFilter]);
+  }, [customers, phoneFilter]);
 
   const displayedCustomers = filteredCustomers;
 
