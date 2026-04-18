@@ -19,7 +19,7 @@ import NotificationPage from '../features/user/notification';
 import Navbar from '../components/layout/userside/navbar';
 import Footer from '../components/layout/userside/footer';
 import OrderPage from '../features/user/order';
-import ProfilePage, { ReferralPage, CouponsPage } from '../features/user/profile';
+import ProfilePage from '../features/user/profile';
 import SupportPage from '../features/user/support';
 // import WishlistPage from '../features/user/wishlist';
 
@@ -149,8 +149,6 @@ export const AppRoutes: React.FC = () => {
             <Route path="/orders" element={<OrderPage />} />
             <Route path="/orders/:id" element={<OrderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/referrals" element={<ReferralPage />} />
-            <Route path="/profile/coupons" element={<CouponsPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
           </Route>

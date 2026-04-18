@@ -405,6 +405,8 @@ const ProductProfile: React.FC = () => {
                 </span>
               )}
             </div>
+            </div>
+            
 
           {/* Actions */}
           <div className="flex gap-3">
