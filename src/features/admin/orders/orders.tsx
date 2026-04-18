@@ -29,7 +29,6 @@ import {
   BarChart3,
   DollarSign,
   Search,
-  X,
 } from "lucide-react";
 import { FEATURE_ORDERS_ANALYTICS } from "../../../config/constants";
 
@@ -234,7 +233,7 @@ const OrderManagement: React.FC = () => {
     }
     if (deliverySlotFilter) {
       result = result.filter((o) =>
-        o.deliverySlot?.toLowerCase().includes(deliverySlotFilter.toLowerCase())
+        String(o.deliverySlot ?? "").toLowerCase().includes(deliverySlotFilter.toLowerCase())
       );
     }
     if (paymentMethodFilter) {
@@ -1148,7 +1147,7 @@ const OrderDetailsPanel = ({
               />
             )}
             {order.deliverySlot && (
-              <InfoField label="Delivery Slot" value={order.deliverySlot} />
+              <InfoField label="Delivery Slot" value={String(order.deliverySlot)} />
             )}
             {order.payment?.transactionId && (
               <InfoField label="Transaction ID" value={order.payment.transactionId} />

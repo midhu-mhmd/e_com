@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -201,6 +202,11 @@ const ProductProfile: React.FC = () => {
 
   return (
     <div dir="ltr" className="min-h-screen bg-white text-stone-800">
+      <Helmet>
+        <title>{product ? `${product.name} - SIMAK FRESH` : "Product Details - SIMAK FRESH"}</title>
+        <meta name="description" content={product?.description || "Get the freshest seafood and meat delivered to your doorstep."} />
+        {product?.image && <meta property="og:image" content={product.image} />}
+      </Helmet>
 
       {/* ═══════════════════════════════════════════════════════
           MOBILE / TABLET  (hidden on lg+)

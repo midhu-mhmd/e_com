@@ -1,18 +1,15 @@
+import { Loader } from "@googlemaps/js-api-loader";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, Navigation, Loader2 } from "lucide-react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyCpMhqetQskMUsPFiHNNka6K1NsZutU8KM";
-
 const MAP_ID = "DEMO_MAP_ID";
 
-/* ── Global window extensions ── */
-declare global {
-  interface Window {
-    google: any;
-    __mapsApiLoaded?: boolean;
-    __mapsApiCallbacks?: Array<() => void>;
-  }
-}
+const loader = new Loader({
+  apiKey: GOOGLE_MAPS_API_KEY,
+  version: "weekly",
+  libraries: ["places", "marker", "geocoding"],
+});
 
 /* ── Public types ── */
 export interface MapPickerResult {
@@ -31,42 +28,7 @@ interface Props {
 }
 
 /* ── Improved Maps loader ── */
-function loadMapsBootstrap(onReady: () => void) {
 
-  if (window.google?.maps?.importLibrary) {
-    onReady();
-    return;
-  }
-
-  if (!window.__mapsApiCallbacks) {
-    window.__mapsApiCallbacks = [];
-  }
-
-  window.__mapsApiCallbacks.push(onReady);
-
-  if (document.getElementById("google-maps-script")) return;
-
-  const script = document.createElement("script");
-
-  script.id = "google-maps-script";
-
-  script.src =
-    `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}` +
-    `&loading=async&libraries=places,marker,geocoding`;
-
-  script.async = true;
-  script.defer = true;
-
-  script.onload = () => {
-    window.__mapsApiLoaded = true;
-
-    window.__mapsApiCallbacks?.forEach((cb) => cb());
-
-    window.__mapsApiCallbacks = [];
-  };
-
-  document.head.appendChild(script);
-}
 
 /* ── Parse Geocoder address components ── */
 function parseGeocoderComponents(components: any[]): Partial<MapPickerResult> {
@@ -190,12 +152,12 @@ export default function GoogleMapPicker({
         { AdvancedMarkerElement },
         { Geocoder },
         { PlaceAutocompleteElement },
-      ] = await Promise.all([
+      ] = (await Promise.all([
         window.google.maps.importLibrary("maps"),
         window.google.maps.importLibrary("marker"),
         window.google.maps.importLibrary("geocoding"),
         window.google.maps.importLibrary("places"),
-      ]);
+      ])) as any[];
 
       const center = { lat: defaultLat, lng: defaultLng };
 
@@ -312,8 +274,22 @@ export default function GoogleMapPicker({
   }, [defaultLat, defaultLng, reverseGeocode, onSelect]);
 
   useEffect(() => {
-    loadMapsBootstrap(initMap);
+    loader.load().then(initMap).catch(e => console.error("loader.load error:", e));
   }, [initMap]);
+
+  // Handle container resizing (e.g. during animations)
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current || !mapDivRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      if (window.google?.maps?.event && mapRef.current) {
+        window.google.maps.event.trigger(mapRef.current, "resize");
+      }
+    });
+
+    observer.observe(mapDivRef.current);
+    return () => observer.disconnect();
+  }, [isLoaded]);
 
   const handleUseLocation = () => {
 

@@ -1,0 +1,12 @@
+export const BRAND_COLORS = {
+  RED: "#F44746",
+  CYAN: "#04BCB1",
+  GOLD: "#F6DE37",
+  DARK_CYAN: "#083344",
+  ACCENT_CYAN: "#0891b2",
+  OFF_WHITE: "#f8fafc",
+  BLACK: "#020617",
+  CYAN_DARK: "#024D48",
+  CYAN_MEDIUM: "#038C84",
+  CYAN_LIGHT: "#B4EBE8",
+} as const;

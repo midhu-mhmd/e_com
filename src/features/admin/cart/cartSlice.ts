@@ -119,6 +119,7 @@ interface CartState {
     isLoading: boolean;
     error: string | null;
     isOpen: boolean;
+    updatingItemIds: number[];
 }
 
 const cartInitialState: CartState = {
@@ -126,6 +127,7 @@ const cartInitialState: CartState = {
     isLoading: false,
     error: null,
     isOpen: false,
+    updatingItemIds: [],
 };
 
 const cartSlice = createSlice({
@@ -162,10 +164,18 @@ const cartSlice = createSlice({
             state.items = state.items.filter((i) => i.id !== action.payload);
         },
         updateQuantity: (state, action: PayloadAction<{ id: number; quantity: number }>) => {
-            const item = state.items.find((i) => i.id === action.payload.id);
-            if (item && action.payload.quantity > 0 && action.payload.quantity <= item.stock) {
-                item.quantity = action.payload.quantity;
+            // Mark item as updating — spinner shown, buttons disabled
+            if (!state.updatingItemIds.includes(action.payload.id)) {
+                state.updatingItemIds.push(action.payload.id);
             }
+        },
+        updateQuantitySuccess: (state, action: PayloadAction<{ id: number; quantity: number }>) => {
+            const item = state.items.find((i) => i.id === action.payload.id);
+            if (item) item.quantity = action.payload.quantity;
+            state.updatingItemIds = state.updatingItemIds.filter((id) => id !== action.payload.id);
+        },
+        updateQuantityFailure: (state, action: PayloadAction<{ id: number; error: string }>) => {
+            state.updatingItemIds = state.updatingItemIds.filter((id) => id !== action.payload.id);
         },
         clearCart: (state) => {
             state.items = [];
@@ -181,6 +191,8 @@ export const {
     addToCart,
     removeFromCart,
     updateQuantity,
+    updateQuantitySuccess,
+    updateQuantityFailure,
     clearCart,
 } = cartSlice.actions;
 
@@ -192,5 +204,6 @@ export const selectCartCount = (state: RootState) =>
     state.cart.items.reduce((count, item) => count + item.quantity, 0);
 export const selectCartLoading = (state: RootState) => state.cart.isLoading;
 export const selectCartError = (state: RootState) => state.cart.error;
+export const selectUpdatingItemIds = (state: RootState) => state.cart.updatingItemIds;
 
 export const cartReducer = cartSlice.reducer;

@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBanners } from '../../hooks/queries';
+import { BRAND_COLORS } from '../../constants/theme';
 
 const Hero: React.FC = () => {
   const { t } = useTranslation('home');
   const navigate = useNavigate();
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(1);
+  const [, setDirection] = useState(1);
 
-  // ✅ TanStack Query — cached banners
   const { data: allBanners, isLoading: loading } = useBanners();
 
   const banners = useMemo(() => {
@@ -39,7 +39,7 @@ const Hero: React.FC = () => {
 
   useEffect(() => {
     if (banners.length <= 1) return;
-    const id = setInterval(next, 5000);
+    const id = setInterval(next, 8000);
     return () => clearInterval(id);
   }, [next, banners.length]);
 
@@ -55,26 +55,25 @@ const Hero: React.FC = () => {
   }
 
   if (banners.length === 0) {
-    return null; // Don't show hero if no active banners
+    return null;
   }
 
   const media = banners[current];
 
-  // API only values
+
   const title = media.title;
   const tag = media.tag;
   const subtitle = media.subtitle;
   const highlight = media.highlight;
   const cta = media.cta_text || null;
 
-  /* 1. Background Animation (Slide) */
-  const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 1 }),
-    center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({ x: dir > 0 ? '-50%' : '50%', opacity: 1 }),
+  const zoomVariants = {
+    enter: { scale: 1.1, opacity: 0 },
+    center: { scale: 1, opacity: 1 },
+    exit: { scale: 0.95, opacity: 0 },
   };
 
-  /* 2. Text Animation (Fade Only) */
+
   const fadeVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.5, delay: 0.2 } },
@@ -83,29 +82,30 @@ const Hero: React.FC = () => {
 
   return (
     <div className="w-full bg-white font-sans text-slate-800 select-none pb-4">
-      {/* ═══ HERO CAROUSEL ═══════════════════════ */}
       <section className="relative w-full  mx-auto px-0 sm:px-4 pt-2 sm:pt-4 group/carousel">
         <div
           className="relative h-[300px] sm:h-[360px] md:h-[420px] w-full overflow-hidden sm:rounded-[2rem] shadow-xl shadow-slate-200"
+          style={{ backgroundColor: BRAND_COLORS.BLACK }}
         >
-          {/* LAYER 1: Background Image & Gradient (Moving) */}
-          <AnimatePresence initial={false} custom={direction}>
+          <AnimatePresence initial={false}>
             <motion.div
               key={media.id}
-              custom={direction}
-              variants={slideVariants}
+              variants={zoomVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ x: { type: 'spring', stiffness: 300, damping: 30 } }}
+              transition={{
+                opacity: { duration: 1.2 },
+                scale: { duration: 1.6, ease: [0.22, 1, 0.36, 1] }
+              }}
               className="absolute inset-0 z-0"
             >
               <motion.img
                 src={media.desktop_image}
                 alt={title}
-                initial={{ scale: 1 }}
-                animate={{ scale: 1.1 }}
-                transition={{ duration: 10, ease: 'linear' }}
+                initial={{ scale: 1.12 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 40, ease: 'easeOut' }}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent sm:via-black/40 rtl:bg-gradient-to-l" />
@@ -113,7 +113,7 @@ const Hero: React.FC = () => {
             </motion.div>
           </AnimatePresence>
 
-          {/* LAYER 2: Text Content (Static Position, Fading In/Out) */}
+
           <div className="absolute inset-0 z-10 flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-24 pointer-events-none">
             <div className="max-w-2xl pointer-events-auto">
               <AnimatePresence mode="wait">
@@ -125,7 +125,7 @@ const Hero: React.FC = () => {
                   exit="exit"
                   className="space-y-3"
                 >
-                  {/* Highlight Tag */}
+
                   <div className="inline-flex items-center gap-2 mb-4">
                     {highlight && (
                       <span className="px-3 py-1 bg-yellow-500 text-black text-xs font-bold uppercase tracking-wider rounded-full shadow-lg shadow-yellow-500/20">
@@ -139,21 +139,21 @@ const Hero: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Title (no split — works for AR/ZH too) */}
+
                   <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white leading-[1.1] mb-3 tracking-tight">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">
                       {title}
                     </span>
                   </h1>
 
-                  {/* Subtitle */}
+
                   {subtitle && (
                     <p className="text-sm sm:text-base text-slate-200 mb-4 max-w-lg leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
                       {subtitle}
                     </p>
                   )}
 
-                  {/* CTA Only */}
+
                   {cta && (
                     <div className="flex items-center gap-4 sm:gap-6">
                       <button
@@ -174,7 +174,7 @@ const Hero: React.FC = () => {
 
 
 
-          {/* ✅ Progress Indicators: right-6 on mobile, resetting to left-12 on sm+ */}
+
           <div className="absolute bottom-6 end-6 sm:end-auto sm:start-12 md:start-20 lg:start-24 z-20 flex gap-2">
             {banners.map((_, i) => (
               <button

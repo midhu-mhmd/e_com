@@ -551,7 +551,7 @@ const BannersManagement: React.FC = () => {
                             initial={{ opacity: 0, scale: 0.98, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.98, y: 12 }}
-                            className="relative w-full max-w-5xl bg-white rounded-[2rem] overflow-hidden shadow-2xl"
+                            className="relative w-full   bg-white rounded-[2rem] overflow-hidden shadow-2xl"
                         >
                             <div className="relative h-[420px] w-full">
                                 <img src={previewBanner.desktop_image} alt={previewBanner.title} className="absolute inset-0 w-full h-full object-cover" />

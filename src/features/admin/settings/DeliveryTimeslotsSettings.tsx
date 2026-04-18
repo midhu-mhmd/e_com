@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { 
     Clock, Plus, Trash2, Save, Loader2, Calendar, 
-    AlertCircle, Check, X, ShieldAlert, ChevronDown, Info, Pencil
+    Check, X, ShieldAlert, Info, Pencil
 } from "lucide-react";
 import { ordersApi, type DeliverySlotDto } from "../orders/ordersApi";
 import { useToast } from "../../../components/ui/Toast";

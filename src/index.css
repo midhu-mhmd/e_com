@@ -43,6 +43,12 @@
 /* Default (English) */
 html {
   font-family: 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 /* Arabic */
@@ -51,7 +57,8 @@ html[lang="ar"] {
 }
 
 /* Chinese */
-html[lang="cn"], html[lang="zh"] {
+html[lang="cn"],
+html[lang="zh"] {
   font-family: 'Noto Sans SC', 'SF Pro Display', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -65,14 +72,88 @@ html[lang="cn"], html[lang="zh"] {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══ Global Thin Cyan Scrollbar (BRAND_COLORS.CYAN = #04BCB1) ═══ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #383737 transparent;
+}
+
+/* Chrome / Edge / Safari */
+*::-webkit-scrollbar {
+  width: 1px;
+  height: 1px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #04BCB1;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #cdd4d3;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Override: pages that need scrollbar hidden */
+html,
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
 .rtl .rtl-flip {
   transform: scaleX(-1);
+}
+
+@keyframes textShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-text-shimmer {
+  background-size: 200% auto;
+  animation: textShimmer 3s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
 }

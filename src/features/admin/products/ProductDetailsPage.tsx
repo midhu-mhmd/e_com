@@ -232,7 +232,7 @@ const ProductDetailsPage: React.FC = () => {
                 <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 flex items-center gap-2"><Video size={12} /> Videos</p>
                   <div className="flex flex-col gap-2">
-                    {product.videos.map((v, idx) => {
+                    {product.videos.map((v) => {
                       const items: MediaItem[] = product.videos
                         .filter(vi => !!vi.url)
                         .map(vi => ({ id: vi.id, type: "video", src: vi.url, title: vi.title || undefined }));

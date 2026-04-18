@@ -23,6 +23,7 @@ export interface DiscountTierDto {
   product?: number;
   min_quantity: number;
   discount_percentage: string;
+  discount_price?: string;
 }
 
 /* ── Delivery Tier DTO ── */
@@ -31,6 +32,9 @@ export interface DeliveryTierDto {
   product?: number;
   min_quantity: number;
   delivery_days: number;
+  name?: string;
+  cost?: string;
+  estimated_days?: string;
 }
 
 /* ── Product DTO returned by backend ── */

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Fish } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,7 @@ import {
     selectCartItems,
     selectCartTotal,
     selectCartError,
+    selectUpdatingItemIds,
 } from '../admin/cart/cartSlice';
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
@@ -22,6 +23,7 @@ const CartPage: React.FC = () => {
     const cartItems = useAppSelector(selectCartItems);
     const cartTotal = useAppSelector(selectCartTotal);
     const cartError = useAppSelector(selectCartError);
+    const updatingItemIds = useAppSelector(selectUpdatingItemIds);
     const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
     const checkingAuth = useAppSelector((s) => s.auth.checkingAuth);
 
@@ -144,25 +146,46 @@ const CartPage: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    <div className="flex items-end justify-between mt-2">
+                                    <div className="flex flex-col gap-1 mt-2">
+                                        {item.quantity >= item.stock && (
+                                            <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                                                <Fish size={13} /> That's our full catch! Only {item.stock} fresh from Simak.
+                                            </p>
+                                        )}
+                                        <div className="flex items-end justify-between">
                                         {/* Quantity Control */}
-                                        <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-200">
-                                            <button
-                                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-                                                className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                <Minus size={14} />
-                                            </button>
-                                            <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
-                                            <button
-                                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
-                                                className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
-                                                disabled={item.quantity >= item.stock}
-                                            >
-                                                <Plus size={14} />
-                                            </button>
-                                        </div>
+                                        {(() => {
+                                            const isUpdating = updatingItemIds.includes(item.id);
+                                            const atMax = item.quantity >= item.stock;
+                                            return (
+                                                <div className={`flex items-center gap-3 bg-stone-50 rounded-lg p-1 border ${atMax ? 'border-amber-300' : 'border-stone-200'}`}>
+                                                    <button
+                                                        onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
+                                                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
+                                                        disabled={isUpdating || item.quantity <= 1}
+                                                    >
+                                                        <Minus size={14} />
+                                                    </button>
+                                                    <div className="w-6 flex items-center justify-center">
+                                                        {isUpdating ? (
+                                                            <svg className="animate-spin h-4 w-4 text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                                            </svg>
+                                                        ) : (
+                                                            <span className="text-sm font-bold">{item.quantity}</span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+                                                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
+                                                        disabled={isUpdating || atMax}
+                                                    >
+                                                        <Plus size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Price */}
                                         <div className="text-right">
@@ -174,6 +197,7 @@ const CartPage: React.FC = () => {
                                             ) : (
                                                 <span className="text-lg font-black text-cyan-900">AED {(item.price * item.quantity).toFixed(2)}</span>
                                             )}
+                                        </div>
                                         </div>
                                     </div>
                                 </div>

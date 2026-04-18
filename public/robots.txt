@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin dashboard to keep it private
+Disallow: /admin
+Disallow: /admin/*
+
+Sitemap: https://simakfresh.ae/sitemap.xml

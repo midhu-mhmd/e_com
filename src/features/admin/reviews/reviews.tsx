@@ -15,7 +15,6 @@ import {
   X,
   Eye,
   EyeOff,
-  Info,
   Calendar,
   User,
   Package,

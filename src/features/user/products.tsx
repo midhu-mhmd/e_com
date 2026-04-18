@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, memo } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -269,6 +270,12 @@ const UserProductsPage: React.FC = () => {
 
     return (
         <div dir="ltr" className="min-h-screen bg-slate-50 text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
+            <Helmet>
+                <title>
+                    {category ? `${category} - SIMAK FRESH` : searchTerm ? `Search: ${searchTerm} - SIMAK FRESH` : "Shop Fresh Seafood & Meat - SIMAK FRESH"}
+                </title>
+                <meta name="description" content={category ? `Browse our freshest selection of ${category}. Quality seafood and meat delivered fresh.` : "Browse our full catalog of premium fresh seafood and meat products locally sourced and delivered in Dubai."} />
+            </Helmet>
 
             {/* ─── Static Filter Bar ─── */}
             <div className="relative z-30 bg-white border-b border-slate-100 shadow-sm">

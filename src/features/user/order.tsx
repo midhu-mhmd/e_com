@@ -574,7 +574,7 @@ const OrderList: React.FC = () => {
                         </button>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="bg-white rounded-4xl p-16 text-center max-w-2xl mx-auto shadow-sm">
+                    <div className="bg-white rounded-4xl p-16 text-center  mx-auto shadow-sm">
                         <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-8">
                             <Package className="text-slate-400" size={40} />
                         </div>

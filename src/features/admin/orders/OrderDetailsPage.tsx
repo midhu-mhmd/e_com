@@ -230,7 +230,7 @@ const OrderDetailsPage: React.FC = () => {
           deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
           tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
           deliveryDate: raw.preferred_delivery_date ?? null,
-          deliverySlot: raw.preferred_delivery_slot ?? null,
+          deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
           deliveryNotes: raw.delivery_notes ?? null,
           items: Array.isArray(raw.items)
             ? raw.items.map((dto) => ({
@@ -509,7 +509,7 @@ const OrderDetailsPage: React.FC = () => {
                             deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
                             tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
                             deliveryDate: raw.preferred_delivery_date ?? null,
-                            deliverySlot: raw.preferred_delivery_slot ?? null,
+                            deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
                             deliveryNotes: raw.delivery_notes ?? null,
                             items: Array.isArray(raw.items)
                               ? raw.items.map((dto: any) => ({
