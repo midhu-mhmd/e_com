@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin } from "lucide-react";
-import { useAppDispatch, useRequireAuth } from "../../hooks";
+import { Star, ShoppingCart, Truck, ShieldCheck, ArrowLeft, Minus, Plus, Heart, Zap, Play, X, MapPin, Bell } from "lucide-react";
+import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../admin/cart/cartSlice";
 import { cartsApi } from "../admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
@@ -15,6 +15,7 @@ import {
   extractProductLocationValues,
   getProductLocationLabel,
 } from "../admin/products/productLocationOptions";
+import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
 /** Unified media item for the gallery */
 type MediaItem =
@@ -76,6 +77,7 @@ const ProductProfile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const requireAuth = useRequireAuth();
+  const authUserId = useAppSelector((state) => state.auth.user?.id);
 
   // ✅ TanStack Query — cached product details
   const productId = id ? parseInt(id) : undefined;
@@ -104,6 +106,24 @@ const ProductProfile: React.FC = () => {
 
   // Ensure hook order is stable across all renders
   const toast = useToast();
+
+  React.useEffect(() => {
+    if (!product) return;
+
+    const alerts = processRestockAlerts([product], authUserId, (restockedProduct) => ({
+      title: t("details.restockBackInStock", {
+        name: restockedProduct.name,
+        defaultValue: `${restockedProduct.name} is back in stock now.`,
+      }),
+      message: t("details.restockBackInStock", {
+        name: restockedProduct.name,
+        defaultValue: `${restockedProduct.name} is back in stock now.`,
+      }),
+      actionUrl: `/products/${restockedProduct.id}`,
+    }));
+
+    alerts.forEach((alert) => toast.show(alert.message, "success"));
+  }, [authUserId, product, t, toast]);
 
   const checkWishlist = () => {
     if (!product) return;
@@ -203,6 +223,21 @@ const ProductProfile: React.FC = () => {
         const errorMsg = e?.response?.data?.error || "Failed to add item to cart";
         toast.show(errorMsg, "error");
       }
+    })();
+  };
+
+  const handleNotifyMe = () => {
+    if (!product) return;
+
+    requireAuth(() => {
+      subscribeToRestock(product, authUserId);
+      toast.show(
+        t("details.restockSubscribed", {
+          name: product.name,
+          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+        }),
+        "success"
+      );
     })();
   };
 
@@ -402,14 +437,23 @@ const ProductProfile: React.FC = () => {
               {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
             </button>
 
-            <button
-              onClick={() => addItemToCart("checkout")}
-              disabled={!product.is_available || product.stock === 0}
-              className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
-            >
-              <Zap size={22} />
-              {t("details.buyNow")}
-            </button>
+            {product.is_available && product.stock > 0 ? (
+              <button
+                onClick={() => addItemToCart("checkout")}
+                className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+              >
+                <Zap size={22} />
+                {t("details.buyNow")}
+              </button>
+            ) : (
+              <button
+                onClick={handleNotifyMe}
+                className="flex-1 py-4 bg-amber-500 text-white text-base font-black rounded-2xl hover:bg-amber-600 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+              >
+                <Bell size={22} />
+                {t("details.notifyMe")}
+              </button>
+            )}
 
             <motion.button
               onClick={toggleWishlist}

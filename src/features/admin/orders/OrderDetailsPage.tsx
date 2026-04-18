@@ -60,7 +60,7 @@ type Order = {
   deliveryCharge: number;
   tipAmount: number;
   deliveryDate: string | null;
-  deliverySlot: string | null;
+  deliverySlot: string | number | null;
   deliveryNotes: string | null;
   items: OrderItem[];
   statusHistory: StatusHistoryEntry[];
@@ -136,7 +136,7 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
   );
 }
 
-function InfoField({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+function InfoField({ label, value, children }: { label: string; value?: string | number; children?: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-wide">{label}</p>
@@ -155,7 +155,7 @@ const OrderDetailsPage: React.FC = () => {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "">("");
   const [statusNotes, setStatusNotes] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);  const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoyUser[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false); const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoyUser[]>([]);
   const [deliveryBoysError, setDeliveryBoysError] = useState<string | null>(null);
   const [selectedBoyId, setSelectedBoyId] = useState<number | "">("");
   const [assigning, setAssigning] = useState(false);
@@ -170,48 +170,48 @@ const OrderDetailsPage: React.FC = () => {
         const addr = raw.shipping_address_details;
         const shippingAddress: ShippingAddress = addr
           ? {
-              id: addr.id,
-              label: addr.label ?? "",
-              fullName: addr.full_name ?? "",
-              phoneNumber: addr.phone_number ?? "",
-              streetAddress: addr.street_address ?? "",
-              area: addr.area ?? "",
-              city: addr.city ?? "",
-              emirate: addr.emirate ?? "",
-              country: addr.country ?? "",
-              latitude: addr.latitude ?? null,
-              longitude: addr.longitude ?? null,
-            }
+            id: addr.id,
+            label: addr.label ?? "",
+            fullName: addr.full_name ?? "",
+            phoneNumber: addr.phone_number ?? "",
+            streetAddress: addr.street_address ?? "",
+            area: addr.area ?? "",
+            city: addr.city ?? "",
+            emirate: addr.emirate ?? "",
+            country: addr.country ?? "",
+            latitude: addr.latitude ?? null,
+            longitude: addr.longitude ?? null,
+          }
           : {
-              id: "",
-              label: "",
-              fullName: "",
-              phoneNumber: "",
-              streetAddress: "",
-              area: "",
-              city: "",
-              emirate: "",
-              country: "",
-              latitude: null,
-              longitude: null,
-            };
+            id: "",
+            label: "",
+            fullName: "",
+            phoneNumber: "",
+            streetAddress: "",
+            area: "",
+            city: "",
+            emirate: "",
+            country: "",
+            latitude: null,
+            longitude: null,
+          };
         const payment: Payment =
           raw.payment
             ? {
-                transactionId: raw.payment.transaction_id ?? "",
-                amount: parseFloat(raw.payment.amount) || 0,
-                status: raw.payment.status ?? "",
-                paymentMethod: raw.payment.payment_method ?? "",
-                receiptNumber: raw.payment.receipt?.receipt_number ?? null,
-                createdAt: raw.payment.created_at ?? "",
-              }
+              transactionId: raw.payment.transaction_id ?? "",
+              amount: parseFloat(raw.payment.amount) || 0,
+              status: raw.payment.status ?? "",
+              paymentMethod: raw.payment.payment_method ?? "",
+              receiptNumber: raw.payment.receipt?.receipt_number ?? null,
+              createdAt: raw.payment.created_at ?? "",
+            }
             : null;
         const statusHistory: StatusHistoryEntry[] = Array.isArray(raw.status_history)
           ? raw.status_history.map((h) => ({
-              status: h.status ?? "",
-              notes: h.notes ?? "",
-              createdAt: h.created_at ?? "",
-            }))
+            status: h.status ?? "",
+            notes: h.notes ?? "",
+            createdAt: h.created_at ?? "",
+          }))
           : [];
         let uid: any = (addr as any)?.user ?? null;
         if (uid && typeof uid === "object") uid = uid.id ?? null;
@@ -234,14 +234,14 @@ const OrderDetailsPage: React.FC = () => {
           deliveryNotes: raw.delivery_notes ?? null,
           items: Array.isArray(raw.items)
             ? raw.items.map((dto) => ({
-                id: dto.id,
-                productId: dto.product,
-                productName: dto.product_name ?? `Product #${dto.product}`,
-                productImage: dto.product_image ?? null,
-                quantity: dto.quantity,
-                price: parseFloat(dto.price) || 0,
-                subtotal: parseFloat(dto.subtotal) || 0,
-              }))
+              id: dto.id,
+              productId: dto.product,
+              productName: dto.product_name ?? `Product #${dto.product}`,
+              productImage: dto.product_image ?? null,
+              quantity: dto.quantity,
+              price: parseFloat(dto.price) || 0,
+              subtotal: parseFloat(dto.subtotal) || 0,
+            }))
             : [],
           statusHistory,
           payment,
@@ -311,11 +311,7 @@ const OrderDetailsPage: React.FC = () => {
     downloadBlob(blob, `receipt_${order.orderNumber}.pdf`);
   }, [order]);
 
-  const handleDownloadImage = useCallback(async () => {
-    if (!order) return;
-    const blob = await ordersApi.receiptImage(order.id);
-    downloadBlob(blob, `receipt_${order.orderNumber}.png`);
-  }, [order]);
+
 
   const handleDownloadAdminReceipt = useCallback(async () => {
     if (!order) return;
@@ -371,13 +367,7 @@ const OrderDetailsPage: React.FC = () => {
                     >
                       <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (PDF)</span>
                     </button>
-                    <button
-                      onClick={handleDownloadImage}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white border border-[#EEEEEE] rounded-lg text-xs font-bold hover:bg-gray-50"
-                      title="Payment receipt Image"
-                    >
-                      <Download size={14} /> <span className="sm:hidden lg:inline">Receipt (IMG)</span>
-                    </button>
+
                   </>
                 )}
               </div>
@@ -449,48 +439,48 @@ const OrderDetailsPage: React.FC = () => {
                           const addr = raw.shipping_address_details;
                           const shippingAddress: ShippingAddress = addr
                             ? {
-                                id: addr.id,
-                                label: addr.label ?? "",
-                                fullName: addr.full_name ?? "",
-                                phoneNumber: addr.phone_number ?? "",
-                                streetAddress: addr.street_address ?? "",
-                                area: addr.area ?? "",
-                                city: addr.city ?? "",
-                                emirate: addr.emirate ?? "",
-                                country: addr.country ?? "",
-                                latitude: addr.latitude ?? null,
-                                longitude: addr.longitude ?? null,
-                              }
+                              id: addr.id,
+                              label: addr.label ?? "",
+                              fullName: addr.full_name ?? "",
+                              phoneNumber: addr.phone_number ?? "",
+                              streetAddress: addr.street_address ?? "",
+                              area: addr.area ?? "",
+                              city: addr.city ?? "",
+                              emirate: addr.emirate ?? "",
+                              country: addr.country ?? "",
+                              latitude: addr.latitude ?? null,
+                              longitude: addr.longitude ?? null,
+                            }
                             : {
-                                id: "",
-                                label: "",
-                                fullName: "",
-                                phoneNumber: "",
-                                streetAddress: "",
-                                area: "",
-                                city: "",
-                                emirate: "",
-                                country: "",
-                                latitude: null,
-                                longitude: null,
-                              };
+                              id: "",
+                              label: "",
+                              fullName: "",
+                              phoneNumber: "",
+                              streetAddress: "",
+                              area: "",
+                              city: "",
+                              emirate: "",
+                              country: "",
+                              latitude: null,
+                              longitude: null,
+                            };
                           const payment: Payment =
                             raw.payment
                               ? {
-                                  transactionId: raw.payment.transaction_id ?? "",
-                                  amount: parseFloat(raw.payment.amount) || 0,
-                                  status: raw.payment.status ?? "",
-                                  paymentMethod: raw.payment.payment_method ?? "",
-                                  receiptNumber: raw.payment.receipt?.receipt_number ?? null,
-                                  createdAt: raw.payment.created_at ?? "",
-                                }
+                                transactionId: raw.payment.transaction_id ?? "",
+                                amount: parseFloat(raw.payment.amount) || 0,
+                                status: raw.payment.status ?? "",
+                                paymentMethod: raw.payment.payment_method ?? "",
+                                receiptNumber: raw.payment.receipt?.receipt_number ?? null,
+                                createdAt: raw.payment.created_at ?? "",
+                              }
                               : null;
                           const statusHistory: StatusHistoryEntry[] = Array.isArray(raw.status_history)
                             ? raw.status_history.map((h: any) => ({
-                                status: h.status ?? "",
-                                notes: h.notes ?? "",
-                                createdAt: h.created_at ?? "",
-                              }))
+                              status: h.status ?? "",
+                              notes: h.notes ?? "",
+                              createdAt: h.created_at ?? "",
+                            }))
                             : [];
                           let uid: any = (addr as any)?.user ?? null;
                           if (uid && typeof uid === "object") uid = uid.id ?? null;
@@ -513,14 +503,14 @@ const OrderDetailsPage: React.FC = () => {
                             deliveryNotes: raw.delivery_notes ?? null,
                             items: Array.isArray(raw.items)
                               ? raw.items.map((dto: any) => ({
-                                  id: dto.id,
-                                  productId: dto.product,
-                                  productName: dto.product_name ?? `Product #${dto.product}`,
-                                  productImage: dto.product_image ?? null,
-                                  quantity: dto.quantity,
-                                  price: parseFloat(dto.price) || 0,
-                                  subtotal: parseFloat(dto.subtotal) || 0,
-                                }))
+                                id: dto.id,
+                                productId: dto.product,
+                                productName: dto.product_name ?? `Product #${dto.product}`,
+                                productImage: dto.product_image ?? null,
+                                quantity: dto.quantity,
+                                price: parseFloat(dto.price) || 0,
+                                subtotal: parseFloat(dto.subtotal) || 0,
+                              }))
                               : [],
                             statusHistory,
                             payment,
@@ -755,13 +745,12 @@ const OrderDetailsPage: React.FC = () => {
 
                 {/* Cancellation request banner */}
                 {order.cancellationRequest && (
-                  <div className={`p-3 rounded-xl border text-xs font-medium ${
-                    order.cancellationRequest.status === "PENDING"
+                  <div className={`p-3 rounded-xl border text-xs font-medium ${order.cancellationRequest.status === "PENDING"
                       ? "bg-amber-50 border-amber-200 text-amber-700"
                       : order.cancellationRequest.status === "APPROVED"
-                      ? "bg-rose-50 border-rose-200 text-rose-700"
-                      : "bg-gray-50 border-gray-200 text-gray-600"
-                  }`}>
+                        ? "bg-rose-50 border-rose-200 text-rose-700"
+                        : "bg-gray-50 border-gray-200 text-gray-600"
+                    }`}>
                     <p className="font-bold">
                       Cancellation Request — {order.cancellationRequest.status}
                     </p>

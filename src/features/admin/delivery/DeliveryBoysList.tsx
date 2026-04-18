@@ -106,9 +106,9 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-6 space-y-6">
           {/* Name */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>First Name <span className="text-rose-400">*</span></label>
               <input className={inputCls} value={form.first_name} onChange={(e) => set("first_name", e.target.value)} placeholder="Ahmed" />
@@ -120,7 +120,7 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           </div>
 
           {/* Contact */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Email</label>
               <input type="email" className={inputCls} value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="delivery@example.com" />
@@ -130,31 +130,35 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
               <input className={inputCls} value={form.phone_number} onChange={(e) => set("phone_number", e.target.value)} placeholder="+971501234567" />
             </div>
           </div>
-          <p className="text-[10px] text-[#A1A1AA] -mt-3">At least one of email or phone is required.</p>
+          <p className="text-[10px] text-[#A1A1AA] -mt-4 px-1">At least one of email or phone is required.</p>
 
           {/* Emirates */}
           <div>
             <label className={labelCls}>Assigned Emirates</label>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {EMIRATES.map((em) => (
-                <button
-                  key={em.value}
-                  type="button"
-                  onClick={() => toggleEmirate(em.value)}
-                  className={`px-3 py-1.5 text-[11px] font-semibold rounded-lg border transition-all ${
-                    form.assigned_emirates.includes(em.value)
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  {em.label}
-                </button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
+              {EMIRATES.map((em) => {
+                const isSelected = form.assigned_emirates.includes(em.value);
+                return (
+                  <button
+                    key={em.value}
+                    type="button"
+                    onClick={() => toggleEmirate(em.value)}
+                    className={`px-3 py-2 text-[10px] sm:text-[11px] font-bold rounded-xl border transition-all flex items-center justify-center gap-1.5 ${
+                      isSelected
+                        ? "bg-[#18181B] text-white border-[#18181B]"
+                        : "bg-white text-gray-500 border-[#EEEEEE] hover:border-gray-300 hover:bg-gray-50/50"
+                    }`}
+                  >
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />}
+                    {em.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Vehicle + Identity */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Vehicle Number</label>
               <input className={inputCls} value={form.vehicle_number} onChange={(e) => set("vehicle_number", e.target.value)} placeholder="ABC123" />
@@ -174,43 +178,62 @@ function CreateModal({ onClose, onCreated }: { onClose: () => void; onCreated: (
           {/* Notes */}
           <div>
             <label className={labelCls}>Notes</label>
-            <textarea className={inputCls} rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Optional notes…" />
+            <textarea className={inputCls} rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Add any additional details about the delivery boy…" />
           </div>
 
           {/* Available toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between py-3.5 px-4 bg-[#FAFAFA] rounded-2xl border border-[#EEEEEE] transition-colors hover:bg-[#F4F4F5]">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-bold text-[#18181B]">Available for delivery</span>
+              <p className="text-[10px] text-[#A1A1AA]">Allow this boy to receive new delivery assignments</p>
+            </div>
             <button
               type="button"
               onClick={() => set("is_available", !form.is_available)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                form.is_available ? "bg-emerald-500" : "bg-gray-200"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500/20 ${
+                form.is_available ? "bg-emerald-500 shadow-inner" : "bg-gray-300 shadow-inner"
               }`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                form.is_available ? "translate-x-5" : "translate-x-0.5"
-              }`} />
+              <span
+                className={`${
+                  form.is_available ? "translate-x-6" : "translate-x-1"
+                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
+              />
             </button>
-            <span className="text-xs font-medium text-gray-600">Available for delivery</span>
           </div>
 
-          {err && <p className="text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{err}</p>}
+          {err && (
+            <div className="flex items-start gap-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-4 py-3 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle size={14} className="shrink-0 mt-0.5" />
+              <p className="font-medium">{err}</p>
+            </div>
+          )}
         </form>
 
-        <div className="px-6 py-4 border-t border-[#EEEEEE] flex gap-3">
+        <div className="px-6 py-5 border-t border-[#EEEEEE] flex items-center gap-3 bg-gray-50/30 rounded-b-2xl">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 border border-[#EEEEEE] rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50"
+            className="flex-1 h-11 px-4 border border-[#EEEEEE] bg-white rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit as any}
             disabled={saving}
-            className="flex-1 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 disabled:opacity-40 flex items-center justify-center gap-2"
+            className="flex-1 h-11 px-4 bg-[#18181B] text-white rounded-xl text-sm font-bold hover:bg-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
           >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-            {saving ? "Creating…" : "Create"}
+            {saving ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Creating…</span>
+              </>
+            ) : (
+              <>
+                <Plus size={16} />
+                <span>Create Boy</span>
+              </>
+            )}
           </button>
         </div>
       </div>

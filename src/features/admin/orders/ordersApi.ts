@@ -139,6 +139,13 @@ export type OrdersQuery = {
     page?: number;
     limit?: number;
     offset?: number;
+    search?: string;
+    customer?: string;
+    city?: string;
+    deliveryDate?: string;
+    deliverySlot?: string | number;
+    paymentMethod?: string;
+    transactionId?: string;
 };
 
 export interface ValidateCouponRequest {

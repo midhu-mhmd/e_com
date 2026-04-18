@@ -165,6 +165,7 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
                       onClick={() => tier.id && handleDeleteTier(tier.id)}
                       className="text-red-600 hover:text-red-700 transition"
                       title="Delete"
+                      type="button"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -193,6 +194,9 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
                   min_quantity: parseInt(e.target.value) || 0,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               min="1"
             />
@@ -210,6 +214,9 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
                   discount_percentage: parseFloat(e.target.value) || 0,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               step="0.01"
               min="0"
@@ -229,6 +236,7 @@ const DiscountTiersManager: React.FC<DiscountTiersManagerProps> = ({
               onClick={handleAddTier}
               disabled={loading}
               className="w-full bg-cyan-600 text-white font-semibold py-2 rounded-lg hover:bg-cyan-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              type="button"
             >
               <Plus size={16} />
               Add Tier

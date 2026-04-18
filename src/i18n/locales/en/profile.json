@@ -6,6 +6,7 @@
             "addresses": "Addresses",
             "reviews": "Reviews",
             "referrals": "Referrals",
+            "referralCoupons": "Referral & Coupons",
             "signOut": "Sign Out"
         },
         "auth": {
@@ -108,12 +109,16 @@
             "loading": "Loading reviews…"
         },
         "referrals": {
+            "combinedTitle": "Referral & Coupons",
             "title": "Friends Who Refer",
             "subtitle": "Stay Friends Forever",
             "description": "When you refer your friend to Simak Fresh, you get 20% OFF on your next order and so does your friend. Then you both eat healthy ever after!",
             "codeLabel": "Your Referral Code",
             "copyCode": "Copy code",
             "startReferring": "Start Referring, Start Earning!",
+            "copySuccess": "Referral code copied!",
+            "copyError": "Failed to copy",
+            "linkCopied": "Referral link copied!",
             "steps": {
                 "one": {
                     "title": "Invite a Friend",
@@ -144,6 +149,31 @@
                 "4": "This offer is not transferable.",
                 "5": "Simak Fresh reserves the right to modify or terminate this program at any time.",
                 "6": "The referral code must be applied at checkout during the friend's first purchase."
+            }
+        },
+        "coupons": {
+            "title": "Available Coupons",
+            "subtitle": "Your active discounts and rewards at a glance.",
+            "empty": "No coupons are available right now.",
+            "emptyHint": "Earn one through referrals or check back after a new campaign goes live.",
+            "error": "Unable to load your coupons right now.",
+            "copied": "Coupon code copied!",
+            "available": "Available coupon",
+            "availableCoupon": "Available coupon",
+            "reward": "Reward coupon",
+            "referralReward": "Referral reward",
+            "firstOrderReward": "First order reward",
+            "discount": "Discount",
+            "validUntil": "Valid until",
+            "usage": "Usage",
+            "status": "Status",
+            "active": "Active",
+            "noExpiry": "No expiry",
+            "unlimited": "Unlimited",
+            "stats": {
+                "available": "Available",
+                "referral": "Referral",
+                "firstOrder": "First Order"
             }
         },
         "emirates": {

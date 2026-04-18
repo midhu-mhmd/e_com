@@ -443,7 +443,7 @@ const SupportPage: React.FC = () => {
                                                 {verifySuccess && (
                                                     <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-600">
                                                         <CheckCircle2 size={14} />
-                                                        {t("form.verify.success")}
+                                                        {t("form.verify.success", { defaultValue: "Email verified successfully!" })}
                                                     </div>
                                                 )}
                                             </div>
@@ -494,12 +494,12 @@ const SupportPage: React.FC = () => {
                             </div>
 
                             <a
-                                href={t("sidebar.call.tel")}
+                                href="tel:+971545446111"
                                 className="block w-full text-center bg-emerald-600 text-white py-4 rounded-2xl text-sm font-bold tracking-wide hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-500/20 active:scale-[0.98] transition-all"
                             >
                                 <span className="flex items-center justify-center gap-2">
                                     <Phone size={16} />
-                                    {t("sidebar.call.value")}
+                                    +971 545 446 111
                                 </span>
                             </a>
 
@@ -522,7 +522,7 @@ const SupportPage: React.FC = () => {
                                             {t("sidebar.email.title")}
                                         </p>
                                         <a
-                                            href={`mailto:${t("sidebar.email.value")}`}
+                                            href="mailto:support@simakfresh.ae"
                                             className="text-xs font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
                                         >
                                             {t("sidebar.email.value")}
@@ -533,7 +533,7 @@ const SupportPage: React.FC = () => {
                         </div>
 
                         {/* Quick Info Card */}
-                        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-[2rem] p-8 text-white">
+                        <div className="bg-linear-to-br from-zinc-900 to-zinc-800 rounded-[2rem] p-8 text-white">
                             <h3 className="text-base font-semibold mb-3">
                                 {t("quick.title")}
                             </h3>

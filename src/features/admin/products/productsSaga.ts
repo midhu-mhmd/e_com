@@ -56,15 +56,14 @@ function mapProductDtoToProduct(dto: ProductDto): Product {
             ? dto.discount_tiers.map((t) => ({
                 id: t.id,
                 minQuantity: t.min_quantity,
-                discountPrice: parseFloat(t.discount_price ?? "0") || 0,
+                discountPercentage: parseFloat(String(t.discount_percentage)) || 0,
             }))
             : [],
         deliveryTiers: Array.isArray(dto.delivery_tiers)
             ? dto.delivery_tiers.map((t) => ({
                 id: t.id,
-                name: t.name ?? "",
-                cost: parseFloat(t.cost ?? "0") || 0,
-                estimatedDays: t.estimated_days ?? "",
+                minQuantity: t.min_quantity,
+                deliveryDays: t.delivery_days || 0,
             }))
             : [],
         createdAt: dto.created_at,
@@ -139,19 +138,71 @@ function* createProductWorker(
     action: ReturnType<typeof productsActions.createProductRequest>
 ): SagaIterator {
     try {
-        const payload = action.payload;
-        // API call
-        const dto: ProductDto = yield call(productsApi.create, payload);
+        const { formData, images, videos, deliveryTiers, discountTiers } = action.payload;
 
-        // Map DTO to UI model
-        const product = mapProductDtoToProduct(dto);
+        // 1. Create main product
+        const dto: ProductDto = yield call(productsApi.create, formData);
+        const productId = dto.id;
+
+        // 2. Save secondary images
+        if (Array.isArray(images) && images.length > 0) {
+            for (const img of images) {
+                const fd = new FormData();
+                fd.append("product", String(productId));
+                fd.append("image", img.file);
+                fd.append("is_feature", img.is_feature ? "True" : "False");
+                yield call(productsApi.addProductImage, fd);
+            }
+        }
+
+        // 3. Save videos
+        if (Array.isArray(videos) && videos.length > 0) {
+            for (const vid of videos) {
+                if (vid.file) {
+                    const fd = new FormData();
+                    fd.append("product", String(productId));
+                    fd.append("video_file", vid.file);
+                    fd.append("title", vid.title || "");
+                    yield call(productsApi.addProductVideo, fd);
+                } else if (vid.video_url) {
+                    yield call(productsApi.addProductVideo, {
+                        product: productId,
+                        video_url: vid.video_url,
+                        title: vid.title || "",
+                    } as any);
+                }
+            }
+        }
+
+        // 4. Save delivery tiers
+        if (Array.isArray(deliveryTiers) && deliveryTiers.length > 0) {
+            for (const tier of deliveryTiers) {
+                yield call(productsApi.createDeliveryTier, {
+                    product: productId,
+                    min_quantity: tier.min_quantity,
+                    delivery_days: tier.delivery_days,
+                });
+            }
+        }
+
+        // 5. Save discount tiers
+        if (Array.isArray(discountTiers) && discountTiers.length > 0) {
+            for (const tier of discountTiers) {
+                yield call(productsApi.createDiscountTier, {
+                    product: productId,
+                    min_quantity: tier.min_quantity,
+                    discount_percentage: Number(tier.discount_percentage),
+                });
+            }
+        }
+
+        // 6. Fetch final product details to get all nested objects populated
+        const finalDto: ProductDto = yield call(productsApi.details, productId);
+        const product = mapProductDtoToProduct(finalDto);
 
         yield put(productsActions.createProductSuccess(product));
     } catch (e: any) {
-        console.error("Create Product Error:", e);
-        console.error("Response data:", e?.response?.data);
-        console.error("Response status:", e?.response?.status);
-
+        console.error("Create Product Orchestration Error:", e);
         const data = e?.response?.data;
         let errMsg = "Failed to create product";
 
@@ -162,7 +213,6 @@ function* createProductWorker(
         } else if (data?.message) {
             errMsg = data.message;
         } else if (data && typeof data === "object") {
-            // Django validation errors: { field: ["error1", "error2"] }
             const fieldErrors = Object.entries(data)
                 .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(", ") : val}`)
                 .join(" | ");

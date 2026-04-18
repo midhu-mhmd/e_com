@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Star, ShoppingCart, Flame, Eye, Sparkles, Zap } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Star, ShoppingCart, Flame, Eye, Sparkles, Zap, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useRequireAuth } from "../../hooks";
+import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../../features/admin/cart/cartSlice";
 import { cartsApi } from "../../features/admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
 import { type ProductDto } from "../../features/admin/products/productApi";
 import { useBestsellers } from "../../hooks/queries";
 import { useToast } from "../ui/Toast";
+import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
 /* ── Product Card ── */
 const ProductCard: React.FC<{
@@ -17,9 +18,11 @@ const ProductCard: React.FC<{
   index: number;
   onAddToCart: () => void;
   onDirectBuy: () => void;
+  onNotifyMe: () => void;
   onQuickView: () => void;
-}> = ({ product, image, discount, index, onAddToCart, onDirectBuy, onQuickView }) => {
+}> = ({ product, image, discount, index, onAddToCart, onDirectBuy, onNotifyMe, onQuickView }) => {
   const { t } = useTranslation("home");
+  const isOutOfStock = !product.is_available || product.stock === 0;
 
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -43,9 +46,8 @@ const ProductCard: React.FC<{
     <div
       ref={ref}
       onClick={onQuickView}
-      className={`group relative flex flex-col h-full min-w-[280px] max-w-[280px] bg-white rounded-2xl border border-zinc-100 overflow-hidden snap-start transition-all duration-500 hover:shadow-xl hover:-translate-y-1 cursor-pointer ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      }`}
+      className={`group relative flex flex-col h-full min-w-[280px] max-w-[280px] bg-white rounded-2xl border border-zinc-100 overflow-hidden snap-start transition-all duration-500 hover:shadow-xl hover:-translate-y-1 cursor-pointer ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
       style={{ transitionDelay: `${index * 60}ms` }}
     >
       {/* Image Section */}
@@ -55,9 +57,8 @@ const ProductCard: React.FC<{
             src={image}
             alt={product.name}
             onLoad={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
-              imgLoaded ? "opacity-100" : "opacity-0"
-            }`}
+            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imgLoaded ? "opacity-100" : "opacity-0"
+              }`}
           />
         )}
         {!imgLoaded && (
@@ -105,15 +106,15 @@ const ProductCard: React.FC<{
         </div>
       </div>
 
-      {/* Details Section */}
-      <div className="p-5 flex-1 flex flex-col">
-        
+      {/* Details Section - Force LTR for English content */}
+      <div className="p-5 flex-1 flex flex-col text-left" dir="ltr">
+
         {/* ✅ FIXED: Category (Left) & Rating (Right) */}
         <div className="flex items-center justify-between mb-2 h-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 truncate mr-2">
             {product.category_name || t("bestsellers.fallbackCategory")}
           </p>
-          
+
           <div className="flex items-center justify-end gap-1.5 shrink-0">
             {rating > 0 && (
               <>
@@ -142,7 +143,7 @@ const ProductCard: React.FC<{
         </h3>
 
         {/* Price + Actions - mt-auto keeps this locked to the bottom */}
-          <div className="mt-auto pt-3 flex flex-col gap-3">
+        <div className="mt-auto pt-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-extrabold text-zinc-900">
@@ -175,13 +176,13 @@ const ProductCard: React.FC<{
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDirectBuy();
+              if (isOutOfStock) onNotifyMe();
+              else onDirectBuy();
             }}
-            disabled={!product.is_available || product.stock === 0}
-            className="w-full py-2.5 rounded-xl bg-cyan-600 text-white hover:bg-cyan-700 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 text-xs font-bold flex items-center justify-center gap-2"
+            className={`w-full py-2.5 rounded-xl text-white transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 text-xs font-bold flex items-center justify-center gap-2 ${isOutOfStock ? "bg-amber-500 hover:bg-amber-600" : "bg-cyan-600 hover:bg-cyan-700"}`}
           >
-            <Zap size={14} className="fill-current" />
-            {t("bestsellers.buyNow", "Buy Now")}
+            {isOutOfStock ? <Bell size={14} /> : <Zap size={14} className="fill-current" />}
+            {isOutOfStock ? t("bestsellers.notifyMe") : t("bestsellers.buyNow", "Buy Now")}
           </button>
         </div>
       </div>
@@ -194,12 +195,13 @@ const BestsellersSection: React.FC = () => {
   const { t } = useTranslation("home");
 
   const { data, isLoading: loading } = useBestsellers();
-  const products = data?.results || [];
+  const products = useMemo(() => data?.results || [], [data]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
+  const authUserId = useAppSelector((state) => state.auth.user?.id);
 
   const getProductImage = (p: ProductDto) => {
     if (p.image) return p.image;
@@ -216,6 +218,24 @@ const BestsellersSection: React.FC = () => {
   };
 
   const toast = useToast();
+
+  useEffect(() => {
+    if (!products.length) return;
+
+    const alerts = processRestockAlerts(products, authUserId, (product) => ({
+      title: t("bestsellers.restockBackInStock", {
+        name: product.name,
+        defaultValue: `${product.name} is back in stock now.`,
+      }),
+      message: t("bestsellers.restockBackInStock", {
+        name: product.name,
+        defaultValue: `${product.name} is back in stock now.`,
+      }),
+      actionUrl: `/products/${product.id}`,
+    }));
+
+    alerts.forEach((alert) => toast.show(alert.message, "success"));
+  }, [authUserId, products, t, toast]);
 
   const handleAddToCart = (product: ProductDto) => {
     requireAuth(async () => {
@@ -249,6 +269,19 @@ const BestsellersSection: React.FC = () => {
         const msg = err?.response?.data?.error || "Failed to add item to cart";
         toast.show(msg, "error");
       }
+    })();
+  };
+
+  const handleNotifyMe = (product: ProductDto) => {
+    requireAuth(() => {
+      subscribeToRestock(product, authUserId);
+      toast.show(
+        t("bestsellers.restockSubscribed", {
+          name: product.name,
+          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+        }),
+        "success"
+      );
     })();
   };
 
@@ -293,7 +326,7 @@ const BestsellersSection: React.FC = () => {
                   </div>
                   <div className="h-4 w-3/4 bg-zinc-100 rounded mb-2" />
                   <div className="h-4 w-1/2 bg-zinc-100 rounded" />
-                  
+
                   <div className="mt-auto pt-3 flex flex-col gap-3">
                     <div className="flex justify-between items-center">
                       <div className="h-5 w-16 bg-zinc-100 rounded" />
@@ -322,6 +355,7 @@ const BestsellersSection: React.FC = () => {
                 index={i}
                 onAddToCart={() => handleAddToCart(product)}
                 onDirectBuy={() => handleDirectBuy(product)}
+                onNotifyMe={() => handleNotifyMe(product)}
                 onQuickView={() => navigate(`/products/${product.id}`)}
               />
             ))}

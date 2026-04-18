@@ -144,6 +144,7 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
                       onClick={() => tier.id && handleDeleteTier(tier.id)}
                       className="text-red-600 hover:text-red-700 transition"
                       title="Delete"
+                      type="button"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -172,6 +173,9 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
                   min_quantity: parseInt(e.target.value) || 0,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               min="1"
             />
@@ -189,14 +193,16 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
                   delivery_days: parseInt(e.target.value) || 0,
                 })
               }
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.preventDefault();
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               min="1"
             />
           </div>
           <div className="flex items-end">
             <button
-              type="button"
-              onClick={handleAddTier}
+              type="button"              type="button"              onClick={handleAddTier}
               disabled={loading}
               className="w-full bg-cyan-600 text-white font-semibold py-2 rounded-lg hover:bg-cyan-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
             >

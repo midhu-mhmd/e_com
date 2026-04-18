@@ -87,9 +87,12 @@
     "subtitle": "The fresh catches your neighbors are loving right now. Cleaned, packed, and delivered cold.",
     "off": "OFF",
     "outOfStock": "Out of Stock",
+    "notifyMe": "Notify Me",
     "quickView": "Quick View",
     "fallbackCategory": "Seafood",
     "addToCartAria": "Add to cart",
+    "restockSubscribed": "We’ll notify you when {{name}} is back in stock.",
+    "restockBackInStock": "{{name}} is back in stock now.",
     "empty": "No bestsellers found at the moment."
   },
   "howItWorks": {
