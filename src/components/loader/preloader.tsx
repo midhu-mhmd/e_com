@@ -1,104 +1,108 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import LogoAnimated from "../ui/LogoAnimated";
+import { BRAND_COLORS } from "../../constants/theme";
+import { BrandLogo } from "../common/BrandLogo";
+import { BrandSignature } from "../common/BrandSignature";
 
-const PRELOADER_TEXTS = [
-    <span key="en" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-        SIMAK <span className="text-cyan-600/50">FRESH</span>
-    </span>,
-    <span key="zh" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-        思马克 <span className="text-cyan-600/50">新鲜</span>
-    </span>,
-    <span key="ar" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 font-sans">
-        سماك <span className="text-cyan-600/50">فريش</span>
-    </span>,
+const LANG_TEXTS = [
+  { a: "SIMAK", b: "FRESH" },
+  { a: "思马克", b: "新鲜" },
+  { a: "سماك", b: "فريش" },
 ];
 
-/**
- * SIMAK FRESH branded preloader.
- * Shown during internal page loading states with a blurred background overlay.
- */
 const ShrimpLoader = () => {
-    const [langIndex, setLangIndex] = useState(0);
-    const [showRings, setShowRings] = useState(false);
+  const [idx, setIdx] = useState(0);
 
-    useEffect(() => {
-        const timer = setTimeout(() => setShowRings(true), 800);
-        return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    const t = setInterval(() => setIdx((p) => (p + 1) % LANG_TEXTS.length), 1500);
+    return () => clearInterval(t);
+  }, []);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setLangIndex((prev) => (prev + 1) % 3);
-        }, 1200);
-        return () => clearInterval(timer);
-    }, []);
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white w-screen h-screen overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#ecfeff_0%,_#ffffff_65%)]" />
 
-    return (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-white/60 backdrop-blur-sm w-screen h-screen overflow-hidden">
-            {/* Ripple rings */}
-            <AnimatePresence>
-                {showRings && (
-                    <>
-                        {[0, 1, 2].map((i) => (
-                            <motion.div
-                                key={`ring-${i}`}
-                                initial={{ opacity: 0.25, scale: 0.3 }}
-                                animate={{ opacity: 0, scale: 2.5 }}
-                                transition={{
-                                    duration: 2,
-                                    delay: i * 0.4,
-                                    repeat: Infinity,
-                                    ease: "easeOut",
-                                }}
-                                className="absolute w-48 h-48 rounded-full border border-cyan-300/20 pointer-events-none"
-                            />
-                        ))}
-                    </>
-                )}
-            </AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="relative flex flex-col items-center gap-5"
+      >
+        <motion.div
+          animate={{ y: [0, -7, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <BrandLogo size={96} className="drop-shadow-sm" />
+        </motion.div>
 
-            <div className="relative flex flex-col items-center justify-center gap-8">
-                {/* Brand logo — cinematic fish merge */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="relative"
-                >
-                    <LogoAnimated className="w-64 h-40 object-contain" mergeDuration={1.0} />
-                </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25, ease: "easeOut" }}
+          className="flex flex-col items-center gap-2"
+        >
+          <div className="flex items-baseline gap-2">
+            <span 
+              className="text-[22px] font-black tracking-[0.14em] uppercase leading-none"
+              style={{ color: BRAND_COLORS.DARK_CYAN }}
+            >
+              SIMAK
+            </span>
+            <span 
+              className="text-[22px] font-black tracking-[0.14em] uppercase leading-none"
+              style={{ color: BRAND_COLORS.CYAN }}
+            >
+              FRESH
+            </span>
+          </div>
+          <BrandSignature 
+            language="en" 
+            color={ BRAND_COLORS.ACCENT_CYAN }
+            size="sm"
+            className="opacity-60"
+          />
+        </motion.div>
 
-                {/* Brand text with blur transitions */}
-                <div className="h-6 flex items-center justify-center">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={`pre-lang-${langIndex}`}
-                            initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="flex flex-col items-center"
-                        >
-                            {PRELOADER_TEXTS[langIndex]}
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="h-5 flex items-center justify-center"
+        >
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={idx}
+              initial={{ opacity: 0, y: 5, filter: "blur(3px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -5, filter: "blur(3px)" }}
+              transition={{ duration: 0.22 }}
+              className="text-[10px] font-bold tracking-widest uppercase"
+              style={{ color: BRAND_COLORS.ACCENT_CYAN }}
+            >
+              {LANG_TEXTS[idx].a}{" "}
+              <span style={{ opacity: 0.7 }}>{LANG_TEXTS[idx].b}</span>
+            </motion.p>
+          </AnimatePresence>
+        </motion.div>
 
-                {/* Progress shimmer bar */}
-                <div className="h-[3px] w-36 overflow-hidden rounded-full bg-slate-100/80 mt-1">
-                    <motion.div
-                        className="h-full w-12 rounded-full"
-                        style={{
-                            background: "linear-gradient(90deg, transparent, #06b6d4, transparent)",
-                        }}
-                        animate={{ x: ["-100%", "400%"] }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                </div>
-            </div>
-        </div>
-    );
+        <motion.div
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="w-20 h-[2px] rounded-full bg-zinc-100 overflow-hidden"
+        >
+          <motion.div
+            className="h-full w-7 rounded-full"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${BRAND_COLORS.CYAN}, transparent)`,
+            }}
+            animate={{ x: ["-100%", "380%"] }}
+            transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </motion.div>
+      </motion.div>
+    </div>
+  );
 };
 
 export default ShrimpLoader;

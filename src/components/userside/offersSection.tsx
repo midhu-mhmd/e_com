@@ -101,7 +101,7 @@ const OffersSection: React.FC = () => {
             {/* Decorative */}
             <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-50/50 rounded-full blur-3xl" />
 
-            <div className="relative mx-auto max-w-7xl">
+            <div className="relative mx-auto  ">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-50 border border-cyan-100 rounded-full mb-4">

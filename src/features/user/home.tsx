@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import Hero from "../../components/userside/heroSection";
 import ShopByCategorySection from "../../components/userside/trustSection";
 import BestsellersSection from "../../components/userside/bestsellersSection";
@@ -26,6 +27,10 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col bg-white">
+      <Helmet>
+        <title>SIMAK FRESH - Fresh Seafood & Meat Delivery in Dubai</title>
+        <meta name="description" content="Dubai's best online fresh seafood and meat shop. Get premium quality fish and cuts delivered fresh to your door." />
+      </Helmet>
       <Hero />
       <ShopByCategorySection />
       <BestsellersSection />

@@ -19,11 +19,10 @@ import { logout } from '../../../features/auth/authSlice';
 import { selectCartItems } from '../../../features/admin/cart/cartSlice';
 import { useTranslation } from 'react-i18next';
 
-// ✅ your hook (user-side language + rtl)
 import useLanguageToggle from '../../../hooks/useLanguageToggle';
-
-// ✅ Logo
-import simakLogo from '../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png';
+import { BRAND_COLORS } from '../../../constants/theme';
+import { BrandSignature } from '../../common/BrandSignature';
+import { BrandLogo } from '../../common/BrandLogo';
 
 const Navbar: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -55,11 +54,11 @@ const Navbar: React.FC = () => {
 
     return (
         <div
-            className="w-full font-sans text-slate-800 select-none sticky top-0 z-50"
+            className="w-full text-slate-800 select-none sticky top-0 z-50"
         >
             {/* ═══ 1  TOP UTILITY BAR ════════════════════════════ */}
             <div className="bg-cyan-950 text-cyan-50 text-[11px]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
+                <div className="  mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-5">
                         <Link
                             to="/orders"
@@ -110,36 +109,24 @@ const Navbar: React.FC = () => {
                 className={`bg-white border-b border-slate-100 transition-shadow duration-300 ${isScrolled ? 'shadow-md' : ''
                     }`}
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
-                    {/* Logo */}
+                <div className="  mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-4">
                     <Link to="/" className="shrink-0 flex items-center gap-2 group">
-                        <img
-                            src={simakLogo}
-                            alt={t('brand.name')}
-                            className="h-10 w-auto object-contain"
-                        />
+                        <BrandLogo size={40} />
                         <div className="flex flex-col justify-center items-center text-center">
-                            <span className="text-[18px] sm:text-[20px] font-black tracking-tighter text-cyan-950 uppercase leading-none">
+                            <span 
+                                className="text-[18px] sm:text-[20px] tracking-tighter uppercase leading-none"
+                                style={{ color: BRAND_COLORS.DARK_CYAN }}
+                            >
                                 {t('brand.name')}
                             </span>
-                            <div className="flex items-center gap-0.5 mt-1 whitespace-nowrap">
-                                {currentLanguage === 'en' ? (
-                                    <>
-                                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.02em] text-cyan-600 uppercase">
-                                            SIGNATURE
-                                        </span>
-                                        <span className="text-[10px] sm:text-[11px] font-serif italic lowercase text-cyan-600/80 mx-0.5 leading-none">
-                                            of
-                                        </span>
-                                        <span className="text-[8px] sm:text-[9px] font-black tracking-[0.02em] text-cyan-600 uppercase">
-                                            QUALITY
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-[8px] sm:text-[9.5px] font-black tracking-[0.02em] text-cyan-600 uppercase">
-                                        {t('brand.signature')}
-                                    </span>
-                                )}
+                            <div className="mt-1 whitespace-nowrap">
+                                <BrandSignature
+                                    language={currentLanguage}
+                                    signatureText={t('brand.signature')}
+                                    color={BRAND_COLORS.ACCENT_CYAN}
+                                    size="sm"
+                                    wow={false}
+                                />
                             </div>
                         </div>
                     </Link>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,30 +18,27 @@ import {
 } from "../admin/products/productLocationOptions";
 import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
 
-/** Unified media item for the gallery */
+import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+
 type MediaItem =
   | { type: "image"; id: number; src: string }
   | { type: "video"; id: number; src: string; title: string };
 
-/** Build unified media list from product data */
 const buildMediaList = (product: ProductDto): MediaItem[] => {
   const items: MediaItem[] = [];
   const addedSrcs = new Set<string>();
 
-  // 1. Main image field first (if exists and not in images array)
   if (product.image && !addedSrcs.has(product.image)) {
     items.push({ type: "image", id: -1, src: product.image });
     addedSrcs.add(product.image);
   }
 
-  // 2. Featured image from gallery (if exists)
   const featured = product.images?.find((img) => img.is_feature);
   if (featured && !addedSrcs.has(featured.image)) {
     items.push({ type: "image", id: featured.id, src: featured.image });
     addedSrcs.add(featured.image);
   }
 
-  // 3. All other gallery images (skip duplicates)
   for (const img of product.images || []) {
     if (!addedSrcs.has(img.image)) {
       items.push({ type: "image", id: img.id, src: img.image });
@@ -48,7 +46,6 @@ const buildMediaList = (product: ProductDto): MediaItem[] => {
     }
   }
 
-  // 4. Videos
   for (const vid of product.videos || []) {
     const src = vid.video_file || vid.video_url;
     if (src) {
@@ -79,7 +76,6 @@ const ProductProfile: React.FC = () => {
   const requireAuth = useRequireAuth();
   const authUserId = useAppSelector((state) => state.auth.user?.id);
 
-  // ✅ TanStack Query — cached product details
   const productId = id ? parseInt(id) : undefined;
   const { data: product = null, isLoading: loading, isError } = useProductDetails(productId);
   const error = isError ? t("details.errorLoad") : null;
@@ -90,7 +86,6 @@ const ProductProfile: React.FC = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
 
-  // Build media list and set initial selection
   const mediaList = product ? buildMediaList(product) : [];
 
   React.useEffect(() => {
@@ -101,10 +96,8 @@ const ProductProfile: React.FC = () => {
 
   React.useEffect(() => {
     checkWishlist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
-  // Ensure hook order is stable across all renders
   const toast = useToast();
 
   React.useEffect(() => {
@@ -202,7 +195,6 @@ const ProductProfile: React.FC = () => {
     product.available_locations ?? product.available_emirates ?? product.service_areas
   ).map(getProductLocationLabel);
 
-  // ✅ Calculate total dynamic price based on quantity
   const basePriceTotal = (parseFloat(product.price) * quantity).toFixed(2);
   const discountPriceTotal = product.discount_price
     ? (parseFloat(product.discount_price) * quantity).toFixed(2)
@@ -245,186 +237,174 @@ const ProductProfile: React.FC = () => {
   const activeMedia = selectedMedia || mediaList[0] || null;
 
   return (
-    <div dir="ltr" className="min-h-screen bg-white font-sans text-stone-800 pb-20">
-      {/* Back */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm font-bold text-stone-500 hover:text-cyan-600 transition-colors"
-        >
-          <ArrowLeft size={16} /> {t("details.back")}
-        </button>
-      </div>
+    <div dir="ltr" className="min-h-screen bg-white text-stone-800">
+      <Helmet>
+        <title>{product ? `${product.name} - SIMAK FRESH` : "Product Details - SIMAK FRESH"}</title>
+        <meta name="description" content={product?.description || "Get the freshest seafood and meat delivered to your doorstep."} />
+        {product?.image && <meta property="og:image" content={product.image} />}
+      </Helmet>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-        {/* ═══ Media Gallery ═══ */}
-        <div className="space-y-4">
-          {/* Main Viewer */}
-          <motion.div
-            key={activeMedia?.src || "empty"}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="relative aspect-[4/3] bg-slate-50 rounded-3xl overflow-hidden border border-slate-100"
+      {/* ═══════════════════════════════════════════════════════
+          MOBILE / TABLET  (hidden on lg+)
+      ═══════════════════════════════════════════════════════ */}
+      <div className="lg:hidden">
+
+        {/* Hero */}
+        <div className="relative w-full overflow-hidden" style={{ height: "min(72vw, 420px)" }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMedia?.src || "empty-mobile"}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28 }}
+              className="absolute inset-0"
+            >
+              {activeMedia?.type === "video" ? (
+                <video
+                  src={activeMedia.src}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain bg-black"
+                />
+              ) : activeMedia?.src ? (
+                <img
+                  src={activeMedia.src}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-900 flex items-center justify-center p-16">
+                  <img src={logo} className="w-full h-full object-contain" alt="logo" />
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="pointer-events-none absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/55 to-transparent z-10" />
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/35 to-transparent z-10" />
+
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-4 left-4 z-20 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg text-stone-800 active:scale-90 transition-transform"
           >
-            {activeMedia?.type === "video" ? (
-              <video
-                key={activeMedia.src}
-                src={activeMedia.src}
-                controls
-                autoPlay
-                className="w-full h-full object-contain bg-black rounded-3xl"
-              />
-            ) : (
-              <img
-                src={activeMedia?.src || "https://via.placeholder.com/600x450?text=No+Image"}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            )}
+            <ArrowLeft size={18} />
+          </button>
 
-            {/* Badges */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-              {product.discount_price && (
-                <span className="px-3 py-1.5 bg-cyan-600 text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg shadow-cyan-600/30">
-                  {t("details.off", { value: discountPercentage })}
-                </span>
-              )}
-              {(!product.is_available || product.stock === 0) && (
-                <span className="px-3 py-1.5 bg-cyan-900 text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg">
-                  {t("details.outOfStock")}
-                </span>
-              )}
+          <motion.button
+            onClick={toggleWishlist}
+            whileTap={{ scale: 0.75 }}
+            animate={{ scale: isWishlisted ? [1, 1.25, 1] : 1 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-4 right-4 z-20 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
+          >
+            <Heart
+              size={18}
+              fill={isWishlisted ? "currentColor" : "none"}
+              className={isWishlisted ? "text-rose-500" : "text-stone-600"}
+            />
+          </motion.button>
+
+          {discountPercentage > 0 && (
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
+              className="absolute top-[60px] left-4 z-20 bg-cyan-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-md shadow-cyan-600/30"
+            >
+              -{discountPercentage}% OFF
+            </motion.div>
+          )}
+
+          {(!product.is_available || product.stock === 0) && (
+            <div className="absolute inset-0 z-10 bg-black/45 flex items-center justify-center">
+              <span className="bg-white/95 text-stone-900 px-5 py-2 rounded-full font-black text-sm shadow-xl">
+                {t("details.outOfStock")}
+              </span>
             </div>
-          </motion.div>
+          )}
 
-          {/* Thumbnails Strip — Images + Videos */}
           {mediaList.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
               {mediaList.map((item, idx) => (
                 <button
-                  key={`${item.type}-${item.id}-${idx}`}
+                  key={idx}
                   onClick={() => setSelectedMedia(item)}
-                  className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all bg-slate-100 group ${activeMedia?.src === item.src
-                    ? "border-cyan-600 ring-2 ring-cyan-600/20 shadow-lg"
-                    : "border-transparent hover:border-stone-300"
-                    }`}
-                >
-                  {item.type === "video" ? (
-                    <>
-                      {/* Video poster — use first frame or dark bg */}
-                      <video
-                        src={item.src}
-                        muted
-                        preload="metadata"
-                        className="w-full h-full object-cover"
-                      />
-                      {/* Play icon overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-                        <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md">
-                          <Play size={14} className="text-stone-800 ml-0.5" fill="currentColor" />
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <img
-                      src={item.src}
-                      alt={`View ${idx + 1}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </button>
+                  className={`rounded-full transition-all duration-300 ${activeMedia?.src === item.src ? "w-5 h-2 bg-white" : "w-2 h-2 bg-white/45 hover:bg-white/70"}`}
+                />
               ))}
             </div>
           )}
         </div>
 
-        {/* Details */}
-        <div className="space-y-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md">
-                <BackendData value={product.category_name} />
-              </span>
+        {mediaList.length > 1 && (
+          <div className="flex gap-2.5 px-4 pt-3 pb-0 overflow-x-auto no-scrollbar bg-white">
+            {mediaList.map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedMedia(item)}
+                className={`relative w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all duration-200 ${activeMedia?.src === item.src ? "border-cyan-600 ring-2 ring-cyan-600/20 shadow-md" : "border-stone-100 hover:border-stone-300"}`}
+              >
+                {item.type === "video" ? (
+                  <>
+                    <video src={item.src} muted preload="metadata" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
+                        <Play size={10} fill="currentColor" className="text-stone-800 ml-0.5" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img src={item.src} alt="" className="w-full h-full object-cover" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
-              {product.average_rating > 0 && (
-                <div className="flex items-center gap-1 text-yellow-500">
-                  <Star size={14} fill="currentColor" />
-                  <span className="text-sm font-bold text-stone-700">
-                    {t("details.ratingText", {
-                      rating: product.average_rating,
-                      reviews: product.total_reviews
-                    })}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-black text-stone-900 leading-tight"><BackendData value={product.name} /></h1>
-            <p className="text-stone-500 leading-relaxed text-lg"><BackendData value={product.description} /></p>
+        <motion.div
+          initial={{ y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-white px-5 pt-5 pb-32 space-y-5"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-600 bg-cyan-50 border border-cyan-100 px-2.5 py-1 rounded-lg truncate max-w-[55%]">
+              <BackendData value={product.category_name} />
+            </span>
+            {product.average_rating > 0 && (
+              <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg flex-shrink-0">
+                <Star size={11} fill="currentColor" className="text-amber-400" />
+                <span className="text-xs font-black text-stone-800">{Number(product.average_rating).toFixed(1)}</span>
+                <span className="text-[10px] text-stone-400">({product.total_reviews})</span>
+              </div>
+            )}
           </div>
 
-          {/* Price block */}
-          <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div>
-              <p className="text-sm text-stone-400 font-bold mb-1">
+          <h1 className="text-[1.65rem] font-black text-stone-900 leading-tight tracking-tight">
+            <BackendData value={product.name} />
+          </h1>
+
+          <div className="flex items-center justify-between bg-stone-50 border border-stone-100 rounded-2xl px-4 py-3.5 gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-stone-400 mb-1 uppercase tracking-wider">
                 {quantity > 1
                   ? t("details.priceFor", { count: quantity, unit: unitLabel })
                   : t("details.pricePer", { sku: unitLabel })}
               </p>
-
-              <div className="flex items-baseline gap-3">
-                {/* ✅ Render dynamically computed prices */}
-                {discountPriceTotal ? (
-                  <>
-                    <span className="text-4xl font-black text-stone-900">
-                      {t("details.currencyAed", { value: discountPriceTotal })}
-                    </span>
-                    <span className="text-xl text-stone-400 line-through font-bold">
-                      {t("details.currencyAed", { value: basePriceTotal })}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-4xl font-black text-stone-900">
-                    {t("details.currencyAed", { value: basePriceTotal })}
+              {discountPriceTotal ? (
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-[1.45rem] font-black text-stone-900 leading-none">
+                    <span className="text-yellow-500 text-[10px] font-bold">AED </span>{discountPriceTotal}
                   </span>
-                )}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div className="flex flex-col gap-3 w-full sm:w-auto">
-              <div className="flex items-center gap-4 bg-white rounded-xl p-1 border border-stone-200 shadow-sm w-fit">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 flex items-center justify-center text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
-                  aria-label={t("details.qtyDecrease")}
-                >
-                  <Minus size={18} />
-                </button>
-
-                <span className="text-lg font-black w-8 text-center" aria-label={t("details.qtyLabel", { value: quantity })}>
-                  {quantity}
+                  <span className="text-sm text-stone-400 line-through font-medium">{basePriceTotal}</span>
+                </div>
+              ) : (
+                <span className="text-[1.45rem] font-black text-stone-900 leading-none">
+                  <span className="text-yellow-500 text-[10px] font-bold">AED </span>{basePriceTotal}
                 </span>
-
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 flex items-center justify-center text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
-                  aria-label={t("details.qtyIncrease")}
-                >
-                  <Plus size={18} />
-                </button>
-              </div>
-
-              {/* Stock count */}
-              {product.is_available && product.stock > 0 && product.stock < 15 && (
-                <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
-                  {product.stock === 1 ? t("details.inStockItem", { count: product.stock }) : t("details.inStockItems", { count: product.stock })}
-                </p>
               )}
             </div>
-          </div>
 
           {/* Actions */}
           <div className="flex gap-3">
@@ -470,143 +450,96 @@ const ProductProfile: React.FC = () => {
             </motion.button>
           </div>
 
-          {/* Bulk Order Section */}
-          {/* <div
-            className="bg-cyan-50 border border-cyan-100 rounded-3xl p-5 cursor-pointer hover:bg-cyan-100/50 transition-colors"
-            onClick={() => setShowBulkOrder(!showBulkOrder)}
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-black text-cyan-900 text-lg">{t("details.bulkOrder.title")}</p>
-                <p className="text-sm font-bold text-cyan-700">{t("details.bulkOrder.subtitle")}</p>
+          {product.is_available && product.stock > 0 && product.stock < 15 && (
+            <div className="flex items-center gap-2">
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse ${product.stock < 7 ? "bg-orange-500" : product.stock < 10 ? "bg-amber-500" : "bg-emerald-500"}`} />
+              <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
+                {product.stock === 1
+                  ? t("details.inStockItem", { count: product.stock })
+                  : t("details.inStockItems", { count: product.stock })}
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar -mx-5 px-5">
+            <div className="flex-shrink-0 flex items-center gap-2.5 bg-yellow-50 border border-yellow-100 rounded-2xl px-3.5 py-2.5">
+              <div className="w-7 h-7 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Truck size={14} className="text-yellow-700" />
               </div>
-              <div className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm text-cyan-600">
-                <ChevronDown size={20} className={`transition-transform duration-300 ${showBulkOrder ? 'rotate-180' : ''}`} />
+              <div>
+                <p className="text-[10px] font-black text-stone-900 leading-none">{t("details.meta.fastDelivery.title")}</p>
+                <p className="text-[9px] text-stone-400 mt-0.5">Same day</p>
               </div>
             </div>
-
-            <AnimatePresence>
-              {showBulkOrder && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-5 pt-5 border-t border-cyan-200/50">
-                    <p className="text-sm font-medium text-cyan-800 mb-4 leading-relaxed">
-                      {t("details.bulkOrder.description")}
-                    </p>
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="text-xs font-black uppercase tracking-widest text-cyan-900 bg-white px-3 py-1.5 rounded-lg shadow-sm">
-                        {t("details.bulkOrder.minOrder", { count: 50 })}
-                      </span>
-                    </div>
-                    <a
-                      href={`https://wa.me/971500000000?text=${encodeURIComponent(`Hello, I am interested in bulk ordering "${product.name}"`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the link
-                      className="flex items-center justify-center w-full py-4 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20"
-                    >
-                      {t("details.bulkOrder.getQuote")}
-                    </a>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div> */}
-
-          {/* Meta Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-stone-100">
-              <div className="p-2 bg-yellow-50 rounded-xl text-yellow-600">
-                <Truck size={20} />
+            <div className="flex-shrink-0 flex items-center gap-2.5 bg-emerald-50 border border-emerald-100 rounded-2xl px-3.5 py-2.5">
+              <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <ShieldCheck size={14} className="text-emerald-700" />
               </div>
               <div>
-                <p className="font-bold text-stone-900">{t("details.meta.fastDelivery.title")}</p>
-                <p className="text-stone-500 text-xs">Same day delivery</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-stone-100">
-              <div className="p-2 bg-yellow-50 rounded-xl text-yellow-600">
-                <ShieldCheck size={20} />
-              </div>
-              <div>
-                <p className="font-bold text-stone-900">{t("details.meta.freshGuaranteed.title")}</p>
-                <p className="text-stone-500 text-xs">{t("details.meta.freshGuaranteed.subtitle")}</p>
+                <p className="text-[10px] font-black text-stone-900 leading-none">{t("details.meta.freshGuaranteed.title")}</p>
+                <p className="text-[9px] text-stone-400 mt-0.5">{t("details.meta.freshGuaranteed.subtitle")}</p>
               </div>
             </div>
           </div>
 
-          {availableLocations.length > 0 && (
-            <div className="bg-white rounded-3xl border border-stone-100 p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-50 rounded-xl text-cyan-600">
-                  <MapPin size={20} />
-                </div>
-                <div>
-                  <p className="font-bold text-stone-900">{t("details.availableIn.title", { defaultValue: "Available in" })}</p>
-                  <p className="text-xs text-stone-500">
-                    {t("details.availableIn.subtitle", { defaultValue: "This product can be delivered in the following emirates." })}
-                  </p>
-                </div>
-              </div>
+          {product.description && (
+            <div className="space-y-2 pt-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                {t("details.description", { defaultValue: "Description" })}
+              </p>
+              <p className="text-sm text-stone-600 leading-relaxed">
+                <BackendData value={product.description} />
+              </p>
+            </div>
+          )}
 
+          {availableLocations.length > 0 && (
+            <div className="space-y-3 pt-1">
+              <div className="flex items-center gap-2">
+                <MapPin size={13} className="text-cyan-600" />
+                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                  {t("details.availableIn.title", { defaultValue: "Available in" })}
+                </p>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {availableLocations.map((location) => (
-                  <span
-                    key={location}
-                    className="rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 border border-cyan-100"
-                  >
-                    {t(`details.emirates.${location}`, { defaultValue: location })}
+                {availableLocations.map((loc) => (
+                  <span key={loc} className="rounded-full bg-cyan-50 border border-cyan-100 px-3 py-1 text-[10px] font-bold text-cyan-700">
+                    {t(`details.emirates.${loc}`, { defaultValue: loc })}
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Only show reviews section if there are reviews */}
           {reviewsData?.results && reviewsData.results.length > 0 && (
-            <div className="bg-white rounded-3xl border border-stone-100 p-6">
-              <div className="flex items-end justify-between mb-6">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
-                    {t("details.reviews.title", { defaultValue: "Reviews" })}
-                  </p>
-                  <p className="text-stone-500 text-sm font-bold">
-                    {t("details.reviews.basedOn", {
-                      count: product.total_reviews,
-                      defaultValue: `Based on ${product.total_reviews} reviews`,
-                    })}
-                  </p>
-                </div>
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                  {t("details.reviews.title", { defaultValue: "Reviews" })} ({product.total_reviews})
+                </p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
                 {reviewsData.results.map((r) => (
-                  <div key={r.id} className="p-5 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white transition-colors shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
+                  <div key={r.id} className="p-4 bg-stone-50 border border-stone-100 rounded-2xl">
+                    <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
-                          {(r.user_name || 'U').slice(0, 1).toUpperCase()}
+                        <div className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center text-xs font-black flex-shrink-0">
+                          {(r.user_name || "U").slice(0, 1).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-black text-stone-900">
+                          <p className="text-xs font-black text-stone-900 leading-none">
                             {r.user_name || t("details.reviews.anonymous", { defaultValue: "Anonymous" })}
                           </p>
-                          <p className="text-xs text-stone-400 font-bold">{new Date(r.created_at).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-stone-400 mt-0.5">{new Date(r.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} size={16} className={i < r.rating ? "text-yellow-500" : "text-stone-300"} fill={i < r.rating ? "currentColor" : "none"} />
+                          <Star key={i} size={12} className={i < r.rating ? "text-yellow-500" : "text-stone-200"} fill={i < r.rating ? "currentColor" : "none"} />
                         ))}
                       </div>
                     </div>
-                    <p className="text-stone-600 text-sm leading-relaxed">{r.comment}</p>
-                    {/* Images */}
+                    <p className="text-sm text-stone-600 leading-relaxed">{r.comment}</p>
                     {Array.isArray((r as any).images) && (r as any).images.length > 0 && (
                       <div className="flex gap-2 mt-3 flex-wrap">
                         {(r as any).images.slice(0, 6).map((entry: any, idx: number) => {
@@ -614,17 +547,10 @@ const ProductProfile: React.FC = () => {
                           const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
                           const url = normalizeReviewImage(cleaned);
                           return (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => setViewerUrl(url)}
-                              className="group relative"
-                              aria-label="Expand image"
-                            >
-                              <img src={url} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
-                              <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
+                            <button key={idx} type="button" onClick={() => setViewerUrl(url)} className="group relative" aria-label="Expand image">
+                              <img src={url} alt="review" className="w-14 h-14 object-cover rounded-xl border border-stone-200" />
                             </button>
-                          )
+                          );
                         })}
                       </div>
                     )}
@@ -633,9 +559,344 @@ const ProductProfile: React.FC = () => {
               </div>
             </div>
           )}
+        </motion.div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          MOBILE STICKY CTA  (hidden on lg+)
+      ═══════════════════════════════════════════════════════ */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-stone-100 px-4 py-3 flex gap-3 shadow-[0_-8px_28px_rgba(0,0,0,0.09)]">
+        <button
+          onClick={() => addItemToCart("cart")}
+          disabled={!product.is_available || product.stock === 0}
+          className="flex-1 py-3.5 bg-stone-900 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ShoppingCart size={17} />
+          {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
+        </button>
+        <button
+          onClick={() => addItemToCart("checkout")}
+          disabled={!product.is_available || product.stock === 0}
+          className="flex-1 py-3.5 bg-cyan-600 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/25 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Zap size={17} className="fill-current" />
+          {t("details.buyNow")}
+        </button>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════
+          DESKTOP LAYOUT  (hidden below lg)  — UNTOUCHED
+      ═══════════════════════════════════════════════════════ */}
+      <div className="hidden lg:block pb-20">
+        <div className="mx-auto px-4 sm:px-6 py-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm font-bold text-stone-500 hover:text-cyan-600 transition-colors"
+          >
+            <ArrowLeft size={16} /> {t("details.back")}
+          </button>
         </div>
-      </main>
-      {/* Lightbox viewer */}
+
+        <main className="mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          <div className="space-y-4">
+            <motion.div
+              key={activeMedia?.src || "empty"}
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="relative aspect-[4/3] bg-slate-50 rounded-3xl overflow-hidden border border-slate-100"
+            >
+              {activeMedia?.type === "video" ? (
+                <video
+                  key={activeMedia.src}
+                  src={activeMedia.src}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain bg-black rounded-3xl"
+                />
+              ) : (
+                <img
+                  src={activeMedia?.src || "https://via.placeholder.com/600x450?text=No+Image"}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+
+              <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                {product.discount_price && (
+                  <span className="px-3 py-1.5 bg-cyan-600 text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg shadow-cyan-600/30">
+                    {t("details.off", { value: discountPercentage })}
+                  </span>
+                )}
+                {(!product.is_available || product.stock === 0) && (
+                  <span className="px-3 py-1.5 bg-cyan-900 text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg">
+                    {t("details.outOfStock")}
+                  </span>
+                )}
+              </div>
+            </motion.div>
+
+            {mediaList.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                {mediaList.map((item, idx) => (
+                  <button
+                    key={`${item.type}-${item.id}-${idx}`}
+                    onClick={() => setSelectedMedia(item)}
+                    className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all bg-slate-100 group ${activeMedia?.src === item.src
+                      ? "border-cyan-600 ring-2 ring-cyan-600/20 shadow-lg"
+                      : "border-transparent hover:border-stone-300"
+                      }`}
+                  >
+                    {item.type === "video" ? (
+                      <>
+                        <video src={item.src} muted preload="metadata" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                          <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                            <Play size={14} className="text-stone-800 ml-0.5" fill="currentColor" />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <img src={item.src} alt={`View ${idx + 1}`} loading="lazy" className="w-full h-full object-cover" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-1 rounded-md">
+                  <BackendData value={product.category_name} />
+                </span>
+
+                {product.average_rating > 0 && (
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    <Star size={14} fill="currentColor" />
+                    <span className="text-sm font-bold text-stone-700">
+                      {t("details.ratingText", {
+                        rating: product.average_rating,
+                        reviews: product.total_reviews
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <h1 className="text-4xl md:text-5xl font-black text-stone-900 leading-tight"><BackendData value={product.name} /></h1>
+              <p className="text-stone-500 leading-relaxed text-lg"><BackendData value={product.description} /></p>
+            </div>
+
+            <div className="p-6 bg-stone-50 rounded-3xl border border-stone-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div>
+                <p className="text-sm text-stone-400 font-bold mb-1">
+                  {quantity > 1
+                    ? t("details.priceFor", { count: quantity, unit: unitLabel })
+                    : t("details.pricePer", { sku: unitLabel })}
+                </p>
+
+                <div className="flex items-baseline gap-3">
+                  {discountPriceTotal ? (
+                    <>
+                      <span className="text-4xl font-black text-stone-900">
+                        {t("details.currencyAed", { value: discountPriceTotal })}
+                      </span>
+                      <span className="text-xl text-stone-400 line-through font-bold">
+                        {t("details.currencyAed", { value: basePriceTotal })}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-4xl font-black text-stone-900">
+                      {t("details.currencyAed", { value: basePriceTotal })}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 w-full sm:w-auto">
+                <div className="flex items-center gap-4 bg-white rounded-xl p-1 border border-stone-200 shadow-sm w-fit">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 flex items-center justify-center text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+                    aria-label={t("details.qtyDecrease")}
+                  >
+                    <Minus size={18} />
+                  </button>
+
+                  <span className="text-lg font-black w-8 text-center" aria-label={t("details.qtyLabel", { value: quantity })}>
+                    {quantity}
+                  </span>
+
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-10 h-10 flex items-center justify-center text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+                    aria-label={t("details.qtyIncrease")}
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+
+                {product.is_available && product.stock > 0 && product.stock < 15 && (
+                  <p className={`text-xs font-bold ${product.stock < 7 ? "text-orange-500" : product.stock < 10 ? "text-amber-500" : "text-emerald-600"}`}>
+                    {product.stock === 1 ? t("details.inStockItem", { count: product.stock }) : t("details.inStockItems", { count: product.stock })}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => addItemToCart("cart")}
+                disabled={!product.is_available || product.stock === 0}
+                className="flex-1 py-4 bg-stone-900 text-white text-base font-black rounded-2xl hover:bg-stone-800 shadow-xl shadow-stone-900/10 hover:shadow-stone-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+              >
+                <ShoppingCart size={22} />
+                {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
+              </button>
+
+              <button
+                onClick={() => addItemToCart("checkout")}
+                disabled={!product.is_available || product.stock === 0}
+                className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+              >
+                <Zap size={22} />
+                {t("details.buyNow")}
+              </button>
+
+              <motion.button
+                onClick={toggleWishlist}
+                whileTap={{ scale: 0.8 }}
+                animate={{ scale: isWishlisted ? [1, 1.2, 1] : 1 }}
+                transition={{ duration: 0.3 }}
+                className={`p-4 border-2 rounded-2xl transition-all ${isWishlisted
+                  ? "bg-cyan-50 border-cyan-100 text-cyan-600"
+                  : "bg-white border-stone-100 text-stone-400 hover:text-cyan-500 hover:border-cyan-100 hover:bg-cyan-50"
+                  }`}
+                aria-label={isWishlisted ? t("details.removeWishlist") : t("details.addWishlist")}
+              >
+                <Heart size={24} fill={isWishlisted ? "currentColor" : "none"} />
+              </motion.button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-stone-100">
+                <div className="p-2 bg-yellow-50 rounded-xl text-yellow-600">
+                  <Truck size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900">{t("details.meta.fastDelivery.title")}</p>
+                  <p className="text-stone-500 text-xs">Same day delivery</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-stone-100">
+                <div className="p-2 bg-yellow-50 rounded-xl text-yellow-600">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-stone-900">{t("details.meta.freshGuaranteed.title")}</p>
+                  <p className="text-stone-500 text-xs">{t("details.meta.freshGuaranteed.subtitle")}</p>
+                </div>
+              </div>
+            </div>
+
+            {availableLocations.length > 0 && (
+              <div className="bg-white rounded-3xl border border-stone-100 p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cyan-50 rounded-xl text-cyan-600">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-stone-900">{t("details.availableIn.title", { defaultValue: "Available in" })}</p>
+                    <p className="text-xs text-stone-500">
+                      {t("details.availableIn.subtitle", { defaultValue: "This product can be delivered in the following emirates." })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {availableLocations.map((location) => (
+                    <span
+                      key={location}
+                      className="rounded-full bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 border border-cyan-100"
+                    >
+                      {t(`details.emirates.${location}`, { defaultValue: location })}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {reviewsData?.results && reviewsData.results.length > 0 && (
+              <div className="bg-white rounded-3xl border border-stone-100 p-6">
+                <div className="flex items-end justify-between mb-6">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
+                      {t("details.reviews.title", { defaultValue: "Reviews" })}
+                    </p>
+                    <p className="text-stone-500 text-sm font-bold">
+                      {t("details.reviews.basedOn", {
+                        count: product.total_reviews,
+                        defaultValue: `Based on ${product.total_reviews} reviews`,
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {reviewsData.results.map((r) => (
+                    <div key={r.id} className="p-5 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white transition-colors shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">
+                            {(r.user_name || "U").slice(0, 1).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-stone-900">
+                              {r.user_name || t("details.reviews.anonymous", { defaultValue: "Anonymous" })}
+                            </p>
+                            <p className="text-xs text-stone-400 font-bold">{new Date(r.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} size={16} className={i < r.rating ? "text-yellow-500" : "text-stone-300"} fill={i < r.rating ? "currentColor" : "none"} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-stone-600 text-sm leading-relaxed">{r.comment}</p>
+                      {Array.isArray((r as any).images) && (r as any).images.length > 0 && (
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {(r as any).images.slice(0, 6).map((entry: any, idx: number) => {
+                            const raw = typeof entry === "string" ? entry : entry?.image;
+                            const cleaned = typeof raw === "string" ? raw.trim().replace(/^['\"`]+|['\"`]+$/g, "") : "";
+                            const url = normalizeReviewImage(cleaned);
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setViewerUrl(url)}
+                                className="group relative"
+                                aria-label="Expand image"
+                              >
+                                <img src={url} alt="review" className="w-16 h-16 object-cover rounded-lg border border-stone-200" />
+                                <span className="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/10 transition-colors" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Lightbox */}
       <AnimatePresence>
         {viewerUrl && (
           <motion.div

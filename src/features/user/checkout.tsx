@@ -229,7 +229,7 @@ const CheckoutPage: React.FC = () => {
     const req = getPhoneRequirements(addrCountryCode);
     const digitsOnly = (addressForm.phone_number || "").replace(/[^\d]/g, "");
     if (digitsOnly.length !== req.length || (req.pattern && !req.pattern.test(digitsOnly))) {
-      errors.phone_number = t("address.errors.phoneInvalid", { 
+      errors.phone_number = t("address.errors.phoneInvalid", {
         defaultValue: `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`,
         name: req.name,
         length: req.length,
@@ -652,7 +652,7 @@ const CheckoutPage: React.FC = () => {
     <div className="min-h-screen bg-[#F8FAFB] font-sans text-slate-800 pb-24">
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+        <div className="  mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <button onClick={() => navigate("/cart")} className="text-slate-400 hover:text-cyan-600 transition-colors">
             <ArrowLeft size={20} />
           </button>
@@ -660,7 +660,7 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+      <main className="  mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
         {/* ═══ Left Column - Form ═══ */}
         <div className="lg:col-span-2 space-y-6">
 

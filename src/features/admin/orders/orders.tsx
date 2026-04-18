@@ -29,7 +29,6 @@ import {
   BarChart3,
   DollarSign,
   Search,
-  X,
 } from "lucide-react";
 import { FEATURE_ORDERS_ANALYTICS } from "../../../config/constants";
 

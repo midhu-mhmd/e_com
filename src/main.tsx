@@ -7,6 +7,7 @@ import { ToastProvider } from './components/ui/Toast.tsx';
 import { ErrorModalProvider } from './components/ui/ErrorModal.tsx';
 import './index.css';
 import "./i18n";
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
 import InitialLoader from './components/loader/spinnerLoader';
 
@@ -36,11 +37,13 @@ createRoot(document.getElementById('root')!).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <ErrorModalProvider>
-            <App />
-          </ErrorModalProvider>
-        </ToastProvider>
+        <HelmetProvider>
+          <ToastProvider>
+            <ErrorModalProvider>
+              <App />
+            </ErrorModalProvider>
+          </ToastProvider>
+        </HelmetProvider>
       </QueryClientProvider>
     </Provider>
   </GoogleOAuthProvider>

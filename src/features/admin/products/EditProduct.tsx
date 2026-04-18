@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle, Save, Plus, Link as LinkIcon, Eye } from "lucide-react";
+import { ArrowLeft, Loader2, UploadCloud, Trash2, Image as ImageIcon, Film, AlertCircle, Save, Link as LinkIcon, Eye } from "lucide-react";
 import type { ProductDto, CategoryDto } from "./productApi";
 import { productsApi } from "./productApi";
 import DeliveryTiersManager from "./DeliveryTiersManager";
@@ -509,7 +509,7 @@ const EditProductForm: React.FC<EditProductFormProps> = ({ dto, productId }) => 
 
                         {existingVideos.length > 0 && (
                             <div className="flex flex-col gap-2">
-                                {existingVideos.map((vid, idx) => {
+                                {existingVideos.map((vid) => {
                                     const videoItems: MediaItem[] = existingVideos
                                         .filter(v => v.video_url || v.video_file)
                                         .map(v => ({ id: v.id, type: "video", src: (v.video_url || v.video_file)!, title: v.title || undefined }));

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Fish } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,7 +11,10 @@ import {
     selectCartItems,
     selectCartTotal,
     selectCartError,
+    selectUpdatingItemIds,
 } from '../admin/cart/cartSlice';
+
+import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
 const CartPage: React.FC = () => {
     const { t } = useTranslation('cart');
@@ -20,6 +23,7 @@ const CartPage: React.FC = () => {
     const cartItems = useAppSelector(selectCartItems);
     const cartTotal = useAppSelector(selectCartTotal);
     const cartError = useAppSelector(selectCartError);
+    const updatingItemIds = useAppSelector(selectUpdatingItemIds);
     const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
     const checkingAuth = useAppSelector((s) => s.auth.checkingAuth);
 
@@ -83,7 +87,7 @@ const CartPage: React.FC = () => {
         <div className="min-h-screen bg-stone-50 font-sans text-stone-800 pb-20">
             {/* Header */}
             <div className="bg-cyan-950 border-b border-cyan-900 sticky top-0 z-20 shadow-md">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+                <div className="  mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                     <h1 className="text-xl font-black text-white flex items-center gap-2">
                         <ShoppingBag size={20} className="text-yellow-500" /> {t('cart.title', { count: cartItems.length })}
                     </h1>
@@ -96,7 +100,7 @@ const CartPage: React.FC = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <main className="  mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
                 {/* Cart Items List */}
                 <div className="lg:col-span-2 space-y-4">
                     <AnimatePresence>
@@ -110,12 +114,18 @@ const CartPage: React.FC = () => {
                                 className="bg-white rounded-2xl p-4 border border-stone-200 flex gap-4 hover:shadow-lg transition-shadow"
                             >
                                 {/* Image */}
-                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={item.image || "https://via.placeholder.com/100"}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover"
-                                    />
+                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    {item.image ? (
+                                        <img
+                                            src={item.image}
+                                            alt={item.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-slate-900 p-4">
+                                            <img src={logo} className="w-full h-full object-contain" alt="Logo fallback" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Details */}
@@ -136,25 +146,46 @@ const CartPage: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    <div className="flex items-end justify-between mt-2">
+                                    <div className="flex flex-col gap-1 mt-2">
+                                        {item.quantity >= item.stock && (
+                                            <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                                                <Fish size={13} /> That's our full catch! Only {item.stock} fresh from Simak.
+                                            </p>
+                                        )}
+                                        <div className="flex items-end justify-between">
                                         {/* Quantity Control */}
-                                        <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-200">
-                                            <button
-                                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-                                                className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                <Minus size={14} />
-                                            </button>
-                                            <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
-                                            <button
-                                                onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
-                                                className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
-                                                disabled={item.quantity >= item.stock}
-                                            >
-                                                <Plus size={14} />
-                                            </button>
-                                        </div>
+                                        {(() => {
+                                            const isUpdating = updatingItemIds.includes(item.id);
+                                            const atMax = item.quantity >= item.stock;
+                                            return (
+                                                <div className={`flex items-center gap-3 bg-stone-50 rounded-lg p-1 border ${atMax ? 'border-amber-300' : 'border-stone-200'}`}>
+                                                    <button
+                                                        onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
+                                                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
+                                                        disabled={isUpdating || item.quantity <= 1}
+                                                    >
+                                                        <Minus size={14} />
+                                                    </button>
+                                                    <div className="w-6 flex items-center justify-center">
+                                                        {isUpdating ? (
+                                                            <svg className="animate-spin h-4 w-4 text-cyan-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                                            </svg>
+                                                        ) : (
+                                                            <span className="text-sm font-bold">{item.quantity}</span>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+                                                        className="w-7 h-7 flex items-center justify-center bg-white rounded-md text-stone-600 hover:text-black shadow-sm disabled:opacity-50"
+                                                        disabled={isUpdating || atMax}
+                                                    >
+                                                        <Plus size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Price */}
                                         <div className="text-right">
@@ -166,6 +197,7 @@ const CartPage: React.FC = () => {
                                             ) : (
                                                 <span className="text-lg font-black text-cyan-900">AED {(item.price * item.quantity).toFixed(2)}</span>
                                             )}
+                                        </div>
                                         </div>
                                     </div>
                                 </div>

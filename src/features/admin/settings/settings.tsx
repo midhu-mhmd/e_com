@@ -24,7 +24,7 @@ const SettingsPage: React.FC = () => {
       </aside>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 p-4 sm:p-6 md:p-12 lg:p-16 max-w-5xl overflow-y-auto w-full">
+      <main className="flex-1 p-4 sm:p-6 md:p-12 lg:p-16   overflow-y-auto w-full">
         <header className="mb-8 md:mb-12">
           <h1 className="text-2xl md:text-3xl font-black tracking-tight italic">Settings</h1>
           <p className="text-[#71717A] text-sm mt-1">Configure your storefront settings.</p>

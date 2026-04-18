@@ -34,11 +34,14 @@ const useLanguageToggle = () => {
     }
   }, []);
 
-  // 2. SYNC: Watch Redux and force i18next to match the User Profile
+  // 2. SYNC: Only apply profile preference when there is no explicit user-chosen language in localStorage
   useEffect(() => {
+    const stored = localStorage.getItem("i18nextLng") as Lang | null;
+    const hasStoredChoice = stored && (["en", "ar", "cn"] as Lang[]).includes(stored);
+    if (hasStoredChoice) return;
     if (preferredLang && i18n.language !== preferredLang) {
       i18n.changeLanguage(preferredLang);
-      localStorage.setItem("i18nextLng", preferredLang); // Persist for session
+      localStorage.setItem("i18nextLng", preferredLang);
     }
   }, [preferredLang, i18n]);
 

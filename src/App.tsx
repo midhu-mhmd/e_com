@@ -1,4 +1,3 @@
-import ShrimpLoader from "./components/loader/preloader";
 import { useEffect, useRef } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -64,8 +63,6 @@ function App() {
 
   return (
     <>
-      {/* Only show ShrimpLoader for internal loading, not on initial site load */}
-      {checkingAuth && <ShrimpLoader />}
       <div style={{ display: checkingAuth ? 'none' : 'block' }}>
         <BrowserRouter>
           <AppRoutes />

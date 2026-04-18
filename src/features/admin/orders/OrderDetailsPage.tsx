@@ -230,7 +230,7 @@ const OrderDetailsPage: React.FC = () => {
           deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
           tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
           deliveryDate: raw.preferred_delivery_date ?? null,
-          deliverySlot: raw.preferred_delivery_slot ?? null,
+          deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
           deliveryNotes: raw.delivery_notes ?? null,
           items: Array.isArray(raw.items)
             ? raw.items.map((dto) => ({
@@ -323,7 +323,7 @@ const OrderDetailsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full text-[#18181B] bg-[#FDFDFD]">
-      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+      <div className="  mx-auto p-4 md:p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
@@ -499,7 +499,7 @@ const OrderDetailsPage: React.FC = () => {
                             deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
                             tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
                             deliveryDate: raw.preferred_delivery_date ?? null,
-                            deliverySlot: raw.preferred_delivery_slot ?? null,
+                            deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
                             deliveryNotes: raw.delivery_notes ?? null,
                             items: Array.isArray(raw.items)
                               ? raw.items.map((dto: any) => ({

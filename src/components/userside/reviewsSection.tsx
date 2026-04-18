@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Star, Quote, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { Star, Quote, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import InfiniteScrollTrack from "../ui/InfiniteScrollTrack";
 
 import { reviewsApi, type ReviewDto } from "../../features/admin/reviews/reviewsApi";
 
@@ -9,9 +10,6 @@ const ReviewsSection: React.FC = () => {
     const { t } = useTranslation("home");
     const [reviews, setReviews] = useState<ReviewDto[]>([]);
     const [loading, setLoading] = useState(true);
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -32,28 +30,6 @@ const ReviewsSection: React.FC = () => {
         fetchReviews();
     }, []);
 
-    const updateScrollButtons = () => {
-        const el = scrollRef.current;
-        if (!el) return;
-        setCanScrollLeft(el.scrollLeft > 10);
-        setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    };
-
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        el.addEventListener("scroll", updateScrollButtons);
-        updateScrollButtons();
-        return () => el.removeEventListener("scroll", updateScrollButtons);
-    }, [reviews]);
-
-    const scroll = (dir: "left" | "right") => {
-        scrollRef.current?.scrollBy({
-            left: dir === "left" ? -360 : 360,
-            behavior: "smooth",
-        });
-    };
-
     const displayReviews = reviews.length > 0 ? reviews : fallbackReviews;
 
     // Calculate average rating
@@ -68,7 +44,7 @@ const ReviewsSection: React.FC = () => {
             <div className="pointer-events-none absolute -top-40 right-0 w-[280px] sm:w-[400px] lg:w-[500px] h-[280px] sm:h-[400px] lg:h-[500px] bg-cyan-50/40 rounded-full blur-3xl opacity-60" />
             <div className="pointer-events-none absolute -bottom-40 left-0 w-[200px] sm:w-[300px] lg:w-[400px] h-[200px] sm:h-[300px] lg:h-[400px] bg-yellow-50/40 rounded-full blur-3xl opacity-50" />
 
-            <div className="relative mx-auto max-w-7xl">
+            <div className="relative mx-auto  ">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-6">
                     <div>
@@ -89,22 +65,18 @@ const ReviewsSection: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Rating summary + arrows */}
-                    <div className="flex items-center gap-6">
-                        {/* Rating summary card */}
-                        <div className="hidden sm:flex items-center gap-4 px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl">
-                            <div className="text-center">
-                                <p className="text-3xl font-extrabold text-zinc-900">{avgRating.toFixed(1)}</p>
-                                <div className="flex items-center gap-0.5 mt-0.5">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            size={12}
-                                            className={i < Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-zinc-200"}
-                                        />
-                                    ))}
-                                </div>
-                                <p className="text-[10px] text-zinc-400 mt-1">{displayReviews.length} {t("reviews.reviewsLabel")}</p>
+                    {/* Rating summary card */}
+                    <div className="hidden sm:flex items-center gap-4 px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl">
+                        <div className="text-center">
+                            <p className="text-3xl font-extrabold text-zinc-900">{avgRating.toFixed(1)}</p>
+                            <div className="flex items-center gap-0.5 mt-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        size={12}
+                                        className={i < Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "text-zinc-200"}
+                                    />
+                                ))}
                             </div>
                         </div>
 
@@ -151,19 +123,18 @@ const ReviewsSection: React.FC = () => {
 
                 {/* Reviews Carousel */}
                 {!loading && (
-                    <div
-                        ref={scrollRef}
-                        className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                    >
-                        {displayReviews.map((review, i) => (
-                            <ReviewCard key={review.id} review={review} index={i} />
-                        ))}
-                    </div>
+                    <InfiniteScrollTrack
+                        items={displayReviews}
+                        speed={0.5}
+                        copies={4}
+                        outerClassName="overflow-hidden py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+                        gap="gap-4 sm:gap-5"
+                        renderItem={(review, i) => (
+                            <ReviewCard review={review} index={i} />
+                        )}
+                    />
                 )}
             </div>
-
-            <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
         </section>
     );
 };
@@ -209,7 +180,7 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
     return (
         <div
             ref={ref}
-            className={`group relative min-w-[280px] sm:min-w-[340px] bg-white border border-zinc-100 rounded-2xl p-5 sm:p-6 snap-start hover:shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-default ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            className={`group relative min-w-[280px] sm:min-w-[340px] bg-white border border-zinc-100 rounded-2xl p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-500 cursor-default ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
             style={{ transitionDelay: `${index * 60}ms` }}
         >

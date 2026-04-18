@@ -82,7 +82,7 @@ const MediaLightbox: React.FC<Props> = ({ items, index, onClose, onChange }) => 
       onClick={onClose}
     >
       <div
-        className="relative flex flex-col items-center gap-4 max-w-5xl w-full"
+        className="relative flex flex-col items-center gap-4   w-full"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top bar */}

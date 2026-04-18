@@ -209,8 +209,8 @@ const AdminLayout: React.FC = () => {
         </header>
 
         {/* --- VIEWPORT --- */}
-        <main className="flex-1 overflow-y-auto bg-white pt-4 px-4 pb-12 md:px-8 lg:px-10">
-          <div className="max-w-full lg:max-w-[1400px] mx-auto">
+        <main className="flex-1 overflow-y-auto bg-white pt-4 px-4 pb-12">
+          <div className="w-auto mx-auto">
             <Outlet />
           </div>
         </main>

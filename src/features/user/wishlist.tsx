@@ -58,7 +58,7 @@ const WishlistPage: React.FC = () => {
         <div className="min-h-screen bg-[#FDFDFD] font-sans text-slate-800 pb-20">
             {/* Header */}
             <div className="bg-white border-b border-slate-100 sticky top-[60px] z-30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="  mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                             <Heart className="text-rose-600 fill-rose-600" size={28} />
@@ -80,7 +80,7 @@ const WishlistPage: React.FC = () => {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <main className="  mx-auto px-4 sm:px-6 py-8">
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {[1, 2, 3, 4].map((i) => (

@@ -84,14 +84,14 @@ const ProductDetailsPage: React.FC = () => {
       status === "Active"
         ? "bg-emerald-50 text-emerald-600 border-emerald-100"
         : status === "Out of Stock"
-        ? "bg-rose-50 text-rose-600 border-rose-100"
-        : "bg-gray-50 text-gray-600 border-gray-200";
+          ? "bg-rose-50 text-rose-600 border-rose-100"
+          : "bg-gray-50 text-gray-600 border-gray-200";
     return <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${cls}`}>{status}</span>;
   }, [product]);
 
   return (
     <div className="min-h-screen w-full text-[#18181B] bg-[#FDFDFD]">
-      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+      <div className="  mx-auto p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -135,7 +135,7 @@ const ProductDetailsPage: React.FC = () => {
                       <Package size={28} className="text-[#A1A1AA]" />
                     )}
                   </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                     <div>
                       <p className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest">Name</p>
                       <p className="text-sm font-bold">{product.name}</p>
@@ -229,7 +229,7 @@ const ProductDetailsPage: React.FC = () => {
                 <div className="bg-white border border-[#EEEEEE] rounded-2xl p-6">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-3 flex items-center gap-2"><Video size={12} /> Videos</p>
                   <div className="flex flex-col gap-2">
-                    {product.videos.map((v, idx) => {
+                    {product.videos.map((v) => {
                       const items: MediaItem[] = product.videos
                         .filter(vi => !!vi.url)
                         .map(vi => ({ id: vi.id, type: "video", src: vi.url, title: vi.title || undefined }));

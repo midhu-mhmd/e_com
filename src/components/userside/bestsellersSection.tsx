@@ -51,8 +51,8 @@ const ProductCard: React.FC<{
       style={{ transitionDelay: `${index * 60}ms` }}
     >
       {/* Image Section */}
-      <div className="relative h-52 shrink-0 bg-zinc-50 overflow-hidden">
-        {image && (
+      <div className="relative h-52 shrink-0 bg-zinc-50 overflow-hidden flex items-center justify-center">
+        {image ? (
           <img
             src={image}
             alt={product.name}
@@ -60,8 +60,12 @@ const ProductCard: React.FC<{
             className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imgLoaded ? "opacity-100" : "opacity-0"
               }`}
           />
+        ) : (
+          <div className="w-full h-full bg-zinc-900 p-8">
+            <img src={logo} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" alt="Logo fallback" />
+          </div>
         )}
-        {!imgLoaded && (
+        {!imgLoaded && image && (
           <div className="absolute inset-0 flex items-center justify-center text-zinc-300">
             <Sparkles size={32} />
           </div>
@@ -197,7 +201,6 @@ const BestsellersSection: React.FC = () => {
   const { data, isLoading: loading } = useBestsellers();
   const products = useMemo(() => data?.results || [], [data]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const requireAuth = useRequireAuth();
@@ -290,7 +293,7 @@ const BestsellersSection: React.FC = () => {
       <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 bg-cyan-50 rounded-full blur-3xl opacity-60" />
       <div className="pointer-events-none absolute -bottom-32 -left-32 w-80 h-80 bg-yellow-50 rounded-full blur-3xl opacity-50" />
 
-      <div className="relative mx-auto max-w-7xl">
+      <div className="relative mx-auto  ">
         <div className="flex items-end justify-between mb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-50 border border-cyan-100 rounded-full mb-3">
@@ -341,14 +344,16 @@ const BestsellersSection: React.FC = () => {
         )}
 
         {!loading && products.length > 0 && (
-          <div
-            ref={scrollRef}
-            className="flex gap-5 overflow-x-auto py-6 px-1 -mx-1 scrollbar-hide snap-x snap-mandatory items-stretch"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {products.map((product, i) => (
+          <InfiniteScrollTrack
+            items={products}
+            speed={0.6}
+            copies={4}
+            outerClassName="overflow-hidden py-2 -mx-4 sm:-mx-6 lg:-mx-8"
+            gap="gap-5"
+            fadeEdges
+            edgeColor="#FAFAF8"
+            renderItem={(product, i) => (
               <ProductCard
-                key={product.id}
                 product={product}
                 image={getProductImage(product)}
                 discount={getDiscount(product)}
@@ -358,8 +363,8 @@ const BestsellersSection: React.FC = () => {
                 onNotifyMe={() => handleNotifyMe(product)}
                 onQuickView={() => navigate(`/products/${product.id}`)}
               />
-            ))}
-          </div>
+            )}
+          />
         )}
 
         {!loading && products.length === 0 && (
@@ -369,7 +374,6 @@ const BestsellersSection: React.FC = () => {
           </div>
         )}
       </div>
-      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 };
