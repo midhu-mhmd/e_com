@@ -5,12 +5,12 @@ export interface ProductLocationOption {
 
 export const PRODUCT_LOCATION_OPTIONS: ProductLocationOption[] = [
     { value: "abu_dhabi", label: "Abu Dhabi Region" },
-    { value: "dubai", label: "Dubai Region" },
-    { value: "sharjah", label: "Sharjah Region" },
-    { value: "ajman", label: "Ajman Region" },
-    { value: "umm_al_quwain", label: "Umm Al Quwain Region" },
-    { value: "ras_al_khaimah", label: "Ras Al Khaimah Region" },
-    { value: "fujairah", label: "Fujairah Region" },
+    { value: "dubai", label: "Dubai" },
+    { value: "sharjah", label: "Sharjah" },
+    { value: "ajman", label: "Ajman" },
+    { value: "umm_al_quwain", label: "Umm Al Quwain" },
+    { value: "ras_al_khaimah", label: "Ras Al Khaimah" },
+    { value: "fujairah", label: "Fujairah" },
 ];
 
 const LOCATION_OBJECT_KEYS = [

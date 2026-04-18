@@ -202,7 +202,8 @@ const DeliveryTiersManager: React.FC<DeliveryTiersManagerProps> = ({
           </div>
           <div className="flex items-end">
             <button
-              type="button"              type="button"              onClick={handleAddTier}
+              type="button"
+              onClick={handleAddTier}
               disabled={loading}
               className="w-full bg-cyan-600 text-white font-semibold py-2 rounded-lg hover:bg-cyan-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
             >

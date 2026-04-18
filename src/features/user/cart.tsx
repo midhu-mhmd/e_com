@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Fish } from 'lucide-react';
@@ -13,8 +13,18 @@ import {
     selectCartError,
     selectUpdatingItemIds,
 } from '../admin/cart/cartSlice';
+import { ordersApi, type DeliveryChargeSettingsDto } from '../admin/orders/ordersApi';
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
+
+const computeDeliveryCharge = (
+    cartTotal: number,
+    settings: DeliveryChargeSettingsDto | null
+) => {
+    if (!settings) return null;
+    if (!settings.is_active) return 0;
+    return cartTotal >= settings.min_order_for_free_delivery ? 0 : settings.delivery_charge_amount;
+};
 
 const CartPage: React.FC = () => {
     const { t } = useTranslation('cart');
@@ -26,6 +36,8 @@ const CartPage: React.FC = () => {
     const updatingItemIds = useAppSelector(selectUpdatingItemIds);
     const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
     const checkingAuth = useAppSelector((s) => s.auth.checkingAuth);
+    const [deliveryChargeSettings, setDeliveryChargeSettings] = useState<DeliveryChargeSettingsDto | null>(null);
+    const [loadingDeliveryChargeSettings, setLoadingDeliveryChargeSettings] = useState(true);
 
     // Always fetch fresh cart data when the cart page mounts and user is authenticated.
     // Also refetch when the page regains focus to prevent caching.
@@ -44,6 +56,37 @@ const CartPage: React.FC = () => {
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
     }, [dispatch, isAuthenticated, checkingAuth]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadDeliveryChargeSettings = async () => {
+            try {
+                const data = await ordersApi.getDeliveryChargeSettings();
+                if (isMounted) {
+                    setDeliveryChargeSettings(data);
+                }
+            } catch (error) {
+                console.error('Failed to load delivery charge settings', error);
+                if (isMounted) {
+                    setDeliveryChargeSettings(null);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoadingDeliveryChargeSettings(false);
+                }
+            }
+        };
+
+        void loadDeliveryChargeSettings();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const deliveryCharge = computeDeliveryCharge(cartTotal, deliveryChargeSettings);
+    const totalWithDelivery = cartTotal + (deliveryCharge ?? 0);
 
     // Loading state removed as requested
 
@@ -114,7 +157,7 @@ const CartPage: React.FC = () => {
                                 className="bg-white rounded-2xl p-4 border border-stone-200 flex gap-4 hover:shadow-lg transition-shadow"
                             >
                                 {/* Image */}
-                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                <div className="w-24 h-24 bg-stone-50 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
                                     {item.image ? (
                                         <img
                                             src={item.image}
@@ -218,16 +261,35 @@ const CartPage: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-sm text-stone-500">
                                 <span>{t('cart.shipping')}</span>
-                                <span className="font-bold text-stone-500">{t('cart.calculatedAtCheckout')}</span>
+                                {deliveryCharge === null ? (
+                                    <span className="font-bold text-stone-500">{t('cart.calculatedAtCheckout')}</span>
+                                ) : (
+                                    <span className={`font-bold ${deliveryCharge === 0 ? 'text-emerald-600' : 'text-stone-900'}`}>
+                                        {deliveryCharge === 0 ? t('cart.free') : `AED ${deliveryCharge.toFixed(2)}`}
+                                    </span>
+                                )}
                             </div>
                             <p className="text-xs text-stone-400 italic">
-                                {t('cart.freeDeliveryNote', { amount: '40' })}
+                                {loadingDeliveryChargeSettings
+                                    ? t('cart.loadingDeliveryCharge', { defaultValue: 'Loading delivery charges...' })
+                                    : deliveryChargeSettings
+                                        ? deliveryChargeSettings.is_active
+                                            ? t('cart.freeDeliveryNote', {
+                                                amount: String(deliveryChargeSettings.min_order_for_free_delivery),
+                                                defaultValue: `Free delivery on orders AED ${deliveryChargeSettings.min_order_for_free_delivery.toFixed(2)} and above.`,
+                                            })
+                                            : t('cart.deliveryDisabled', {
+                                                defaultValue: 'Delivery charges are currently disabled.',
+                                            })
+                                        : t('cart.deliveryRuleFallback', {
+                                            defaultValue: 'Delivery is calculated using the current delivery settings.',
+                                        })}
                             </p>
                         </div>
 
                         <div className="flex justify-between items-end">
                             <span className="text-sm font-bold text-stone-900">{t('cart.itemsTotal')}</span>
-                            <span className="text-2xl font-black text-cyan-900">AED {cartTotal.toFixed(2)}</span>
+                            <span className="text-2xl font-black text-cyan-900">AED {totalWithDelivery.toFixed(2)}</span>
                         </div>
 
                         <button

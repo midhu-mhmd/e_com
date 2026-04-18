@@ -12,11 +12,12 @@ import { useProductDetails, useProductReviews } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import BackendData from "../../components/ui/BackendData";
 import { API_BASE_URL } from "../../config/constants";
+import { productsApi } from "../admin/products/productApi";
 import {
   extractProductLocationValues,
   getProductLocationLabel,
 } from "../admin/products/productLocationOptions";
-import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
+import { processRestockAlerts } from "../../utils/restockAlerts";
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
@@ -221,15 +222,20 @@ const ProductProfile: React.FC = () => {
   const handleNotifyMe = () => {
     if (!product) return;
 
-    requireAuth(() => {
-      subscribeToRestock(product, authUserId);
-      toast.show(
-        t("details.restockSubscribed", {
-          name: product.name,
-          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
-        }),
-        "success"
-      );
+    requireAuth(async () => {
+      try {
+        await productsApi.notifyStock(product.id);
+        toast.show(
+          t("details.restockSubscribed", {
+            name: product.name,
+            defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+          }),
+          "success"
+        );
+      } catch (err: any) {
+        const message = err?.response?.data?.detail || err?.response?.data?.error || "Failed to subscribe for stock alerts.";
+        toast.show(message, "error");
+      }
     })();
   };
 
@@ -576,14 +582,23 @@ const ProductProfile: React.FC = () => {
           <ShoppingCart size={17} />
           {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
         </button>
-        <button
-          onClick={() => addItemToCart("checkout")}
-          disabled={!product.is_available || product.stock === 0}
-          className="flex-1 py-3.5 bg-cyan-600 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/25 active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Zap size={17} className="fill-current" />
-          {t("details.buyNow")}
-        </button>
+        {product.is_available && product.stock > 0 ? (
+          <button
+            onClick={() => addItemToCart("checkout")}
+            className="flex-1 py-3.5 bg-cyan-600 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/25 active:scale-[0.97] transition-all"
+          >
+            <Zap size={17} className="fill-current" />
+            {t("details.buyNow")}
+          </button>
+        ) : (
+          <button
+            onClick={handleNotifyMe}
+            className="flex-1 py-3.5 bg-amber-500 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 active:scale-[0.97] transition-all"
+          >
+            <Bell size={17} />
+            {t("details.notifyMe")}
+          </button>
+        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════
@@ -758,14 +773,23 @@ const ProductProfile: React.FC = () => {
                 {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
               </button>
 
-              <button
-                onClick={() => addItemToCart("checkout")}
-                disabled={!product.is_available || product.stock === 0}
-                className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
-              >
-                <Zap size={22} />
-                {t("details.buyNow")}
-              </button>
+              {product.is_available && product.stock > 0 ? (
+                <button
+                  onClick={() => addItemToCart("checkout")}
+                  className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                  <Zap size={22} />
+                  {t("details.buyNow")}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNotifyMe}
+                  className="flex-1 py-4 bg-amber-500 text-white text-base font-black rounded-2xl hover:bg-amber-600 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                >
+                  <Bell size={22} />
+                  {t("details.notifyMe")}
+                </button>
+              )}
 
               <motion.button
                 onClick={toggleWishlist}

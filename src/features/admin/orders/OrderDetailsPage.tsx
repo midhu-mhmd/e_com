@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Download, Package, MessageSquare, Send, Navigation, Truck, UserCheck } from "lucide-react";
-import { ordersApi } from "./ordersApi";
+import { ordersApi, type DeliverySlotDto } from "./ordersApi";
 import type { OrderStatus, PaymentStatus } from "./ordersSlice";
 import { useDispatch } from "react-redux";
 import { ordersActions } from "./ordersSlice";
@@ -60,7 +60,7 @@ type Order = {
   deliveryCharge: number;
   tipAmount: number;
   deliveryDate: string | null;
-  deliverySlot: string | number | null;
+  deliverySlotDetails: string | null;
   deliveryNotes: string | null;
   items: OrderItem[];
   statusHistory: StatusHistoryEntry[];
@@ -94,6 +94,19 @@ function normalizePaymentStatus(raw: string): PaymentStatus {
     failed: "Failed",
   };
   return map[raw?.toLowerCase?.()] ?? "Pending";
+}
+
+function formatPreferredDeliverySlotDetails(slot?: DeliverySlotDto | null): string | null {
+  if (!slot) return null;
+
+  const name = slot.name?.trim();
+  const start = slot.start_time_display?.trim();
+  const end = slot.end_time_display?.trim();
+
+  if (start && end && name) return `${start} - ${end} (${name})`;
+  if (start && end) return `${start} - ${end}`;
+  if (name) return name;
+  return null;
 }
 
 function OrderStatusBadge({ status }: { status: OrderStatus }) {
@@ -230,7 +243,7 @@ const OrderDetailsPage: React.FC = () => {
           deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
           tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
           deliveryDate: raw.preferred_delivery_date ?? null,
-          deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
+          deliverySlotDetails: formatPreferredDeliverySlotDetails(raw.preferred_delivery_slot_details ?? null),
           deliveryNotes: raw.delivery_notes ?? null,
           items: Array.isArray(raw.items)
             ? raw.items.map((dto) => ({
@@ -499,7 +512,7 @@ const OrderDetailsPage: React.FC = () => {
                             deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
                             tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
                             deliveryDate: raw.preferred_delivery_date ?? null,
-                            deliverySlot: raw.preferred_delivery_slot ? String(raw.preferred_delivery_slot) : null,
+                            deliverySlotDetails: formatPreferredDeliverySlotDetails(raw.preferred_delivery_slot_details ?? null),
                             deliveryNotes: raw.delivery_notes ?? null,
                             items: Array.isArray(raw.items)
                               ? raw.items.map((dto: any) => ({
@@ -700,7 +713,7 @@ const OrderDetailsPage: React.FC = () => {
                     })}
                   />
                 )}
-                {order.deliverySlot && <InfoField label="Delivery Slot" value={order.deliverySlot} />}
+                {order.deliverySlotDetails && <InfoField label="Preferred Delivery Slot" value={order.deliverySlotDetails} />}
                 {order.payment?.transactionId && <InfoField label="Transaction ID" value={order.payment.transactionId} />}
                 {order.shippingAddress.latitude && order.shippingAddress.longitude && (
                   <InfoField label="Location">

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, memo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { type ProductDto } from "../admin/products/productApi";
 import { motion, AnimatePresence } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { Search, ShoppingCart, Star, Filter, ArrowRight, Zap, Loader2, Bell } from "lucide-react";
 import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../admin/cart/cartSlice";
@@ -12,7 +13,8 @@ import { useTranslation } from "react-i18next";
 import { useInfiniteProducts } from "../../hooks/queries";
 import { useToast } from "../../components/ui/Toast";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
-import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
+import { productsApi } from "../admin/products/productApi";
+import { processRestockAlerts } from "../../utils/restockAlerts";
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
@@ -26,11 +28,13 @@ const getProductImage = (p: ProductDto): string => {
 
 const ProductCard = memo(({
     product,
+    index,
     onAddToCart,
     onBuyNow,
     onNotifyMe,
 }: {
     product: ProductDto;
+    index: number;
     onAddToCart: (e: React.MouseEvent, p: ProductDto) => void;
     onBuyNow: (e: React.MouseEvent, p: ProductDto) => void;
     onNotifyMe: (e: React.MouseEvent, p: ProductDto) => void;
@@ -291,17 +295,22 @@ const UserProductsPage: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
 
-        requireAuth(() => {
-            subscribeToRestock(product, authUserId);
-            toast.show(
-                t("details.restockSubscribed", {
-                    name: product.name,
-                    defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
-                }),
-                "success"
-            );
+        requireAuth(async () => {
+            try {
+                await productsApi.notifyStock(product.id);
+                toast.show(
+                    t("details.restockSubscribed", {
+                        name: product.name,
+                        defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+                    }),
+                    "success"
+                );
+            } catch (err: any) {
+                const msg = err?.response?.data?.detail || err?.response?.data?.error || "Failed to subscribe for stock alerts.";
+                toast.show(msg, "error");
+            }
         })();
-    }, [authUserId, requireAuth, t, toast]);
+    }, [requireAuth, t, toast]);
 
     return (
         <div dir="ltr" className="min-h-screen bg-slate-50 text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">

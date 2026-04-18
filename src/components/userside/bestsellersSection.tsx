@@ -5,10 +5,12 @@ import { useAppDispatch, useAppSelector, useRequireAuth } from "../../hooks";
 import { fetchCartRequest } from "../../features/admin/cart/cartSlice";
 import { cartsApi } from "../../features/admin/cart/cartApi";
 import { useTranslation } from "react-i18next";
-import { type ProductDto } from "../../features/admin/products/productApi";
+import { productsApi, type ProductDto } from "../../features/admin/products/productApi";
 import { useBestsellers } from "../../hooks/queries";
 import { useToast } from "../ui/Toast";
-import { processRestockAlerts, subscribeToRestock } from "../../utils/restockAlerts";
+import { processRestockAlerts } from "../../utils/restockAlerts";
+import logo from "../../assets/LOGO-1.svg";
+import InfiniteScrollTrack from "../ui/InfiniteScrollTrack";
 
 /* ── Product Card ── */
 const ProductCard: React.FC<{
@@ -276,15 +278,20 @@ const BestsellersSection: React.FC = () => {
   };
 
   const handleNotifyMe = (product: ProductDto) => {
-    requireAuth(() => {
-      subscribeToRestock(product, authUserId);
-      toast.show(
-        t("bestsellers.restockSubscribed", {
-          name: product.name,
-          defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
-        }),
-        "success"
-      );
+    requireAuth(async () => {
+      try {
+        await productsApi.notifyStock(product.id);
+        toast.show(
+          t("bestsellers.restockSubscribed", {
+            name: product.name,
+            defaultValue: `We’ll notify you when ${product.name} is back in stock.`,
+          }),
+          "success"
+        );
+      } catch (err: any) {
+        const msg = err?.response?.data?.detail || err?.response?.data?.error || "Failed to subscribe for stock alerts.";
+        toast.show(msg, "error");
+      }
     })();
   };
 

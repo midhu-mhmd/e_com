@@ -6,12 +6,14 @@
             "addresses": "العناوين",
             "reviews": "المراجعات",
             "referrals": "الإحالات",
+            "coupons": "القسائم",
             "referralCoupons": "الإحالات والقسائم",
             "signOut": "تسجيل الخروج"
         },
         "auth": {
             "loginRequired": "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
-            "goToLogin": "الذهاب إلى تسجيل الدخول"
+            "goToLogin": "الذهاب إلى تسجيل الدخول",
+            "backToProfile": "العودة إلى الملف الشخصي"
         },
         "personalInfo": {
             "title": "المعلومات الشخصية",
@@ -164,6 +166,10 @@
             "usage": "الاستخدام",
             "status": "الحالة",
             "active": "نشط",
+            "inactive": "غير نشط",
+            "expired": "منتهي الصلاحية",
+            "redeemed": "تم استخدامه",
+            "deleted": "محذوف",
             "noExpiry": "بدون انتهاء",
             "unlimited": "غير محدود",
             "stats": {

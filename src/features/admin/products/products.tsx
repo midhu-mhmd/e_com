@@ -972,14 +972,14 @@ const ProductDetailPanel = ({
                                     <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE] text-[10px] font-bold text-[#A1A1AA] uppercase">
                                         <tr>
                                             <th className="px-4 py-2">Min Quantity</th>
-                                            <th className="px-4 py-2">Discount Price</th>
+                                            <th className="px-4 py-2">Discount</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#EEEEEE]">
                                         {product.discountTiers.map((tier, i) => (
                                             <tr key={tier.id || i} className="hover:bg-[#FBFBFA]">
                                                 <td className="px-4 py-2 font-medium">{tier.minQuantity}</td>
-                                                <td className="px-4 py-2 font-bold text-emerald-600">AED {tier.discountPrice.toLocaleString()}</td>
+                                                <td className="px-4 py-2 font-bold text-emerald-600">{tier.discountPercentage}% off</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -996,17 +996,15 @@ const ProductDetailPanel = ({
                                 <table className="w-full text-left text-xs text-[#52525B]">
                                     <thead className="bg-[#FAFAFA] border-b border-[#EEEEEE] text-[10px] font-bold text-[#A1A1AA] uppercase">
                                         <tr>
-                                            <th className="px-4 py-2">Name</th>
-                                            <th className="px-4 py-2">Cost</th>
-                                            <th className="px-4 py-2">Est. Days</th>
+                                            <th className="px-4 py-2">Min Quantity</th>
+                                            <th className="px-4 py-2">Delivery Days</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#EEEEEE]">
                                         {product.deliveryTiers.map((tier, i) => (
                                             <tr key={tier.id || i} className="hover:bg-[#FBFBFA]">
-                                                <td className="px-4 py-2 font-medium">{tier.name}</td>
-                                                <td className="px-4 py-2">AED {tier.cost.toLocaleString()}</td>
-                                                <td className="px-4 py-2 text-[#A1A1AA]">{tier.estimatedDays}</td>
+                                                <td className="px-4 py-2 font-medium">{tier.minQuantity}</td>
+                                                <td className="px-4 py-2 text-[#A1A1AA]">{tier.deliveryDays} days</td>
                                             </tr>
                                         ))}
                                     </tbody>

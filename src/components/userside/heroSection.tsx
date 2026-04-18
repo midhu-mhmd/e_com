@@ -67,6 +67,12 @@ const Hero: React.FC = () => {
   const subtitle = media.subtitle;
   const highlight = media.highlight;
   const cta = media.cta_text || null;
+  const promoMessages = [
+    'Free delivery for orders above AED 60',
+    'Refer a friend and get 20% OFF',
+    'Get a discount on your first order',
+  ];
+  const promoTickerItems = [...promoMessages, ...promoMessages];
 
   const zoomVariants = {
     enter: { scale: 1.1, opacity: 0 },
@@ -188,6 +194,42 @@ const Hero: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <div className="px-0 sm:px-4 mt-2 sm:mt-3">
+        <div className="border border-slate-200 bg-slate-50 sm:rounded-2xl overflow-hidden">
+          <div className="promo-ticker-track flex items-center gap-2 w-max px-2 py-2.5 sm:px-3 sm:py-3">
+            {promoTickerItems.map((message, index) => (
+              <div
+                key={`${message}-${index}`}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-700 shrink-0"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
+                <span>{message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .promo-ticker-track {
+          animation: heroPromoTicker 24s linear infinite;
+          will-change: transform;
+        }
+
+        .promo-ticker-track:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes heroPromoTicker {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 };

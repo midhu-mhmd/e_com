@@ -2,27 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
-  MapPin,
-  Package,
-  CheckCircle2,
-  Truck,
-  AlertTriangle,
   Loader2,
   AlertCircle,
   RefreshCw,
   Image as ImageIcon,
-  Navigation,
-  Phone,
 } from "lucide-react";
 import { deliveryApi, type DeliveryOrder } from "./deliveryApi";
-
-const STATUS_COLOR: Record<string, string> = {
-  PAID: "bg-green-50 text-green-700",
-  PROCESSING: "bg-amber-50 text-amber-700",
-  SHIPPED: "bg-indigo-50 text-indigo-700",
-  DELIVERED: "bg-emerald-50 text-emerald-700",
-  CANCELLED: "bg-red-50 text-red-700",
-};
 
 // ─── Confirmation modal ───
 function ConfirmModal({
@@ -51,7 +36,7 @@ function ConfirmModal({
           </button>
           <button
             onClick={onCancel}
-            className="w-full py-4 rounded-2xl border border-gray-100 text-xs font-black tracking-widest uppercase text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all font-medium"
+            className="w-full py-4 rounded-2xl border border-gray-100 text-xs font-black tracking-widest uppercase text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-all"
           >
             NOT NOW
           </button>
@@ -395,7 +380,7 @@ const DeliveryOrderDetail: React.FC = () => {
         {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-l border-r border-b border-gray-100">
           {/* Destination */}
-          <div className="p-10 border-b border-gray-100 md:border-b-0 md:border-r border-gray-100">
+          <div className="p-10 border-b border-gray-100 md:border-b-0 md:border-r">
             <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-8">
               Ship-to Destination
             </h2>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { useDeliveryEstimation } from "../../hooks/useDeliveryEstimation";
 import { selectCartItems, selectCartTotal, clearCart } from "../admin/cart/cartSlice";
-import { ordersApi, type CheckoutSummaryResponse, type DeliverySlotDto } from "../admin/orders/ordersApi";
+import { ordersApi, type CheckoutSummaryResponse, type DeliveryChargeSettingsDto, type DeliverySlotDto } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
 import {
   MapPin, CreditCard, Truck, ArrowLeft, Loader2,
@@ -55,6 +55,45 @@ type AvailableCoupon = {
 const parseAmount = (value?: string | number | null) => {
   const parsed = Number.parseFloat(String(value ?? 0));
   return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const parseDateOnly = (value?: string | null) => {
+  if (!value) return null;
+
+  const parts = value.split("-").map((part) => Number(part));
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) {
+    return null;
+  }
+
+  const [year, month, day] = parts;
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+};
+
+const toDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const isSameDay = (left: Date, right: Date) => toDateInputValue(left) === toDateInputValue(right);
+
+const computeDeliveryCharge = (
+  orderTotal: number,
+  settings: DeliveryChargeSettingsDto | null
+) => {
+  if (!settings) return null;
+  if (!settings.is_active) return 0;
+  return orderTotal >= settings.min_order_for_free_delivery ? 0 : settings.delivery_charge_amount;
 };
 
 const normalizeCouponCode = (value?: string | null) =>
@@ -156,6 +195,8 @@ const CheckoutPage: React.FC = () => {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [couponsError, setCouponsError] = useState<string | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [deliveryChargeSettings, setDeliveryChargeSettings] = useState<DeliveryChargeSettingsDto | null>(null);
+  const [loadingDeliveryChargeSettings, setLoadingDeliveryChargeSettings] = useState(true);
   const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryResponse | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
@@ -270,6 +311,34 @@ const CheckoutPage: React.FC = () => {
     loadAddresses();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDeliveryChargeSettings = async () => {
+      try {
+        const data = await ordersApi.getDeliveryChargeSettings();
+        if (isMounted) {
+          setDeliveryChargeSettings(data);
+        }
+      } catch (error) {
+        console.error("Failed to load delivery charge settings", error);
+        if (isMounted) {
+          setDeliveryChargeSettings(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingDeliveryChargeSettings(false);
+        }
+      }
+    };
+
+    void loadDeliveryChargeSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // ─── Computed ───
   useEffect(() => {
     let isMounted = true;
@@ -288,15 +357,10 @@ const CheckoutPage: React.FC = () => {
 
         const normalizedCoupons = rawCoupons
           .filter((coupon: any) => {
-            // Only show active coupons
             if (coupon.is_active !== true) return false;
 
-            // Only show coupons that haven't reached their usage limit
-            if (
-              coupon.usage_limit !== null &&
-              coupon.usage_limit !== undefined &&
-              coupon.used_count >= coupon.usage_limit
-            ) {
+            const validTo = coupon.valid_to ? new Date(coupon.valid_to) : null;
+            if (validTo && !Number.isNaN(validTo.getTime()) && validTo.getTime() < Date.now()) {
               return false;
             }
 
@@ -332,15 +396,39 @@ const CheckoutPage: React.FC = () => {
   const summarySubtotal = checkoutSummary ? parseAmount(checkoutSummary.cart_total_before_discount) : cartTotal;
   const summaryDiscount = checkoutSummary ? parseAmount(checkoutSummary.discount_amount) : 0;
   const summaryAfterDiscount = checkoutSummary ? parseAmount(checkoutSummary.cart_total_after_discount) : cartTotal;
-  const summaryDeliveryCharge = checkoutSummary ? parseAmount(checkoutSummary.delivery_charge) : null;
+  const previewDeliveryCharge = computeDeliveryCharge(summaryAfterDiscount, deliveryChargeSettings);
+  const summaryDeliveryCharge = checkoutSummary ? parseAmount(checkoutSummary.delivery_charge) : previewDeliveryCharge;
   const summaryTip = checkoutSummary ? parseAmount(checkoutSummary.tip_amount) : effectiveTip;
   const finalTotal = checkoutSummary
     ? parseAmount(checkoutSummary.final_total)
-    : Number((cartTotal + effectiveTip).toFixed(2));
+    : Number((cartTotal + effectiveTip + (summaryDeliveryCharge ?? 0)).toFixed(2));
 
   // Min date = earliest delivery date from estimation, or UAE today as fallback
   const uaeTodayDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(new Date());
   const minDate = estimation?.estimated_delivery_date ?? uaeTodayDate;
+  const deliveryBaseDate = parseDateOnly(minDate) ?? parseDateOnly(uaeTodayDate) ?? new Date();
+  const deliveryWindowEnd = addDays(deliveryBaseDate, 1);
+  const visibleDeliveryDates = Array.from({ length: 7 }, (_, index) => addDays(deliveryBaseDate, index - 2));
+  const selectedDeliveryDate = parseDateOnly(deliveryDate);
+
+  const isDateSelectable = (date: Date) =>
+    date.getTime() >= deliveryBaseDate.getTime() && date.getTime() <= deliveryWindowEnd.getTime();
+
+  const formatDeliveryDate = (date: Date) =>
+    new Intl.DateTimeFormat(isArabic ? "ar-EG" : "en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(date);
+
+  useEffect(() => {
+    if (!deliveryDate) return;
+
+    if (!selectedDeliveryDate || !isDateSelectable(selectedDeliveryDate)) {
+      setDeliveryDate("");
+      setDeliverySlot("");
+    }
+  }, [deliveryDate, minDate]);
 
   // ─── Fetch Available Slots ───
   useEffect(() => {
@@ -997,22 +1085,64 @@ const CheckoutPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Date */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Calendar size={12} /> {t("delivery.date")}
                 </label>
-                <input
-                  type="date"
-                  value={deliveryDate}
-                  min={minDate}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val && val < minDate) return;
-                    setDeliveryDate(val);
-                  }}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none transition-all"
-                />
-                <p className="text-[10px] text-slate-400">{t("delivery.earliest", { defaultValue: "Earliest:" })} {estimationLoading ? "…" : minDate}</p>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+                    <div>
+                      <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        {t("delivery.selectWindow", { defaultValue: "Selectable delivery window" })}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        {t("delivery.windowHint", {
+                          defaultValue: `Only dates from ${formatDeliveryDate(deliveryBaseDate)} to ${formatDeliveryDate(deliveryWindowEnd)} can be selected.`,
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-[10px] font-medium text-slate-500 text-right">
+                      {t("delivery.earliest", { defaultValue: "Earliest:" })} {estimationLoading ? "…" : minDate}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                    {visibleDeliveryDates.map((date) => {
+                      const dateValue = toDateInputValue(date);
+                      const selectable = isDateSelectable(date);
+                      const selected = deliveryDate === dateValue;
+
+                      return (
+                        <button
+                          key={dateValue}
+                          type="button"
+                          disabled={!selectable}
+                          onClick={() => selectable && setDeliveryDate(dateValue)}
+                          className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 ${
+                            selected
+                              ? "border-cyan-500 bg-cyan-50 text-cyan-900 shadow-sm ring-2 ring-cyan-500/15"
+                              : selectable
+                                ? "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50"
+                                : "border-slate-200 bg-slate-100 text-slate-400 opacity-50 blur-[1px] cursor-not-allowed"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                              {date.toLocaleDateString(isArabic ? "ar-EG" : "en-GB", { weekday: "short" })}
+                            </span>
+                            {selected && <Check size={12} className="text-cyan-600 shrink-0" />}
+                          </div>
+                          <div className="mt-1 text-lg font-black leading-none">
+                            {date.getDate()}
+                          </div>
+                          <div className="mt-1 text-[10px] font-medium opacity-80">
+                            {formatDeliveryDate(date)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Slot */}
@@ -1446,9 +1576,21 @@ const CheckoutPage: React.FC = () => {
 
               {summaryDeliveryCharge === null && (
                 <p className="text-xs text-slate-400">
-                  {t("summary.deliveryRule", {
-                    defaultValue: "Delivery is free for orders AED 40 above.",
-                  })}
+                  {loadingDeliveryChargeSettings
+                    ? t("summary.deliveryRuleLoading", {
+                        defaultValue: "Loading delivery charge settings...",
+                      })
+                    : deliveryChargeSettings
+                      ? deliveryChargeSettings.is_active
+                        ? t("summary.deliveryRule", {
+                            defaultValue: `Delivery is free for orders AED ${deliveryChargeSettings.min_order_for_free_delivery.toFixed(2)} and above. Orders below that pay AED ${deliveryChargeSettings.delivery_charge_amount.toFixed(2)}.`,
+                          })
+                        : t("summary.deliveryDisabled", {
+                            defaultValue: "Delivery charges are currently disabled.",
+                          })
+                      : t("summary.deliveryRule", {
+                          defaultValue: "Delivery is calculated using the current delivery settings.",
+                        })}
                 </p>
               )}
 

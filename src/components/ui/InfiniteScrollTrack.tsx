@@ -9,6 +9,7 @@ interface InfiniteScrollTrackProps<T> {
   gap?: string;
   fadeEdges?: boolean;
   edgeColor?: string;
+  scrollRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 function InfiniteScrollTrack<T,>({
@@ -20,13 +21,15 @@ function InfiniteScrollTrack<T,>({
   gap = "gap-5",
   fadeEdges = false,
   edgeColor = "#ffffff",
+  scrollRef,
 }: InfiniteScrollTrackProps<T>) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const internalScrollRef = useRef<HTMLDivElement>(null);
+  const trackScrollRef = scrollRef ?? internalScrollRef;
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (items.length === 0 || isPaused) return;
-    const el = scrollRef.current;
+    const el = trackScrollRef.current;
     if (!el) return;
 
     let animId: number;
@@ -39,7 +42,7 @@ function InfiniteScrollTrack<T,>({
     };
     animId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animId);
-  }, [items.length, isPaused, speed, copies]);
+  }, [items.length, isPaused, speed, copies, trackScrollRef]);
 
   return (
     <div
@@ -62,7 +65,7 @@ function InfiniteScrollTrack<T,>({
         </>
       )}
       <div
-        ref={scrollRef}
+        ref={trackScrollRef}
         className={`flex ${gap} py-5 overflow-x-auto overflow-y-hidden touch-pan-x scrollbar-hide cursor-grab active:cursor-grabbing select-none`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >

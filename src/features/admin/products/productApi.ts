@@ -120,6 +120,10 @@ export const productsApi = {
     return res.data;
   },
 
+  notifyStock: async (id: number): Promise<void> => {
+    await api.post(`/products/products/${id}/notify_stock/`);
+  },
+
   create: async (payload: Partial<ProductDto> | FormData): Promise<ProductDto> => {
     const isFormData = payload instanceof FormData;
     const res = await api.post<ProductDto>("/products/products/", payload, {

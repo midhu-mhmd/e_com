@@ -6,11 +6,14 @@
             "addresses": "地址管理",
             "reviews": "评价",
             "referrals": "推荐",
+            "coupons": "优惠券",
+            "referralCoupons": "推荐与优惠券",
             "signOut": "退出登录"
         },
         "auth": {
             "loginRequired": "请登录后查看您的个人资料。",
-            "goToLogin": "前往登录"
+            "goToLogin": "前往登录",
+            "backToProfile": "返回个人资料"
         },
         "personalInfo": {
             "title": "个人信息",
@@ -140,6 +143,35 @@
                 "4": "此优惠不可转让。",
                 "5": "Simak Fresh 保留随时修改或终止此计划的权利。",
                 "6": "推荐码必须在朋友的首次购买结账时使用。"
+            }
+        },
+        "coupons": {
+            "title": "可用优惠券",
+            "subtitle": "您的当前折扣和奖励一目了然。",
+            "empty": "当前没有可用优惠券。",
+            "emptyHint": "您可以通过推荐获得，或者在新活动上线后再回来查看。",
+            "error": "当前无法加载您的优惠券。",
+            "copied": "优惠券代码已复制！",
+            "available": "可用优惠券",
+            "availableCoupon": "可用优惠券",
+            "reward": "奖励优惠券",
+            "referralReward": "推荐奖励",
+            "firstOrderReward": "首单奖励",
+            "discount": "折扣",
+            "validUntil": "有效期至",
+            "usage": "使用情况",
+            "status": "状态",
+            "active": "有效",
+            "inactive": "未启用",
+            "expired": "已过期",
+            "redeemed": "已兑换",
+            "deleted": "已删除",
+            "noExpiry": "无有效期",
+            "unlimited": "不限次数",
+            "stats": {
+                "available": "可用",
+                "referral": "推荐",
+                "firstOrder": "首单"
             }
         },
         "emirates": {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Star, Quote, MessageCircle } from "lucide-react";
+import { Star, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import InfiniteScrollTrack from "../ui/InfiniteScrollTrack";
 
@@ -10,6 +10,9 @@ const ReviewsSection: React.FC = () => {
     const { t } = useTranslation("home");
     const [reviews, setReviews] = useState<ReviewDto[]>([]);
     const [loading, setLoading] = useState(true);
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -37,6 +40,47 @@ const ReviewsSection: React.FC = () => {
         displayReviews.length > 0
             ? (displayReviews as ReviewDto[]).reduce((sum: number, r: ReviewDto) => sum + r.rating, 0) / displayReviews.length
             : 4.8;
+
+    const updateScrollButtons = () => {
+        const el = carouselRef.current;
+        if (!el) {
+            setCanScrollLeft(false);
+            setCanScrollRight(false);
+            return;
+        }
+
+        const threshold = 4;
+        const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+        setCanScrollLeft(el.scrollLeft > threshold);
+        setCanScrollRight(maxScrollLeft - el.scrollLeft > threshold);
+    };
+
+    useEffect(() => {
+        const el = carouselRef.current;
+        if (!el) return;
+
+        updateScrollButtons();
+        const onScroll = () => updateScrollButtons();
+        el.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+
+        const rafId = window.requestAnimationFrame(updateScrollButtons);
+
+        return () => {
+            el.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onScroll);
+            window.cancelAnimationFrame(rafId);
+        };
+    }, [loading, displayReviews.length]);
+
+    const handleArrowScroll = (direction: "left" | "right") => {
+        const el = carouselRef.current;
+        if (!el) return;
+
+        const delta = Math.max(280, Math.floor(el.clientWidth * 0.75));
+        const amount = direction === "left" ? -delta : delta;
+        el.scrollBy({ left: amount, behavior: "smooth" });
+    };
 
     return (
         <section className="relative bg-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -83,14 +127,14 @@ const ReviewsSection: React.FC = () => {
                         {/* Arrows */}
                         <div className="hidden sm:flex items-center gap-2">
                             <button
-                                onClick={() => scroll("left")}
+                                onClick={() => handleArrowScroll("left")}
                                 disabled={!canScrollLeft}
                                 className="p-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                             >
                                 <ChevronLeft size={18} className="rtl-flip" />
                             </button>
                             <button
-                                onClick={() => scroll("right")}
+                                onClick={() => handleArrowScroll("right")}
                                 disabled={!canScrollRight}
                                 className="p-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
                             >
@@ -127,6 +171,7 @@ const ReviewsSection: React.FC = () => {
                         items={displayReviews}
                         speed={0.5}
                         copies={4}
+                        scrollRef={carouselRef}
                         outerClassName="overflow-hidden py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
                         gap="gap-4 sm:gap-5"
                         renderItem={(review, i) => (
@@ -184,12 +229,6 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
                 }`}
             style={{ transitionDelay: `${index * 60}ms` }}
         >
-            {/* Quote icon */}
-            <Quote
-                size={32}
-                className="absolute top-4 start-4 text-zinc-100 group-hover:text-yellow-100 transition-colors"
-            />
-
             {/* Content Section - Force LTR for English comments */}
             <div dir="ltr" className="text-left">
                 {/* Stars */}
@@ -205,7 +244,7 @@ const ReviewCard: React.FC<{ review: ReviewDto; index: number }> = ({ review, in
 
                 {/* Comment */}
                 <p className="text-sm text-zinc-600 leading-relaxed mb-3 line-clamp-3 sm:line-clamp-4 italic">
-                    "{review.comment}"
+                    {review.comment}
                 </p>
 
                 {/* Product tag */}

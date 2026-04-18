@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
     User, Mail, Phone, LogOut, Camera, Save, Loader2, Calendar,
     MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe, Star,
     ChevronRight, CheckCircle, Hash, Clock, Truck, XCircle, AlertCircle,
-    ChevronDown, Gift, Copy, Share2, Users, ShoppingBag, Percent
+    ChevronDown, Gift, Copy, Share2, Users, ShoppingBag, Percent, Tag
 } from "lucide-react";
 import referralInviteImg from "../../assets/referral/referral_invite.png";
 import referralPurchaseImg from "../../assets/referral/referral_purchase.png";
@@ -21,7 +21,7 @@ import { reviewsApi, type ReviewDto } from "../admin/reviews/reviewsApi";
 import { useUserProfile } from "../../hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/Toast";
-import { tokenManager } from "../../services/api";
+import { api, tokenManager } from "../../services/api";
 import useLanguageToggle from "../../hooks/useLanguageToggle";
 import BackendData from "../../components/ui/BackendData";
 import { useTranslation } from "react-i18next";
@@ -30,6 +30,12 @@ import { useTranslation } from "react-i18next";
    Types
    ═══════════════════════════════════════════════ */
 type TabKey = "profile" | "orders" | "addresses" | "reviews" | "referrals";
+
+type ProfileSection = "dashboard" | "referrals" | "coupons";
+
+interface ProfilePageProps {
+    initialSection?: ProfileSection;
+}
 
 const EMIRATES = [
     { value: "abu_dhabi", label: "Abu Dhabi" },
@@ -41,14 +47,120 @@ const EMIRATES = [
     { value: "fujairah", label: "Fujairah" },
 ];
 
+type CouponStatusKey = "active" | "inactive" | "expired" | "redeemed" | "deleted";
+type CouponTypeKey = "standard" | "referral" | "firstOrder";
+
+type ProfileCouponCard = {
+    id: string;
+    code: string;
+    title: string;
+    description: string;
+    badge?: string;
+    statusKey: CouponStatusKey;
+    statusLabel: string;
+    statusClassName: string;
+    typeKey: CouponTypeKey;
+    typeLabel: string;
+    validUntil: string;
+    usage: string;
+};
+
+const parseCouponAmount = (value?: unknown) => {
+    const parsed = Number.parseFloat(String(value ?? 0));
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatCouponDate = (value?: string | null) => {
+    if (!value) return null;
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+
+    return parsed.toLocaleDateString("en-AE", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+};
+
+const normalizeProfileCoupon = (raw: any, index: number, t: any): ProfileCouponCard | null => {
+    const code = String(raw?.coupon_code ?? raw?.code ?? raw?.promo_code ?? "").trim().toUpperCase();
+
+    if (!code) return null;
+
+    const discountType = String(raw?.discount_type ?? "").toLowerCase();
+    const discountValue = raw?.discount_value ?? raw?.discount_amount ?? raw?.amount ?? raw?.percentage;
+    let badge: string | undefined;
+
+    if (discountType === "percentage" && discountValue !== undefined && discountValue !== null && String(discountValue).trim() !== "") {
+        badge = `${parseCouponAmount(discountValue).toFixed(0)}% OFF`;
+    } else if (discountValue !== undefined && discountValue !== null && String(discountValue).trim() !== "") {
+        badge = `AED ${parseCouponAmount(discountValue).toFixed(0)} OFF`;
+    }
+
+    const validUntil = formatCouponDate(raw?.valid_to) ?? t("profile.coupons.noExpiry", { defaultValue: "No expiry" });
+    const usageLimit = raw?.usage_limit;
+    const usedCount = Number(raw?.used_count ?? 0);
+    const usage = usageLimit === null || usageLimit === undefined
+        ? t("profile.coupons.unlimited", { defaultValue: "Unlimited" })
+        : `${usedCount} / ${usageLimit}`;
+
+    const isDeleted = Boolean(raw?.deleted_at);
+    const isInactive = raw?.is_active === false;
+    const isExpired = Boolean(raw?.valid_to) && !Number.isNaN(new Date(raw.valid_to).getTime()) && new Date(raw.valid_to).getTime() < Date.now();
+    const isRedeemed = usageLimit !== null && usageLimit !== undefined && usedCount >= Number(usageLimit);
+
+    let statusKey: CouponStatusKey = "active";
+    if (isDeleted) statusKey = "deleted";
+    else if (isInactive) statusKey = "inactive";
+    else if (isExpired) statusKey = "expired";
+    else if (isRedeemed) statusKey = "redeemed";
+
+    const statusConfig: Record<CouponStatusKey, { label: string; className: string }> = {
+        active: { label: t("profile.coupons.active", { defaultValue: "Active" }), className: "bg-emerald-50 text-emerald-700" },
+        inactive: { label: t("profile.coupons.inactive", { defaultValue: "Inactive" }), className: "bg-slate-100 text-slate-500" },
+        expired: { label: t("profile.coupons.expired", { defaultValue: "Expired" }), className: "bg-amber-50 text-amber-700" },
+        redeemed: { label: t("profile.coupons.redeemed", { defaultValue: "Redeemed" }), className: "bg-rose-50 text-rose-700" },
+        deleted: { label: t("profile.coupons.deleted", { defaultValue: "Deleted" }), className: "bg-slate-100 text-slate-500" },
+    };
+
+    const typeKey: CouponTypeKey = raw?.is_referral_reward ? "referral" : raw?.is_first_order_reward ? "firstOrder" : "standard";
+    const typeLabel = typeKey === "referral"
+        ? t("profile.coupons.referralReward", { defaultValue: "Referral reward" })
+        : typeKey === "firstOrder"
+            ? t("profile.coupons.firstOrderReward", { defaultValue: "First order reward" })
+            : t("profile.coupons.availableCoupon", { defaultValue: "Available coupon" });
+
+    const title = String(raw?.title ?? raw?.name ?? code).trim() || code;
+    const description = String(
+        raw?.description || raw?.message || raw?.short_description || t("profile.coupons.availableCoupon", { defaultValue: "Available coupon" })
+    ).trim();
+
+    return {
+        id: String(raw?.id ?? `${code}-${index}`),
+        code,
+        title,
+        description,
+        badge,
+        statusKey,
+        statusLabel: statusConfig[statusKey].label,
+        statusClassName: statusConfig[statusKey].className,
+        typeKey,
+        typeLabel,
+        validUntil,
+        usage,
+    };
+};
+
 /* ═══════════════════════════════════════════════
    Main Component
    ═══════════════════════════════════════════════ */
-const ProfilePage: React.FC = () => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" }) => {
     // Bring in i18n to ensure we can listen to language state on initial load
     const { t, i18n } = useTranslation("profile");
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, isAuthenticated } = useSelector((state: any) => state.auth); // eslint-disable-line @typescript-eslint/no-explicit-any
     const queryClient = useQueryClient();
     const toast = useToast();
@@ -142,8 +254,10 @@ const ProfilePage: React.FC = () => {
         { key: "orders", label: t("profile.sidebar.myOrders", { defaultValue: "My Orders" }), icon: <Package size={18} /> },
         { key: "reviews", label: t("profile.sidebar.reviews", { defaultValue: "Reviews" }), icon: <Star size={18} /> },
         { key: "addresses", label: t("profile.sidebar.addresses", { defaultValue: "Addresses" }), icon: <MapPin size={18} /> },
-        { key: "referrals", label: t("profile.sidebar.referrals", { defaultValue: "Referrals" }), icon: <Gift size={18} /> },
     ];
+
+    const referralRouteActive = location.pathname.includes("/profile/referrals");
+    const couponRouteActive = location.pathname.includes("/profile/coupons");
 
     return (
         <div className="min-h-screen bg-[#F8FAFB] font-sans">
@@ -219,44 +333,98 @@ const ProfilePage: React.FC = () => {
                                     {label}
                                 </button>
                             ))}
+                            <Link
+                                to="/profile/referrals"
+                                className={`flex-shrink-0 whitespace-nowrap md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm font-semibold transition-all ${referralRouteActive
+                                    ? "bg-cyan-50 text-cyan-700"
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                    }`}
+                            >
+                                <Gift size={18} />
+                                {t("profile.sidebar.referrals", { defaultValue: "Referrals" })}
+                            </Link>
+                            <Link
+                                to="/profile/coupons"
+                                className={`flex-shrink-0 whitespace-nowrap md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm font-semibold transition-all ${couponRouteActive
+                                    ? "bg-cyan-50 text-cyan-700"
+                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                                    }`}
+                            >
+                                <Tag size={18} />
+                                {t("profile.sidebar.coupons", { defaultValue: "Coupons" })}
+                            </Link>
                         </div>
                     </div>
 
                     {/* ═══════ MAIN CONTENT ═══════ */}
                     <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-6 md:p-8 min-h-[400px] md:min-h-[500px]">
                         <AnimatePresence mode="wait">
-                            {activeTab === "profile" && (
-                                <PersonalInfoTab
-                                    key="profile"
-                                    profileData={displayUser}
-                                    loading={loading}
-                                    onSaved={(freshUser) => {
-                                        queryClient.setQueryData(["userProfile"], freshUser);
-                                        dispatch(setUser(freshUser));
-                                        toast.show(t("profile.messages.profileUpdated"), "success");
-                                    }}
-                                    onError={(msg) => toast.show(msg, "error")}
-                                />
-                            )}
-                            {activeTab === "orders" && <OrdersTab key="orders" />}
-                            {activeTab === "reviews" && (
-                                <ReviewsTab
-                                    key="reviews"
-                                    userId={displayUser.id}
-                                />
-                            )}
-                            {activeTab === "addresses" && (
-                                <AddressesTab
-                                    key="addresses"
-                                    onSuccess={(msg) => toast.show(msg, "success")}
-                                    onError={(msg) => toast.show(msg, "error")}
-                                />
-                            )}
-                            {activeTab === "referrals" && (
-                                <ReferralTab
-                                    key="referrals"
-                                    user={displayUser}
-                                />
+                            {initialSection === "referrals" ? (
+                                <section key="referrals" className="space-y-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 shrink-0">
+                                                <Gift size={20} />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.sidebar.referrals", { defaultValue: "Referrals" })}</h2>
+                                                <p className="text-[11px] md:text-xs text-slate-400">{t("profile.referrals.title", { defaultValue: "Friends Who Refer" })}</p>
+                                            </div>
+                                        </div>
+                                        <Link to="/profile" className="text-xs font-bold text-cyan-600 hover:underline whitespace-nowrap">
+                                            {t("profile.auth.backToProfile", { defaultValue: "Back to Profile" })}
+                                        </Link>
+                                    </div>
+                                    <ReferralTab user={displayUser} />
+                                </section>
+                            ) : initialSection === "coupons" ? (
+                                <section key="coupons" className="space-y-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+                                                <Tag size={20} />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-base md:text-lg font-bold text-slate-900">{t("profile.sidebar.coupons", { defaultValue: "Coupons" })}</h2>
+                                                <p className="text-[11px] md:text-xs text-slate-400">{t("profile.coupons.title", { defaultValue: "Available Coupons" })}</p>
+                                            </div>
+                                        </div>
+                                        <Link to="/profile" className="text-xs font-bold text-cyan-600 hover:underline whitespace-nowrap">
+                                            {t("profile.auth.backToProfile", { defaultValue: "Back to Profile" })}
+                                        </Link>
+                                    </div>
+                                    <CouponsTab />
+                                </section>
+                            ) : (
+                                <>
+                                    {activeTab === "profile" && (
+                                        <PersonalInfoTab
+                                            key="profile"
+                                            profileData={displayUser}
+                                            loading={loading}
+                                            onSaved={(freshUser) => {
+                                                queryClient.setQueryData(["userProfile"], freshUser);
+                                                dispatch(setUser(freshUser));
+                                                toast.show(t("profile.messages.profileUpdated"), "success");
+                                            }}
+                                            onError={(msg) => toast.show(msg, "error")}
+                                        />
+                                    )}
+                                    {activeTab === "orders" && <OrdersTab key="orders" />}
+                                    {activeTab === "reviews" && (
+                                        <ReviewsTab
+                                            key="reviews"
+                                            userId={displayUser.id}
+                                        />
+                                    )}
+                                    {activeTab === "addresses" && (
+                                        <AddressesTab
+                                            key="addresses"
+                                            onSuccess={(msg) => toast.show(msg, "success")}
+                                            onError={(msg) => toast.show(msg, "error")}
+                                        />
+                                    )}
+                                </>
                             )}
                         </AnimatePresence>
                     </div>
@@ -293,6 +461,11 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
     const dispatch = useDispatch();
     const isVerified = profileData?.is_email_verified;
     const isPhoneVerified = profileData?.is_phone_verified;
+    const maxDateOfBirth = (() => {
+        const cutoff = new Date();
+        cutoff.setFullYear(cutoff.getFullYear() - 10);
+        return cutoff.toISOString().slice(0, 10);
+    })();
 
     // OTP Modal State
     const [otpModalState, setOtpModalState] = useState<{
@@ -829,7 +1002,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ profileData, loading,
                                 type="date"
                                 value={dob}
                                 onChange={(e) => setDob(e.target.value)}
-                                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 10); return d.toISOString().slice(0, 10); })()}
+                                max={maxDateOfBirth}
                                 min="1900-01-01"
                                 className="w-full ps-11 pe-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs sm:text-sm font-medium text-slate-700 focus:bg-white focus:border-slate-300 outline-none"
                             />
@@ -1679,6 +1852,53 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
     const { t } = useTranslation("profile");
     const toast = useToast();
     const [copied, setCopied] = useState(false);
+    const [referralCoupons, setReferralCoupons] = useState<ProfileCouponCard[]>([]);
+
+    const readNumericStat = (source: any, keys: string[]) => {
+        for (const key of keys) {
+            const value = source?.[key];
+            const numeric = Number(value);
+            if (Number.isFinite(numeric)) {
+                return numeric;
+            }
+        }
+        return null;
+    };
+
+    const referralSummary = user?.referral_stats || user?.referralStats || user?.referral_summary || user?.profile?.referral_stats || user?.profile?.referralStats || {};
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadReferralCoupons = async () => {
+            try {
+                const response = await api.get("/marketing/coupons/");
+                const rawCoupons = Array.isArray(response.data)
+                    ? response.data
+                    : Array.isArray(response.data?.results)
+                        ? response.data.results
+                        : [];
+
+                const normalizedCoupons = rawCoupons
+                    .map((coupon: any, index: number) => normalizeProfileCoupon(coupon, index, t))
+                    .filter(Boolean) as ProfileCouponCard[];
+
+                if (mounted) {
+                    setReferralCoupons(normalizedCoupons);
+                }
+            } catch {
+                if (mounted) {
+                    setReferralCoupons([]);
+                }
+            }
+        };
+
+        void loadReferralCoupons();
+
+        return () => {
+            mounted = false;
+        };
+    }, [t]);
 
     // Prefer backend referral_code if present, else fallback to phone logic
     let referralCode = user?.referral_code;
@@ -1876,15 +2096,33 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
             {/* ── Stats (optional quick-look) ── */}
             <div className="grid grid-cols-3 gap-3 mb-8 md:mb-10">
                 {[
-                    { icon: <Users size={18} />, label: t("profile.referrals.stats.invited", { defaultValue: "Friends Invited" }), value: "—", bg: "bg-cyan-50", color: "text-cyan-600" },
-                    { icon: <ShoppingBag size={18} />, label: t("profile.referrals.stats.successful", { defaultValue: "Successful" }), value: "—", bg: "bg-emerald-50", color: "text-emerald-600" },
-                    { icon: <Percent size={18} />, label: t("profile.referrals.stats.earned", { defaultValue: "Coupons Earned" }), value: "—", bg: "bg-amber-50", color: "text-amber-600" },
+                    {
+                        icon: <Users size={18} />,
+                        label: t("profile.referrals.stats.invited", { defaultValue: "Friends Invited" }),
+                        value: readNumericStat(referralSummary, ["invited_count", "friends_invited", "referral_invites", "total_invited"]) ?? referralCoupons.length,
+                        bg: "bg-cyan-50",
+                        color: "text-cyan-600"
+                    },
+                    {
+                        icon: <ShoppingBag size={18} />,
+                        label: t("profile.referrals.stats.successful", { defaultValue: "Successful" }),
+                        value: readNumericStat(referralSummary, ["successful_count", "successful_referrals", "completed_referrals", "referral_success_count"]) ?? referralCoupons.filter((coupon) => coupon.typeKey === "referral").length,
+                        bg: "bg-emerald-50",
+                        color: "text-emerald-600"
+                    },
+                    {
+                        icon: <Percent size={18} />,
+                        label: t("profile.referrals.stats.earned", { defaultValue: "Coupons Earned" }),
+                        value: readNumericStat(referralSummary, ["coupons_earned", "earned_coupons", "referral_rewards", "reward_coupons"]) ?? referralCoupons.length,
+                        bg: "bg-amber-50",
+                        color: "text-amber-600"
+                    },
                 ].map((stat, i) => (
                     <div key={i} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 md:p-4 text-center">
                         <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-2 ${stat.color}`}>
                             {stat.icon}
                         </div>
-                        <div className="text-lg md:text-xl font-black text-slate-900">{stat.value}</div>
+                        <div className="text-lg md:text-xl font-black text-slate-900">{typeof stat.value === "number" ? stat.value : 0}</div>
                         <div className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{stat.label}</div>
                     </div>
                 ))}
@@ -1905,6 +2143,212 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                     <li>{t("profile.referrals.terms.6", { defaultValue: "The referral code must be applied at checkout during the friend's first purchase." })}</li>
                 </ol>
             </div>
+        </motion.div>
+    );
+};
+
+interface CouponsTabProps {
+    user?: any;
+}
+
+const CouponsTab: React.FC<CouponsTabProps> = () => {
+    const { t } = useTranslation("profile");
+    const toast = useToast();
+    const [coupons, setCoupons] = useState<ProfileCouponCard[]>([]);
+    const [couponsLoading, setCouponsLoading] = useState(true);
+    const [couponsError, setCouponsError] = useState<string | null>(null);
+    const [copiedCouponCode, setCopiedCouponCode] = useState<string | null>(null);
+    const copiedCouponResetRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadCoupons = async () => {
+            setCouponsLoading(true);
+            setCouponsError(null);
+
+            try {
+                const response = await api.get("/marketing/coupons/");
+                const rawCoupons = Array.isArray(response.data)
+                    ? response.data
+                    : Array.isArray(response.data?.results)
+                        ? response.data.results
+                        : [];
+
+                const normalizedCoupons = rawCoupons
+                    .map((coupon: any, index: number) => normalizeProfileCoupon(coupon, index, t))
+                    .filter(Boolean) as ProfileCouponCard[];
+
+                if (mounted) {
+                    setCoupons(normalizedCoupons);
+                }
+            } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+                if (mounted) {
+                    setCouponsError(
+                        error?.response?.data?.detail
+                        || t("profile.coupons.error", { defaultValue: "Unable to load your coupons right now." })
+                    );
+                }
+            } finally {
+                if (mounted) {
+                    setCouponsLoading(false);
+                }
+            }
+        };
+
+        void loadCoupons();
+
+        return () => {
+            mounted = false;
+            if (copiedCouponResetRef.current) {
+                window.clearTimeout(copiedCouponResetRef.current);
+            }
+        };
+    }, [t]);
+
+    const handleCopyCouponCode = async (code: string) => {
+        try {
+            await navigator.clipboard.writeText(code);
+            setCopiedCouponCode(code);
+            toast.show(t("profile.coupons.copied", { defaultValue: "Coupon code copied!" }), "success");
+
+            if (copiedCouponResetRef.current) {
+                window.clearTimeout(copiedCouponResetRef.current);
+            }
+
+            copiedCouponResetRef.current = window.setTimeout(() => {
+                setCopiedCouponCode(null);
+            }, 2500);
+        } catch {
+            toast.show(t("profile.coupons.error", { defaultValue: "Unable to load your coupons right now." }), "error");
+        }
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+        >
+            <div className="mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest mb-3">
+                    <Tag size={12} />
+                    {t("profile.coupons.available", { defaultValue: "Available coupon" })}
+                </div>
+                <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    {t("profile.coupons.title", { defaultValue: "Available Coupons" })}
+                </h2>
+                <p className="text-xs md:text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">
+                    {t("profile.coupons.subtitle", { defaultValue: "Your active discounts and rewards at a glance." })}
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-5 md:mb-6">
+                {[
+                    { label: t("profile.coupons.stats.available", { defaultValue: "Available" }), value: coupons.filter((coupon) => coupon.statusKey === "active").length, icon: <Tag size={16} />, bg: "bg-amber-50", color: "text-amber-600" },
+                    { label: t("profile.coupons.stats.referral", { defaultValue: "Referral" }), value: coupons.filter((coupon) => coupon.typeKey === "referral").length, icon: <Gift size={16} />, bg: "bg-cyan-50", color: "text-cyan-600" },
+                    { label: t("profile.coupons.stats.firstOrder", { defaultValue: "First Order" }), value: coupons.filter((coupon) => coupon.typeKey === "firstOrder").length, icon: <Percent size={16} />, bg: "bg-emerald-50", color: "text-emerald-600" },
+                ].map((stat) => (
+                    <div key={stat.label} className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center shrink-0`}>
+                            {stat.icon}
+                        </div>
+                        <div>
+                            <div className="text-lg font-black text-slate-900">{stat.value}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{stat.label}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {couponsLoading ? (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {[1, 2].map((i) => (
+                        <div key={i} className="rounded-2xl border border-slate-100 bg-white p-4 md:p-5 animate-pulse">
+                            <div className="h-5 w-28 bg-slate-100 rounded-full mb-4" />
+                            <div className="h-10 w-full bg-slate-100 rounded-xl mb-3" />
+                            <div className="h-3 w-3/4 bg-slate-100 rounded-full mb-2" />
+                            <div className="h-3 w-1/2 bg-slate-100 rounded-full mb-4" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="h-16 bg-slate-100 rounded-xl" />
+                                <div className="h-16 bg-slate-100 rounded-xl" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : couponsError ? (
+                <div className="rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-4 text-sm text-rose-600 font-medium">
+                    {couponsError}
+                </div>
+            ) : coupons.length === 0 ? (
+                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mx-auto mb-4 text-amber-500 shadow-sm border border-slate-100">
+                        <Tag size={22} />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900">{t("profile.coupons.empty", { defaultValue: "No coupons are available right now." })}</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                        {t("profile.coupons.emptyHint", { defaultValue: "Earn one through referrals or check back after a new campaign goes live." })}
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    {coupons.map((coupon) => (
+                        <div key={coupon.id} className="rounded-2xl border border-slate-100 bg-white p-4 md:p-5 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                        <Tag size={18} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{coupon.typeLabel}</div>
+                                        <h4 className="text-sm md:text-base font-bold text-slate-900 truncate">{coupon.title}</h4>
+                                    </div>
+                                </div>
+                                <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${coupon.statusClassName}`}>
+                                    {coupon.statusLabel}
+                                </span>
+                            </div>
+
+                            <div className="mt-4 flex items-center gap-3">
+                                <div className="flex-1 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 font-mono text-base md:text-lg font-black tracking-[0.2em] text-slate-900 truncate">
+                                    {coupon.code}
+                                </div>
+                                <button
+                                    onClick={() => handleCopyCouponCode(coupon.code)}
+                                    className={`px-3 py-3 rounded-xl transition-all ${copiedCouponCode === coupon.code ? "bg-emerald-500 text-white" : "bg-slate-900 text-white hover:bg-slate-800"}`}
+                                    title={t("profile.coupons.copied", { defaultValue: "Coupon code copied!" })}
+                                >
+                                    {copiedCouponCode === coupon.code ? <CheckCircle size={16} /> : <Copy size={16} />}
+                                </button>
+                            </div>
+
+                            <p className="mt-3 text-xs md:text-sm text-slate-500 leading-relaxed">
+                                {coupon.description}
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("profile.coupons.discount", { defaultValue: "Discount" })}</div>
+                                    <div className="mt-1 text-sm font-bold text-slate-900">{coupon.badge || "—"}</div>
+                                </div>
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("profile.coupons.validUntil", { defaultValue: "Valid until" })}</div>
+                                    <div className="mt-1 text-sm font-bold text-slate-900">{coupon.validUntil}</div>
+                                </div>
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("profile.coupons.usage", { defaultValue: "Usage" })}</div>
+                                    <div className="mt-1 text-sm font-bold text-slate-900">{coupon.usage}</div>
+                                </div>
+                                <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("profile.coupons.status", { defaultValue: "Status" })}</div>
+                                    <div className="mt-1 text-sm font-bold text-slate-900">{coupon.statusLabel}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </motion.div>
     );
 };

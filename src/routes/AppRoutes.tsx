@@ -149,6 +149,8 @@ export const AppRoutes: React.FC = () => {
             <Route path="/orders" element={<OrderPage />} />
             <Route path="/orders/:id" element={<OrderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/referrals" element={<ProfilePage initialSection="referrals" />} />
+            <Route path="/profile/coupons" element={<ProfilePage initialSection="coupons" />} />
             <Route path="/notifications" element={<NotificationPage />} />
             {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
           </Route>
