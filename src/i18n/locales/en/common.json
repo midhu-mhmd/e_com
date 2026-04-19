@@ -76,13 +76,13 @@
       "placeholder": "Enter your email",
       "subscribe": "Subscribe"
     },
-    "brandDescription": "India's freshest seafood, delivered to your doorstep. From harbour to home in hours — cleaned, packed & ready to cook.",
-    "location": "Kerala, India",
+    "brandDescription": "The UAE's freshest seafood, delivered to your doorstep. From harbour to home in hours — cleaned, packed & ready to cook.",
+    "location": "Sharjah Media City, Sharjah, UAE",
     "timing": "6 AM – 9 PM, Mon–Sun",
     "shop": "Shop",
     "company": "Company",
     "support": "Support",
-    "secure": "FSSAI Licensed • 100% Secure Payments",
+    "secure": "100% Secure Payments",
     "rights": "All rights reserved.",
     "shopLinks": [
       {
@@ -135,12 +135,6 @@
         "label": "Track Order"
       },
       {
-        "label": "Shipping Info"
-      },
-      {
-        "label": "Returns & Refunds"
-      },
-      {
         "label": "Contact Us"
       },
       {
@@ -153,12 +147,6 @@
       },
       {
         "label": "Terms of Service"
-      },
-      {
-        "label": "Refund Policy"
-      },
-      {
-        "label": "Cookie Policy"
       }
     ],
     "download": "Download App",

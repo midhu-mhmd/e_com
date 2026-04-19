@@ -39,6 +39,20 @@ const formatDate = (d: string, lang: string = "en") =>
 const formatDateTime = (d: string, lang: string = "en") =>
     new Date(d).toLocaleString(lang === 'ar' ? 'ar-AE' : lang === 'cn' ? 'zh-CN' : 'en-AE', { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
+const getFriendlyReviewErrorMessage = (apiErr: any, fallback: string) => {
+    const detail =
+        (typeof apiErr === "string" && apiErr) ||
+        (typeof apiErr?.detail === "string" && apiErr.detail) ||
+        (typeof apiErr?.message === "string" && apiErr.message) ||
+        fallback;
+
+    if (/request was throttled|available in \d+ seconds?/i.test(detail)) {
+        return "You're doing that too often. Please wait a moment and try again.";
+    }
+
+    return detail;
+};
+
 /* ══════════════════════════════════════════════════
    REVIEW MODAL (MINIMAL & INDUSTRY STANDARD)
    ══════════════════════════════════════════════════ */
@@ -123,6 +137,7 @@ const ReviewModal: React.FC<{
         })
     );
     const [submitting, setSubmitting] = useState(false);
+    const [submissionLocked, setSubmissionLocked] = useState(false);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [direction, setDirection] = useState(1);
 
@@ -205,17 +220,20 @@ const ReviewModal: React.FC<{
     };
 
     const updateField = (field: keyof ReviewForm, value: any) => {
+        setSubmissionLocked(false);
         setForms((prev) =>
             prev.map((f, i) => (i === currentIdx ? { ...f, [field]: value } : f))
         );
     };
 
     const handleNext = () => {
+        setSubmissionLocked(false);
         setDirection(1);
         setCurrentIdx((i) => i + 1);
     };
 
     const handleBack = () => {
+        setSubmissionLocked(false);
         setDirection(-1);
         setCurrentIdx((i) => Math.max(0, i - 1));
     };
@@ -255,13 +273,22 @@ const ReviewModal: React.FC<{
         } catch (err: any) {
             const status = err?.response?.status;
             const apiErr = err?.response?.data;
-            // Surface as much backend detail as possible for quick diagnosis
-            const detail =
-                (typeof apiErr === "string" && apiErr) ||
-                apiErr?.detail ||
-                apiErr?.message ||
-                JSON.stringify(apiErr);
-            const msg = status ? `Error ${status}: ${detail || t("review.errorMessage")}` : (detail || t("review.errorMessage"));
+            const msg = getFriendlyReviewErrorMessage(apiErr, t("review.errorMessage"));
+
+            const existingReviewId = Number(apiErr?.existing_review_id);
+            const canEditExistingReview = apiErr?.can_edit === true && Number.isFinite(existingReviewId) && existingReviewId > 0;
+
+            if (canEditExistingReview) {
+                setForms((prev) =>
+                    prev.map((form, index) =>
+                        index === currentIdx
+                            ? { ...form, review_id: existingReviewId }
+                            : form
+                    )
+                );
+            }
+
+            setSubmissionLocked(true);
             console.error("Review submission error:", { status, data: apiErr });
             toast.show(msg, "error");
         } finally {
@@ -430,7 +457,7 @@ const ReviewModal: React.FC<{
                             ) : (
                                 <button
                                     onClick={handleSubmitAll}
-                                    disabled={submitting || current.rating === 0}
+                                    disabled={submitting || submissionLocked || current.rating === 0}
                                     className="w-full sm:w-auto px-8 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {submitting ? <Loader2 size={16} className="animate-spin" /> : null}

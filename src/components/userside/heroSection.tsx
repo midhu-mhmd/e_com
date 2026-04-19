@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useBanners } from '../../hooks/queries';
+import { useBanners, useDeliveryOffers } from '../../hooks/queries';
 import { BRAND_COLORS } from '../../constants/theme';
 
 const Hero: React.FC = () => {
@@ -13,6 +13,7 @@ const Hero: React.FC = () => {
   const [, setDirection] = useState(1);
 
   const { data: allBanners, isLoading: loading } = useBanners();
+  const { data: deliveryOffers = [], isLoading: deliveryOffersLoading } = useDeliveryOffers();
 
   const banners = useMemo(() => {
     if (!allBanners) return [];
@@ -44,9 +45,27 @@ const Hero: React.FC = () => {
     return () => clearInterval(id);
   }, [next, banners.length]);
 
+  const media = banners[current];
+  const title = media?.title;
+  const tag = media?.tag;
+  const subtitle = media?.subtitle;
+  const highlight = media?.highlight;
+  const cta = media?.cta_text || null;
+
+  const promoTickerItems = useMemo(() => {
+    if (deliveryOffers.length === 0) return [];
+
+    const items = deliveryOffers
+      .map((offer) => offer.tickerText)
+      .map((message) => message.trim())
+      .filter(Boolean);
+
+    return items.length > 0 ? [...items, ...items] : [];
+  }, [deliveryOffers]);
+
   if (loading) {
     return (
-      <div className="w-full h-[420px] bg-slate-50 flex items-center justify-center">
+      <div className="w-full h-105 bg-slate-50 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin"></div>
           <p className="mt-4 text-slate-400 font-medium">{t("hero.loading", "Loading amazing deals...")}</p>
@@ -58,21 +77,6 @@ const Hero: React.FC = () => {
   if (banners.length === 0) {
     return null;
   }
-
-  const media = banners[current];
-
-
-  const title = media.title;
-  const tag = media.tag;
-  const subtitle = media.subtitle;
-  const highlight = media.highlight;
-  const cta = media.cta_text || null;
-  const promoMessages = [
-    'Free delivery for orders above AED 60',
-    'Refer a friend and get 20% OFF',
-    'Get a discount on your first order',
-  ];
-  const promoTickerItems = [...promoMessages, ...promoMessages];
 
   const zoomVariants = {
     enter: { scale: 1.1, opacity: 0 },
@@ -91,7 +95,7 @@ const Hero: React.FC = () => {
     <div className="w-full bg-white font-sans text-slate-800 select-none pb-4">
       <section className="relative w-full  mx-auto px-0 sm:px-4 pt-2 sm:pt-4 group/carousel">
         <div
-          className="relative h-[300px] sm:h-[360px] md:h-[420px] w-full overflow-hidden sm:rounded-[2rem] shadow-xl shadow-slate-200"
+          className="relative h-75 sm:h-90 md:h-105 w-full overflow-hidden sm:rounded-4xl shadow-xl shadow-slate-200"
           style={{ backgroundColor: BRAND_COLORS.BLACK }}
         >
           <AnimatePresence initial={false}>
@@ -115,8 +119,8 @@ const Hero: React.FC = () => {
                 transition={{ duration: 40, ease: 'easeOut' }}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent sm:via-black/40 rtl:bg-gradient-to-l" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+              <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/50 to-transparent sm:via-black/40 rtl:bg-linear-to-l" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-60" />
             </motion.div>
           </AnimatePresence>
 
@@ -148,7 +152,7 @@ const Hero: React.FC = () => {
 
 
                   <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white leading-[1.1] mb-3 tracking-tight">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200">
+                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-slate-200">
                       {title}
                     </span>
                   </h1>
@@ -170,7 +174,7 @@ const Hero: React.FC = () => {
                         <span className="relative z-10 flex items-center gap-2">
                           {cta} <ChevronRight size={16} className="rtl-flip" />
                         </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-cyan-500" />
+                        <div className="absolute inset-0 bg-linear-to-r from-cyan-600 to-cyan-500" />
                       </button>
                     </div>
                   )}
@@ -182,7 +186,7 @@ const Hero: React.FC = () => {
 
 
 
-          <div className="absolute bottom-6 end-6 sm:end-auto sm:start-12 md:start-20 lg:start-24 z-20 flex gap-2">
+          <div className="absolute bottom-6 inset-e-6 sm:inset-e-auto sm:inset-s-12 md:inset-s-20 lg:inset-s-24 z-20 flex gap-2">
             {banners.map((_, i) => (
               <button
                 key={i}
@@ -195,21 +199,37 @@ const Hero: React.FC = () => {
         </div>
       </section>
 
-      <div className="px-0 sm:px-4 mt-2 sm:mt-3">
-        <div className="border border-slate-200 bg-slate-50 sm:rounded-2xl overflow-hidden">
-          <div className="promo-ticker-track flex items-center gap-2 w-max px-2 py-2.5 sm:px-3 sm:py-3">
-            {promoTickerItems.map((message, index) => (
-              <div
-                key={`${message}-${index}`}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-700 shrink-0"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                <span>{message}</span>
+      {(deliveryOffersLoading || promoTickerItems.length > 0) && (
+        <div className="px-0 sm:px-4 mt-2 sm:mt-3">
+          <div className="border border-slate-200 bg-slate-50 sm:rounded-2xl overflow-hidden">
+            {deliveryOffersLoading && promoTickerItems.length === 0 ? (
+              <div className="flex items-center gap-2 w-max px-2 py-2.5 sm:px-3 sm:py-3">
+                {[0, 1, 2].map((index) => (
+                  <div
+                    key={index}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-300 shrink-0 animate-pulse"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" />
+                    <span>Loading offers</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="promo-ticker-track flex items-center gap-2 w-max px-2 py-2.5 sm:px-3 sm:py-3">
+                {promoTickerItems.map((message, index) => (
+                  <div
+                    key={`${message}-${index}`}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-700 shrink-0"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
+                    <span>{message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
       <style>{`
         .promo-ticker-track {

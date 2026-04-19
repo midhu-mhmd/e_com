@@ -11,17 +11,18 @@ import {
     ArrowRight,
     CreditCard,
     Smartphone,
-    Banknote,
     ShieldCheck,
 } from "lucide-react";
 
 
 import { useTranslation } from "react-i18next";
+import { useCategories } from "../../../hooks/queries";
 import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /* ── Component ── */
 const Footer: React.FC = () => {
     const { t } = useTranslation("common");
+    const { data: dynamicCategories, isLoading: isCategoriesLoading } = useCategories();
     const year = new Date().getFullYear();
 
     const shopLinks = t("footer.shopLinks", { returnObjects: true }) as { label: string }[];
@@ -129,13 +130,30 @@ const Footer: React.FC = () => {
                                 {t("footer.shop")}
                             </h4>
                             <ul className="space-y-2.5">
-                                {Array.isArray(shopLinks) && shopLinks.map((link, idx) => (
-                                    <li key={idx}>
-                                        <a href="/" className="text-xs hover:text-yellow-400 transition-colors">
-                                            {link.label}
-                                        </a>
-                                    </li>
-                                ))}
+                                {isCategoriesLoading ? (
+                                    [1, 2, 3, 4, 5].map((i) => (
+                                        <li key={i} className="h-3 w-24 bg-cyan-900 animate-pulse rounded" />
+                                    ))
+                                ) : (
+                                    dynamicCategories?.slice(0, 8).map((cat) => (
+                                        <li key={cat.id}>
+                                            <a
+                                                href={`/shop?category_name=${encodeURIComponent(cat.name)}`}
+                                                className="text-xs hover:text-yellow-400 transition-colors"
+                                            >
+                                                {cat.name}
+                                            </a>
+                                        </li>
+                                    )) || (
+                                        Array.isArray(shopLinks) && shopLinks.map((link, idx) => (
+                                            <li key={idx}>
+                                                <a href="/" className="text-xs hover:text-yellow-400 transition-colors">
+                                                    {link.label}
+                                                </a>
+                                            </li>
+                                        ))
+                                    )
+                                )}
                             </ul>
                         </div>
 
@@ -199,8 +217,6 @@ const Footer: React.FC = () => {
                             <div className="flex flex-wrap gap-2">
                                 {[
                                     { icon: <CreditCard size={14} />, label: t("footer.paymentMethods.cards") },
-                                    { icon: <Smartphone size={14} />, label: t("footer.paymentMethods.upi") },
-                                    { icon: <Banknote size={14} />, label: t("footer.paymentMethods.cod") },
                                 ].map((pm) => (
                                     <div
                                         key={pm.label}

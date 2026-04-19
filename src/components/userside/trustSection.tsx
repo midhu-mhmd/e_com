@@ -83,7 +83,7 @@ const CategoryCard: React.FC<{ category: CategoryDto; index: number }> = ({
       style={{ transitionDelay: `${index * 80}ms` }}
     >
       <Link
-        to={`/products?category=${encodeURIComponent(category.slug)}`}
+        to={`/products?category_name=${encodeURIComponent(category.name)}`}
         className="group block text-center"
       >
         <div className="aspect-square rounded-[22%] overflow-hidden bg-zinc-50 border border-zinc-100 shadow-sm group-hover:shadow-lg group-hover:-translate-y-0.5 transition-all duration-300">

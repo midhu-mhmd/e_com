@@ -71,6 +71,7 @@ export type ProductsQuery = {
   search?: string;
   category?: string;
   category_slug?: string;
+  category_name?: string;
   min_price?: number;
   max_price?: number;
   is_available?: boolean;

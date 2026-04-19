@@ -191,6 +191,22 @@ const UserProductsPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
     const category = searchParams.get("category");
+    const categoryName = searchParams.get("category_name");
+    const fixedCategories = ["Fresh Fish", "Frozen Fish", "Live Fish", "Light Fish"];
+
+    const handleAllCategories = useCallback(() => {
+        const params = new URLSearchParams(searchParams);
+        params.delete("category");
+        params.delete("category_name");
+        setSearchParams(params);
+    }, [searchParams, setSearchParams]);
+
+    const handleCategoryChipClick = useCallback((name: string) => {
+        const params = new URLSearchParams(searchParams);
+        params.delete("category");
+        params.set("category_name", name);
+        setSearchParams(params);
+    }, [searchParams, setSearchParams]);
 
     // Debounce the search term for data fetching
     useEffect(() => {
@@ -206,16 +222,18 @@ const UserProductsPage: React.FC = () => {
             const params: any = {};
             if (searchTerm) params.q = searchTerm;
             if (category) params.category = category;
+            if (categoryName) params.category_name = categoryName;
             setSearchParams(params, { replace: true });
         }, 500);
 
         return () => clearTimeout(handler);
-    }, [searchTerm, category, setSearchParams]);
+    }, [searchTerm, category, categoryName, setSearchParams]);
 
     // ✅ TanStack Infinite Query — Load More pagination
     const filters = {
         ...(debouncedSearch && { search: debouncedSearch, q: debouncedSearch }),
         ...(category && (isNaN(Number(category)) ? { category_slug: category } : { category })),
+        ...(categoryName && { category_name: categoryName }),
     };
     const {
         data,
@@ -321,29 +339,72 @@ const UserProductsPage: React.FC = () => {
                 <meta name="description" content={category ? `Browse our freshest selection of ${category}. Quality seafood and meat delivered fresh.` : "Browse our full catalog of premium fresh seafood and meat products locally sourced and delivered in Dubai."} />
             </Helmet>
 
-            {/* ─── Static Filter Bar ─── */}
-            <div className="relative z-30 bg-white border-b border-slate-100 shadow-sm">
-                <div className="  mx-auto px-4 sm:px-6 py-4">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* ─── Sticky Premium Filter & Search Bar ─── */}
+            <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-300">
+                <div className="mx-auto px-4 sm:px-6 py-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 lg:gap-8">
+                        
+                        {/* Horizontal Category Scroll - Pill Design */}
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0 lg:order-1 lg:flex-1">
+                            {/* All Button */}
+                            <button
+                                onClick={handleAllCategories}
+                                className={`shrink-0 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-tight transition-all duration-300 whitespace-nowrap active:scale-95 ${
+                                    !category && !categoryName
+                                        ? "bg-[#0b4e62] text-white shadow-lg shadow-[#0b4e62]/20"
+                                        : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200/50"
+                                }`}
+                            >
+                                {t("list.all", { defaultValue: "All Items" })}
+                            </button>
 
-                        {/* Search Input */}
-                        <div className="relative w-full md:w-96 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors" size={20} />
+                            {/* Category Chips */}
+                            {fixedCategories.map((name) => {
+                                const isActive = categoryName?.toLowerCase() === name.toLowerCase();
+                                return (
+                                    <button
+                                        key={name}
+                                        onClick={() => handleCategoryChipClick(name)}
+                                        className={`shrink-0 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-tight transition-all duration-300 whitespace-nowrap active:scale-95 ${
+                                            isActive
+                                                ? "bg-[#0b4e62] text-white shadow-lg shadow-[#0b4e62]/20"
+                                                : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200/50"
+                                        }`}
+                                    >
+                                        {name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Search Input - Desktop: Inline | Mobile: Below Categories */}
+                        <div className="relative group w-full lg:max-w-md lg:order-2">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Search className="text-slate-400 group-focus-within:text-[#0b4e62] transition-colors duration-200" size={18} />
+                            </div>
                             <input
                                 type="text"
                                 placeholder={t("list.searchPlaceholder")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 dir="auto"
-                                className="w-full pl-12 pr-4 py-3 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:bg-white focus:border-cyan-200 focus:ring-4 focus:ring-cyan-500/10 rounded-2xl text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400"
+                                className="w-full pl-11 pr-4 py-3 bg-slate-100/50 hover:bg-slate-100 border-none focus:ring-2 focus:ring-[#0b4e62]/20 rounded-2xl text-sm font-medium text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400/80"
                             />
+                            {searchTerm && (
+                                <button 
+                                    onClick={() => setSearchTerm("")}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <span className="text-xs font-bold uppercase tracking-tighter">Clear</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* ─── Product Grid ─── */}
-            <main className="  mx-auto px-4 sm:px-6 py-8">
+            <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
                 {loading && products.length === 0 ? (
                     <div className="flex items-center justify-center min-h-[50vh]">
                         <ShrimpLoader />

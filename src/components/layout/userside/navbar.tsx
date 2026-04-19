@@ -133,7 +133,7 @@ const Navbar: React.FC = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                        {/* Desktop Links */}
+                        {/* Desktop Shop Link */}
                         <Link
                             to="/products"
                             className="hidden md:block text-xs font-bold text-slate-700 hover:text-cyan-600 transition-colors px-2"
@@ -141,20 +141,11 @@ const Navbar: React.FC = () => {
                             {t('nav.shop')}
                         </Link>
 
-                        {/* ✅ Mobile 'All Products' Icon (Hidden on Desktop) */}
-                        <Link
-                            to="/products"
-                            className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-xl hover:bg-slate-50 text-slate-500 hover:text-cyan-600 transition-colors"
-                            aria-label={t('nav.allProducts')}
-                        >
-                            <Package size={20} />
-                        </Link>
-
-                        {/* ✅ Cart Icon - Hidden on Mobile, Visible on Desktop */}
+                        {/* ✅ Cart Icon - Visible on all screen sizes */}
                         {isAuthenticated ? (
                             <Link
                                 to="/cart"
-                                className="relative hidden md:flex flex-col items-center gap-0.5 min-w-14 py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
+                                className="relative flex flex-col items-center gap-0.5 min-w-14 py-1.5 rounded-xl hover:bg-stone-50 transition-colors group"
                             >
                                 <div className="relative flex justify-center w-full">
                                     <ShoppingCart size={18} className="text-stone-400 group-hover:text-cyan-600 transition-colors" />

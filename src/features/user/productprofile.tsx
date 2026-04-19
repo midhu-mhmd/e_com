@@ -68,6 +68,11 @@ const normalizeReviewImage = (src: string): string => {
   return `${base}/${s.replace(/^\.?\/*/, "")}`;
 };
 
+const isCustomerReview = (review: { user_name?: string | null; user?: number | null }) => {
+  const author = (review.user_name || "").trim().toLowerCase();
+  return author !== "admin" && !author.includes("admin");
+};
+
 const ProductProfile: React.FC = () => {
   const { t } = useTranslation("product");
 
@@ -81,6 +86,7 @@ const ProductProfile: React.FC = () => {
   const { data: product = null, isLoading: loading, isError } = useProductDetails(productId);
   const error = isError ? t("details.errorLoad") : null;
   const { data: reviewsData } = useProductReviews(productId);
+  const visibleReviews = (reviewsData?.results || []).filter(isCustomerReview);
 
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -414,12 +420,12 @@ const ProductProfile: React.FC = () => {
             </div>
             
 
-          {/* Actions */}
-          <div className="flex gap-3">
+          {/* Actions - Responsive layout for all screen sizes */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => addItemToCart("cart")}
               disabled={!product.is_available || product.stock === 0}
-              className="flex-1 py-4 bg-stone-900 text-white text-base font-black rounded-2xl hover:bg-stone-800 shadow-xl shadow-stone-900/10 hover:shadow-stone-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
+              className="flex-1 py-3 sm:py-4 bg-stone-900 text-white text-sm sm:text-base font-black rounded-2xl hover:bg-stone-800 shadow-xl shadow-stone-900/10 hover:shadow-stone-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
             >
               <ShoppingCart size={22} />
               {product.is_available && product.stock > 0 ? t("details.addToCart") : t("details.outOfStock")}
@@ -519,15 +525,15 @@ const ProductProfile: React.FC = () => {
             </div>
           )}
 
-          {reviewsData?.results && reviewsData.results.length > 0 && (
+          {visibleReviews.length > 0 && (
             <div className="space-y-4 pt-1">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">
-                  {t("details.reviews.title", { defaultValue: "Reviews" })} ({product.total_reviews})
+                  {t("details.reviews.title", { defaultValue: "Reviews" })} ({visibleReviews.length})
                 </p>
               </div>
               <div className="space-y-3">
-                {reviewsData.results.map((r) => (
+                {visibleReviews.map((r) => (
                   <div key={r.id} className="p-4 bg-stone-50 border border-stone-100 rounded-2xl">
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2">
@@ -571,9 +577,9 @@ const ProductProfile: React.FC = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════════════
-          MOBILE STICKY CTA  (hidden on lg+)
+          MOBILE STICKY CTA  (removed - using desktop buttons across all sizes)
       ═══════════════════════════════════════════════════════ */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-stone-100 px-4 py-3 flex gap-3 shadow-[0_-8px_28px_rgba(0,0,0,0.09)]">
+      <div className="hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-stone-100 px-4 py-3 flex gap-3 shadow-[0_-8px_28px_rgba(0,0,0,0.09)]">
         <button
           onClick={() => addItemToCart("cart")}
           disabled={!product.is_available || product.stock === 0}
@@ -855,7 +861,7 @@ const ProductProfile: React.FC = () => {
               </div>
             )}
 
-            {reviewsData?.results && reviewsData.results.length > 0 && (
+            {visibleReviews.length > 0 && (
               <div className="bg-white rounded-3xl border border-stone-100 p-6">
                 <div className="flex items-end justify-between mb-6">
                   <div>
@@ -864,14 +870,14 @@ const ProductProfile: React.FC = () => {
                     </p>
                     <p className="text-stone-500 text-sm font-bold">
                       {t("details.reviews.basedOn", {
-                        count: product.total_reviews,
-                        defaultValue: `Based on ${product.total_reviews} reviews`,
+                        count: visibleReviews.length,
+                        defaultValue: `Based on ${visibleReviews.length} reviews`,
                       })}
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {reviewsData.results.map((r) => (
+                  {visibleReviews.map((r) => (
                     <div key={r.id} className="p-5 rounded-2xl border border-stone-100 bg-stone-50 hover:bg-white transition-colors shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">

@@ -4,6 +4,56 @@ import { bannerApi, type BannerDto } from "../features/admin/banners/bannerApi";
 import { productsApi, type ProductsQuery } from "../features/admin/products/productApi";
 import { profileApi } from "../features/user/profileApi";
 import { reviewsApi } from "../features/admin/reviews/reviewsApi";
+import { api } from "../services/api";
+
+export interface DeliveryOfferDto {
+    id: number;
+    title: string;
+    subtitle: string | null;
+    badge: string | null;
+    description: string | null;
+    cta_text: string | null;
+    cta_link: string | null;
+    tickerText: string;
+    is_active: boolean;
+    order: number;
+}
+
+const normalizeDeliveryOffer = (item: any, index: number): DeliveryOfferDto => {
+    const title = String(
+        item?.title ??
+        item?.name ??
+        item?.message ??
+        item?.description ??
+        item?.subtitle ??
+        item?.code ??
+        `Offer ${index + 1}`
+    ).trim();
+    const subtitle = item?.subtitle ?? item?.short_description ?? null;
+    const badge = item?.badge ?? item?.tag ?? item?.label ?? item?.code ?? null;
+    const description = item?.description ?? item?.message ?? null;
+    const ctaText = item?.cta_text ?? item?.cta ?? item?.call_to_action ?? null;
+    const ctaLink = item?.cta_link ?? item?.link ?? null;
+    const tickerParts = [badge, title, subtitle].map((part) => String(part ?? "").trim()).filter(Boolean);
+
+    return {
+        id: Number(item?.id ?? index + 1),
+        title,
+        subtitle: subtitle ? String(subtitle).trim() : null,
+        badge: badge ? String(badge).trim() : null,
+        description: description ? String(description).trim() : null,
+        cta_text: ctaText ? String(ctaText).trim() : null,
+        cta_link: ctaLink ? String(ctaLink).trim() : null,
+        tickerText: tickerParts.join(" • ") || title,
+        is_active: item?.is_active ?? item?.active ?? true,
+        order: Number(item?.sort_order ?? item?.order ?? item?.id ?? index + 1),
+    };
+};
+
+type DeliveryOffersResponse = {
+    results?: any[];
+    data?: any[];
+};
 
 /* ══════════════════════════════════════════
    Banner Hooks
@@ -14,6 +64,27 @@ export const useBanners = () =>
     useQuery<BannerDto[]>({
         queryKey: ["banners"],
         queryFn: () => bannerApi.list(),
+        staleTime: 5 * 60 * 1000,
+    });
+
+export const useDeliveryOffers = () =>
+    useQuery<DeliveryOfferDto[]>({
+        queryKey: ["delivery-offers"],
+        queryFn: async () => {
+            const response = await api.get<DeliveryOffersResponse | DeliveryOfferDto[] | any>("/marketing/promotional/delivery_offers/");
+            const rawItems = Array.isArray(response.data)
+                ? response.data
+                : Array.isArray(response.data?.results)
+                    ? response.data.results
+                    : Array.isArray(response.data?.data)
+                        ? response.data.data
+                        : [];
+
+            return rawItems
+                .map((item: any, index: number) => normalizeDeliveryOffer(item, index))
+                .filter((item) => item.is_active !== false)
+                .sort((left, right) => left.order - right.order);
+        },
         staleTime: 5 * 60 * 1000,
     });
 
@@ -89,3 +160,14 @@ export const useUserProfile = (enabled: boolean = true) => {
         initialData: user || undefined,
     });
 };
+
+/* ══════════════════════════════════════════
+   Category Hooks
+   ══════════════════════════════════════════ */
+
+export const useCategories = () =>
+    useQuery({
+        queryKey: ["categories"],
+        queryFn: () => productsApi.listCategories(),
+        staleTime: 10 * 60 * 1000, // Categories change slowly
+    });

@@ -5,6 +5,11 @@ import InfiniteScrollTrack from "../ui/InfiniteScrollTrack";
 
 import { reviewsApi, type ReviewDto } from "../../features/admin/reviews/reviewsApi";
 
+const isCustomerReview = (review: ReviewDto) => {
+    const author = (review.user_name || "").trim().toLowerCase();
+    return author !== "admin" && !author.includes("admin");
+};
+
 /* ── Component ── */
 const ReviewsSection: React.FC = () => {
     const { t } = useTranslation("home");
@@ -19,7 +24,7 @@ const ReviewsSection: React.FC = () => {
             try {
                 const data = await reviewsApi.list({ limit: 10 });
                 // Show only 4-5 star reviews for social proof
-                const results = data.results || [];
+                const results = (data.results || []).filter(isCustomerReview);
                 const good = results.filter((r) => r.rating >= 4);
                 setReviews(good.length > 0 ? good : results);
             } catch (err) {

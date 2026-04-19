@@ -5,7 +5,7 @@ import {
     User, Mail, Phone, LogOut, Camera, Save, Loader2, Calendar,
     MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe, Star,
     ChevronRight, CheckCircle, Hash, Clock, Truck, XCircle, AlertCircle,
-    ChevronDown, Gift, Copy, Share2, Users, ShoppingBag, Percent, Tag
+    ChevronDown, Gift, Copy, Share2, Percent, Tag
 } from "lucide-react";
 import referralInviteImg from "../../assets/referral/referral_invite.png";
 import referralPurchaseImg from "../../assets/referral/referral_purchase.png";
@@ -1854,19 +1854,6 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
     const [copied, setCopied] = useState(false);
     const [referralCoupons, setReferralCoupons] = useState<ProfileCouponCard[]>([]);
 
-    const readNumericStat = (source: any, keys: string[]) => {
-        for (const key of keys) {
-            const value = source?.[key];
-            const numeric = Number(value);
-            if (Number.isFinite(numeric)) {
-                return numeric;
-            }
-        }
-        return null;
-    };
-
-    const referralSummary = user?.referral_stats || user?.referralStats || user?.referral_summary || user?.profile?.referral_stats || user?.profile?.referralStats || {};
-
     useEffect(() => {
         let mounted = true;
 
@@ -2093,55 +2080,72 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                 </button>
             </div>
 
-            {/* ── Stats (optional quick-look) ── */}
-            <div className="grid grid-cols-3 gap-3 mb-8 md:mb-10">
-                {[
-                    {
-                        icon: <Users size={18} />,
-                        label: t("profile.referrals.stats.invited", { defaultValue: "Friends Invited" }),
-                        value: readNumericStat(referralSummary, ["invited_count", "friends_invited", "referral_invites", "total_invited"]) ?? referralCoupons.length,
-                        bg: "bg-cyan-50",
-                        color: "text-cyan-600"
-                    },
-                    {
-                        icon: <ShoppingBag size={18} />,
-                        label: t("profile.referrals.stats.successful", { defaultValue: "Successful" }),
-                        value: readNumericStat(referralSummary, ["successful_count", "successful_referrals", "completed_referrals", "referral_success_count"]) ?? referralCoupons.filter((coupon) => coupon.typeKey === "referral").length,
-                        bg: "bg-emerald-50",
-                        color: "text-emerald-600"
-                    },
-                    {
-                        icon: <Percent size={18} />,
-                        label: t("profile.referrals.stats.earned", { defaultValue: "Coupons Earned" }),
-                        value: readNumericStat(referralSummary, ["coupons_earned", "earned_coupons", "referral_rewards", "reward_coupons"]) ?? referralCoupons.length,
-                        bg: "bg-amber-50",
-                        color: "text-amber-600"
-                    },
-                ].map((stat, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-100 rounded-2xl p-3 md:p-4 text-center">
-                        <div className={`w-9 h-9 ${stat.bg} rounded-xl flex items-center justify-center mx-auto mb-2 ${stat.color}`}>
-                            {stat.icon}
-                        </div>
-                        <div className="text-lg md:text-xl font-black text-slate-900">{typeof stat.value === "number" ? stat.value : 0}</div>
-                        <div className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{stat.label}</div>
-                    </div>
-                ))}
-            </div>
+            {/* ── Referral & Coupon Section ── */}
+            <div>
+                <h3 className="text-center text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-wider mb-6 md:mb-8">
+                    {t("profile.referrals.coupons.title", { defaultValue: "Referral & Coupon" })}
+                </h3>
 
-            {/* ── Terms & Conditions ── */}
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 md:p-5">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <AlertCircle size={14} className="text-slate-400" />
-                    {t("profile.referrals.terms.title", { defaultValue: "Terms and Conditions" })}
-                </h4>
-                <ol className="list-decimal list-inside text-[10px] md:text-[11px] text-slate-500 space-y-1.5 leading-relaxed">
-                    <li>{t("profile.referrals.terms.1", { defaultValue: "Your 20% Discount Coupon is valid for 3 months from the date of issue and can be used only once." })}</li>
-                    <li>{t("profile.referrals.terms.2", { defaultValue: "Maximum discount that can be availed is AED 20." })}</li>
-                    <li>{t("profile.referrals.terms.3", { defaultValue: "This offer is ONLY valid in UAE." })}</li>
-                    <li>{t("profile.referrals.terms.4", { defaultValue: "This offer is not transferable." })}</li>
-                    <li>{t("profile.referrals.terms.5", { defaultValue: "Simak Fresh reserves the right to modify or terminate this program at any time." })}</li>
-                    <li>{t("profile.referrals.terms.6", { defaultValue: "The referral code must be applied at checkout during the friend's first purchase." })}</li>
-                </ol>
+                {referralCoupons.length === 0 ? (
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center flex flex-col items-center">
+                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 text-cyan-500 shadow-sm border border-slate-100">
+                            <Tag size={22} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-900">{t("profile.referrals.coupons.empty", { defaultValue: "No referral coupons yet." })}</p>
+                        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                            {t("profile.referrals.coupons.emptyHint", { defaultValue: "Invite your friends to earn discount coupons!" })}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        {referralCoupons.map((coupon) => (
+                            <div key={coupon.id} className="relative flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                <div className="p-4 flex-1 flex flex-col min-w-0 bg-slate-50">
+                                    <div className="flex items-center justify-between gap-3 mb-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+                                                <Tag size={18} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{coupon.typeLabel}</div>
+                                                <h4 className="text-sm md:text-base font-bold text-slate-900 truncate tracking-tight">{coupon.title}</h4>
+                                            </div>
+                                        </div>
+                                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${coupon.statusClassName}`}>
+                                            {coupon.statusLabel}
+                                        </span>
+                                    </div>
+                                    
+                                    <p className="text-[11px] text-slate-500 mb-4 line-clamp-2">{coupon.description}</p>
+
+                                    <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+                                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                                            <Clock size={12} className="text-slate-400" />
+                                            {t("profile.coupons.validUntil", { defaultValue: "Valid until" })}: <span className="text-slate-700 font-bold">{coupon.validUntil || t("profile.coupons.noExpiry", { defaultValue: "No expiry" })}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                                        <div className="flex-1 px-3 py-1.5 bg-slate-200/50 rounded-lg text-xs font-mono font-bold text-slate-700 tracking-wider truncate">
+                                            {coupon.code}
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(coupon.code)
+                                                    .then(() => toast.show(t("profile.coupons.copied", { defaultValue: "Coupon code copied!" }), "success"))
+                                                    .catch(() => toast.show(t("profile.coupons.error", { defaultValue: "Failed to copy code." }), "error"));
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+                                            title="Copy Code"
+                                        >
+                                            <Copy size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </motion.div>
     );
