@@ -60,6 +60,7 @@ type Order = {
   deliveryCharge: number;
   tipAmount: number;
   deliveryDate: string | null;
+  deliverySlot: string | number | null;
   deliverySlotDetails: string | null;
   deliveryNotes: string | null;
   items: OrderItem[];
@@ -243,6 +244,7 @@ const OrderDetailsPage: React.FC = () => {
           deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
           tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
           deliveryDate: raw.preferred_delivery_date ?? null,
+          deliverySlot: raw.preferred_delivery_slot ?? null,
           deliverySlotDetails: formatPreferredDeliverySlotDetails(raw.preferred_delivery_slot_details ?? null),
           deliveryNotes: raw.delivery_notes ?? null,
           items: Array.isArray(raw.items)
@@ -405,7 +407,7 @@ const OrderDetailsPage: React.FC = () => {
                     onClick={() => setIsStatusOpen(!isStatusOpen)}
                     className="bg-black text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-gray-800 transition-colors"
                   >
-                    Update Status <ChevronLeft size={14} className={`transition-transform rotate-90 ${isStatusOpen ? 'rotate-[-90deg]' : ''}`} />
+                    Update Status <ChevronLeft size={14} className={`transition-transform rotate-90 ${isStatusOpen ? '-rotate-90' : ''}`} />
                   </button>
                 </div>
                 {isStatusOpen && (
@@ -512,6 +514,7 @@ const OrderDetailsPage: React.FC = () => {
                             deliveryCharge: parseFloat(raw.delivery_charge ?? "0") || 0,
                             tipAmount: parseFloat(raw.tip_amount ?? "0") || 0,
                             deliveryDate: raw.preferred_delivery_date ?? null,
+                            deliverySlot: raw.preferred_delivery_slot ?? null,
                             deliverySlotDetails: formatPreferredDeliverySlotDetails(raw.preferred_delivery_slot_details ?? null),
                             deliveryNotes: raw.delivery_notes ?? null,
                             items: Array.isArray(raw.items)
@@ -649,7 +652,7 @@ const OrderDetailsPage: React.FC = () => {
                   <div className="space-y-3">
                     {order.statusHistory.map((entry, i) => (
                       <div key={i} className="flex items-start gap-3">
-                        <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] flex-shrink-0" />
+                        <div className="mt-1 w-2 h-2 rounded-full bg-[#A1A1AA] shrink-0" />
                         <div>
                           <p className="text-xs font-bold text-[#18181B]">{entry.status}</p>
                           <p className="text-[10px] text-[#A1A1AA]">

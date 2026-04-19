@@ -85,8 +85,6 @@ const addDays = (date: Date, days: number) => {
   return next;
 };
 
-const isSameDay = (left: Date, right: Date) => toDateInputValue(left) === toDateInputValue(right);
-
 const computeDeliveryCharge = (
   orderTotal: number,
   settings: DeliveryChargeSettingsDto | null
@@ -930,9 +928,9 @@ const CheckoutPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setAddrDropdownOpen(!addrDropdownOpen)}
-                              className="h-[42px] px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-2 text-sm hover:bg-slate-50"
+                              className="h-10.5 px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-2 text-sm hover:bg-slate-50"
                             >
-                              <img src={(addressCountries.find(c => c.code === addrCountryCode) || addressCountries[0]).flag} alt="flag" className="w-5 h-[14px] object-cover rounded-sm" />
+                              <img src={(addressCountries.find(c => c.code === addrCountryCode) || addressCountries[0]).flag} alt="flag" className="w-5 h-3.5 object-cover rounded-sm" />
                               <span className="text-xs font-medium text-slate-700">{addrCountryCode}</span>
                               <ChevronDown size={12} className={`text-slate-400 transition-transform ${addrDropdownOpen ? "rotate-180" : ""}`} />
                             </button>
@@ -945,7 +943,7 @@ const CheckoutPage: React.FC = () => {
                                     onClick={() => { setAddrCountryCode(c.code); setAddrDropdownOpen(false); }}
                                     className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-cyan-50 ${c.code === addrCountryCode ? "bg-cyan-50 text-cyan-600" : "text-slate-700"}`}
                                   >
-                                    <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm" />
+                                    <img src={c.flag} alt={c.name} className="w-5 h-3.5 object-cover rounded-sm" />
                                     <span className="font-medium">{c.name}</span>
                                     <span className="ms-auto text-slate-400">{c.code}</span>
                                   </button>
@@ -1686,7 +1684,7 @@ const CheckoutPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            className="fixed inset-0 z-60 flex items-center justify-center p-4"
           >
             <div className="absolute inset-0 bg-black/50" onClick={() => setVerifyOpen(false)} />
             <div className="relative bg-white rounded-2xl border border-slate-200 w-full max-w-sm p-5 z-10">
@@ -1706,7 +1704,7 @@ const CheckoutPage: React.FC = () => {
                       <select
                         value={verifyCountry}
                         onChange={(e) => { setVerifyCountry(e.target.value); }}
-                        className="h-[42px] px-2 rounded-xl border border-slate-200 bg-white text-sm"
+                        className="h-10.5 px-2 rounded-xl border border-slate-200 bg-white text-sm"
                       >
                         {addressCountries.map((c) => (
                           <option key={c.code} value={c.code}>{c.code}</option>

@@ -80,10 +80,11 @@ export const useDeliveryOffers = () =>
                         ? response.data.data
                         : [];
 
-            return rawItems
-                .map((item: any, index: number) => normalizeDeliveryOffer(item, index))
-                .filter((item) => item.is_active !== false)
-                .sort((left, right) => left.order - right.order);
+            const normalizedOffers = rawItems.map((item: any, index: number) => normalizeDeliveryOffer(item, index));
+
+            return normalizedOffers
+                .filter((item: DeliveryOfferDto) => item.is_active !== false)
+                .sort((left: DeliveryOfferDto, right: DeliveryOfferDto) => left.order - right.order);
         },
         staleTime: 5 * 60 * 1000,
     });
