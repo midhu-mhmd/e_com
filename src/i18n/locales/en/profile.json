@@ -176,6 +176,7 @@
             "deleted": "Deleted",
             "noExpiry": "No expiry",
             "unlimited": "Unlimited",
+            "exhausted": "Exhausted",
             "stats": {
                 "available": "Available",
                 "referral": "Referral",

@@ -16,6 +16,8 @@ import ProductProfile from '../features/user/productprofile';
 import CartPage from '../features/user/cart';
 import CheckoutPage from '../features/user/checkout';
 import NotificationPage from '../features/user/notification';
+import AboutPage from '../features/user/about';
+import CareersPage from '../features/user/careers';
 import Navbar from '../components/layout/userside/navbar';
 import Footer from '../components/layout/userside/footer';
 import OrderPage from '../features/user/order';
@@ -140,6 +142,8 @@ export const AppRoutes: React.FC = () => {
           <Route path="/products/:id" element={<ProductProfile />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/careers" element={<CareersPage />} />
           <Route path="/support" element={<SupportPage />} />
 
           {/* Protected user routes — require login */}
@@ -149,8 +153,6 @@ export const AppRoutes: React.FC = () => {
             <Route path="/orders" element={<OrderPage />} />
             <Route path="/orders/:id" element={<OrderPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/referrals" element={<ProfilePage initialSection="referrals" />} />
-            <Route path="/profile/coupons" element={<ProfilePage initialSection="coupons" />} />
             <Route path="/notifications" element={<NotificationPage />} />
             {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
           </Route>

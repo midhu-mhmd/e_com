@@ -168,6 +168,7 @@
             "deleted": "已删除",
             "noExpiry": "无有效期",
             "unlimited": "不限次数",
+            "exhausted": "已用尽",
             "stats": {
                 "available": "可用",
                 "referral": "推荐",

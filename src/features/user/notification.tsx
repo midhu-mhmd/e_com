@@ -22,7 +22,7 @@ interface Notification {
 
 /* ── API helpers ── */
 const notificationsApi = {
-    list: async (opts?: { limit?: number; offset?: number; is_read?: boolean | null }): Promise<{ results: Notification[]; next?: string | null; count?: number }> => {
+    list: async (opts?: { limit?: number; offset?: number; is_read?: boolean | null }): Promise<{ results: Notification[]; next?: string | null; count?: number; total?: number; read?: number; unread?: number }> => {
         const params: Record<string, any> = {};
         if (opts?.limit != null) params.limit = opts.limit;
         if (opts?.offset != null) params.offset = opts.offset;
@@ -32,7 +32,10 @@ const notificationsApi = {
         const results = Array.isArray(data) ? data : (data.results || []);
         const next = Array.isArray(data) ? null : (data.next || null);
         const count = Array.isArray(data) ? results.length : (data.count ?? results.length);
-        return { results, next, count };
+        const total = Array.isArray(data) ? results.length : (data.total ?? count);
+        const read = Array.isArray(data) ? results.filter((n: any) => n.is_read ?? n.read).length : (data.read ?? undefined);
+        const unread = Array.isArray(data) ? results.filter((n: any) => !(n.is_read ?? n.read)).length : (data.unread ?? undefined);
+        return { results, next, count, total, read, unread };
     },
 
     markAsRead: async (id: number) => {
@@ -81,13 +84,17 @@ const NotificationPage: React.FC = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
     const loadMoreRef = React.useRef<HTMLDivElement>(null);
+    const [serverCounts, setServerCounts] = useState<{ total: number; read: number; unread: number } | null>(null);
 
     // Fetch notifications
     const fetchNotifications = useCallback(async (reset: boolean = false) => {
         try {
             const is_read = filter === 'unread' ? false : filter === 'read' ? true : null;
             const pageOffset = reset ? 0 : notifications.length;
-            const { results, next } = await notificationsApi.list({ limit, offset: pageOffset, is_read });
+            const { results, next, total, read, unread } = await notificationsApi.list({ limit, offset: pageOffset, is_read });
+            if (reset && total != null && read != null && unread != null) {
+                setServerCounts({ total, read, unread });
+            }
             const mapped = results.map((n: any) => ({
                 ...n,
                 type: n.type || 'system',
@@ -133,6 +140,7 @@ const NotificationPage: React.FC = () => {
         try {
             await notificationsApi.markAsRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+            setServerCounts(prev => prev ? { ...prev, read: prev.read + 1, unread: Math.max(0, prev.unread - 1) } : null);
         } catch {
             // ignore
         }
@@ -144,6 +152,7 @@ const NotificationPage: React.FC = () => {
         try {
             await notificationsApi.markAllAsRead();
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            setServerCounts(prev => prev ? { ...prev, read: prev.total, unread: 0 } : null);
         } catch {
             // ignore
         } finally {
@@ -152,9 +161,21 @@ const NotificationPage: React.FC = () => {
     };
 
     const deleteNotification = async (id: number) => {
+        const notification = notifications.find(n => n.id === id);
         try {
             await notificationsApi.deleteNotification(id);
             setNotifications(prev => prev.filter(n => n.id !== id));
+            if (notification) {
+                setServerCounts(prev => {
+                    if (!prev) return null;
+                    const wasUnread = !notification.read;
+                    return {
+                        total: Math.max(0, prev.total - 1),
+                        read: wasUnread ? prev.read : Math.max(0, prev.read - 1),
+                        unread: wasUnread ? Math.max(0, prev.unread - 1) : prev.unread,
+                    };
+                });
+            }
         } catch {
             // leave notification visible if delete failed
         }
@@ -169,9 +190,10 @@ const NotificationPage: React.FC = () => {
         }
     };
 
-    const hasUnread = notifications.some(n => !n.read);
-    const unreadCount = notifications.filter(n => !n.read).length;
-    const readCount = notifications.filter(n => n.read).length;
+    const hasUnread = (serverCounts?.unread ?? notifications.filter(n => !n.read).length) > 0;
+    const unreadCount = serverCounts?.unread ?? notifications.filter(n => !n.read).length;
+    const readCount = serverCounts?.read ?? notifications.filter(n => n.read).length;
+    const totalCount = serverCounts?.total ?? notifications.length;
     const filtered = useMemo(() => {
         if (filter === 'unread') return notifications.filter(n => !n.read);
         if (filter === 'read') return notifications.filter(n => n.read);
@@ -214,7 +236,7 @@ const NotificationPage: React.FC = () => {
                             title={t('notifications.showAll', 'Show all notifications')}
                         >
                             <Bell size={14} /> {t('notifications.all', 'All')}
-                            <span className={`${isArabic ? 'mr-1' : 'ml-1'} inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-md text-[10px] font-black bg-white border border-slate-200 text-slate-700`}>{notifications.length}</span>
+                            <span className={`${isArabic ? 'mr-1' : 'ml-1'} inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-md text-[10px] font-black bg-white border border-slate-200 text-slate-700`}>{totalCount}</span>
                         </button>
                         <button
                             onClick={() => setFilter('unread')}

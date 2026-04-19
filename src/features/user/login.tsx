@@ -498,21 +498,21 @@ const Login: React.FC = () => {
               <div className="h-px flex-1 bg-zinc-100" />
             </div>
 
-            <div className="mt-4">
-              <GoogleLogin
-                onSuccess={(credentialResponse) => {
-                  if (credentialResponse.credential) {
-                    dispatch(googleLogin({
-                      credential: credentialResponse.credential,
-                    }));
-                  }
-                }}
-                onError={() => {
-                  dispatch(authError("Google sign-in was cancelled or failed." as any));
-                }}
-                width="100%"
-              />
-            </div>
+           <div className="mt-4">
+  <GoogleLogin
+    onSuccess={(credentialResponse) => {
+      if (credentialResponse.credential) {
+        dispatch(googleLogin({
+          credential: credentialResponse.credential,
+        }));
+      }
+    }}
+    onError={() => {
+      dispatch(authError("Google sign-in was cancelled or failed." as any));
+    }}
+    width="280"
+  />
+</div>
           </div>
         </div>
 

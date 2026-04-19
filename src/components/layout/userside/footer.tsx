@@ -14,7 +14,7 @@ import {
     ShieldCheck,
 } from "lucide-react";
 
-
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCategories } from "../../../hooks/queries";
 import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
@@ -29,6 +29,14 @@ const Footer: React.FC = () => {
     const companyLinks = t("footer.companyLinks", { returnObjects: true }) as { label: string }[];
     const supportLinks = t("footer.supportLinks", { returnObjects: true }) as { label: string }[];
     const legalLinks = t("footer.legalLinks", { returnObjects: true }) as { label: string }[];
+    const companyLinkPaths = [
+        "/about",       // About Us
+        "/",            // Our Story
+        "/",            // Freshness Promise
+        "/careers",     // Careers
+        "/",            // Blog
+        "/",            // Press
+    ];
 
     const socials = [
         { icon: <Instagram size={18} />, href: "#", label: "Instagram" },
@@ -165,9 +173,12 @@ const Footer: React.FC = () => {
                             <ul className="space-y-2.5">
                                 {Array.isArray(companyLinks) && companyLinks.map((link, idx) => (
                                     <li key={idx}>
-                                        <a href="/" className="text-xs hover:text-yellow-400 transition-colors">
+                                        <Link
+                                            to={companyLinkPaths[idx] || "/"}
+                                            className="text-xs hover:text-yellow-400 transition-colors"
+                                        >
                                             {link.label}
-                                        </a>
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>

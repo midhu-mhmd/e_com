@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
     User, Mail, Phone, LogOut, Camera, Save, Loader2, Calendar,
     MapPin, Package, Plus, Edit3, X, Home, Briefcase, Globe, Star,
@@ -29,22 +29,14 @@ import { useTranslation } from "react-i18next";
 /* ═══════════════════════════════════════════════
    Types
    ═══════════════════════════════════════════════ */
-type TabKey = "profile" | "orders" | "addresses" | "reviews" | "referrals";
-
-type ProfileSection = "dashboard" | "referrals" | "coupons";
+type TabKey = "profile" | "orders" | "addresses" | "reviews" | "referrals_coupons";
 
 interface ProfilePageProps {
-    initialSection?: ProfileSection;
+    // No longer using initialSection - always start from default tabs
 }
 
 const EMIRATES = [
     { value: "abu_dhabi", label: "Abu Dhabi" },
-    { value: "dubai", label: "Dubai" },
-    { value: "sharjah", label: "Sharjah" },
-    { value: "ajman", label: "Ajman" },
-    { value: "umm_al_quwain", label: "Umm Al Quwain" },
-    { value: "ras_al_khaimah", label: "Ras Al Khaimah" },
-    { value: "fujairah", label: "Fujairah" },
 ];
 
 type CouponStatusKey = "active" | "inactive" | "expired" | "redeemed" | "deleted";
@@ -101,14 +93,17 @@ const normalizeProfileCoupon = (raw: any, index: number, t: any): ProfileCouponC
     const validUntil = formatCouponDate(raw?.valid_to) ?? t("profile.coupons.noExpiry", { defaultValue: "No expiry" });
     const usageLimit = raw?.usage_limit;
     const usedCount = Number(raw?.used_count ?? 0);
-    const usage = usageLimit === null || usageLimit === undefined
-        ? t("profile.coupons.unlimited", { defaultValue: "Unlimited" })
-        : `${usedCount} / ${usageLimit}`;
-
+    
     const isDeleted = Boolean(raw?.deleted_at);
     const isInactive = raw?.is_active === false;
     const isExpired = Boolean(raw?.valid_to) && !Number.isNaN(new Date(raw.valid_to).getTime()) && new Date(raw.valid_to).getTime() < Date.now();
     const isRedeemed = usageLimit !== null && usageLimit !== undefined && usedCount >= Number(usageLimit);
+    
+    const usage = isRedeemed 
+        ? t("profile.coupons.exhausted", { defaultValue: "Exhausted" })
+        : usageLimit === null || usageLimit === undefined
+            ? t("profile.coupons.unlimited", { defaultValue: "Unlimited" })
+            : `${usedCount} / ${usageLimit}`;
 
     let statusKey: CouponStatusKey = "active";
     if (isDeleted) statusKey = "deleted";
@@ -155,12 +150,11 @@ const normalizeProfileCoupon = (raw: any, index: number, t: any): ProfileCouponC
 /* ═══════════════════════════════════════════════
    Main Component
    ═══════════════════════════════════════════════ */
-const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" }) => {
+const ProfilePage: React.FC<ProfilePageProps> = () => {
     // Bring in i18n to ensure we can listen to language state on initial load
     const { t, i18n } = useTranslation("profile");
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const location = useLocation();
     const { user, isAuthenticated } = useSelector((state: any) => state.auth); // eslint-disable-line @typescript-eslint/no-explicit-any
     const queryClient = useQueryClient();
     const toast = useToast();
@@ -169,7 +163,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" 
     const [uploadingImage, setUploadingImage] = useState(false);
 
     const { data: profileData, isLoading: loading } = useUserProfile(isAuthenticated);
-    // Removed useEffect that called refetch on mount to avoid double /me call
 
     // Force document direction to update dynamically based on language selection
     useEffect(() => {
@@ -254,10 +247,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" 
         { key: "orders", label: t("profile.sidebar.myOrders", { defaultValue: "My Orders" }), icon: <Package size={18} /> },
         { key: "reviews", label: t("profile.sidebar.reviews", { defaultValue: "Reviews" }), icon: <Star size={18} /> },
         { key: "addresses", label: t("profile.sidebar.addresses", { defaultValue: "Addresses" }), icon: <MapPin size={18} /> },
+        { key: "referrals_coupons", label: t("profile.sidebar.rewards", { defaultValue: "Rewards" }), icon: <Gift size={18} /> },
     ];
-
-    const referralRouteActive = location.pathname.includes("/profile/referrals");
-    const couponRouteActive = location.pathname.includes("/profile/coupons");
 
     return (
         <div className="min-h-screen bg-[#F8FAFB] font-sans">
@@ -333,35 +324,43 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" 
                                     {label}
                                 </button>
                             ))}
-                            <Link
-                                to="/profile/referrals"
-                                className={`flex-shrink-0 whitespace-nowrap md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm font-semibold transition-all ${referralRouteActive
-                                    ? "bg-cyan-50 text-cyan-700"
-                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                    }`}
-                            >
-                                <Gift size={18} />
-                                {t("profile.sidebar.referrals", { defaultValue: "Referrals" })}
-                            </Link>
-                            <Link
-                                to="/profile/coupons"
-                                className={`flex-shrink-0 whitespace-nowrap md:w-full flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 rounded-xl text-sm font-semibold transition-all ${couponRouteActive
-                                    ? "bg-cyan-50 text-cyan-700"
-                                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-                                    }`}
-                            >
-                                <Tag size={18} />
-                                {t("profile.sidebar.coupons", { defaultValue: "Coupons" })}
-                            </Link>
                         </div>
                     </div>
 
                     {/* ═══════ MAIN CONTENT ═══════ */}
                     <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-6 md:p-8 min-h-[400px] md:min-h-[500px]">
                         <AnimatePresence mode="wait">
-                            {initialSection === "referrals" ? (
-                                <section key="referrals" className="space-y-5">
-                                    <div className="flex items-start justify-between gap-3">
+                            {activeTab === "profile" && (
+                                <PersonalInfoTab
+                                    key="profile"
+                                    profileData={displayUser}
+                                    loading={loading}
+                                    onSaved={(freshUser) => {
+                                        queryClient.setQueryData(["userProfile"], freshUser);
+                                        dispatch(setUser(freshUser));
+                                        toast.show(t("profile.messages.profileUpdated"), "success");
+                                    }}
+                                    onError={(msg) => toast.show(msg, "error")}
+                                />
+                            )}
+                            {activeTab === "orders" && <OrdersTab key="orders" />}
+                            {activeTab === "reviews" && (
+                                <ReviewsTab
+                                    key="reviews"
+                                    userId={displayUser.id}
+                                />
+                            )}
+                            {activeTab === "addresses" && (
+                                <AddressesTab
+                                    key="addresses"
+                                    onSuccess={(msg) => toast.show(msg, "success")}
+                                    onError={(msg) => toast.show(msg, "error")}
+                                />
+                            )}
+                            {activeTab === "referrals_coupons" && (
+                                <div key="referrals_coupons" className="space-y-8">
+                                    {/* Referrals Section */}
+                                    <section className="space-y-5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 shrink-0">
                                                 <Gift size={20} />
@@ -371,15 +370,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" 
                                                 <p className="text-[11px] md:text-xs text-slate-400">{t("profile.referrals.title", { defaultValue: "Friends Who Refer" })}</p>
                                             </div>
                                         </div>
-                                        <Link to="/profile" className="text-xs font-bold text-cyan-600 hover:underline whitespace-nowrap">
-                                            {t("profile.auth.backToProfile", { defaultValue: "Back to Profile" })}
-                                        </Link>
-                                    </div>
-                                    <ReferralTab user={displayUser} />
-                                </section>
-                            ) : initialSection === "coupons" ? (
-                                <section key="coupons" className="space-y-5">
-                                    <div className="flex items-start justify-between gap-3">
+                                        <ReferralTab user={displayUser} />
+                                    </section>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-slate-100" />
+
+                                    {/* Coupons Section */}
+                                    <section className="space-y-5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
                                                 <Tag size={20} />
@@ -389,42 +387,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ initialSection = "dashboard" 
                                                 <p className="text-[11px] md:text-xs text-slate-400">{t("profile.coupons.title", { defaultValue: "Available Coupons" })}</p>
                                             </div>
                                         </div>
-                                        <Link to="/profile" className="text-xs font-bold text-cyan-600 hover:underline whitespace-nowrap">
-                                            {t("profile.auth.backToProfile", { defaultValue: "Back to Profile" })}
-                                        </Link>
-                                    </div>
-                                    <CouponsTab />
-                                </section>
-                            ) : (
-                                <>
-                                    {activeTab === "profile" && (
-                                        <PersonalInfoTab
-                                            key="profile"
-                                            profileData={displayUser}
-                                            loading={loading}
-                                            onSaved={(freshUser) => {
-                                                queryClient.setQueryData(["userProfile"], freshUser);
-                                                dispatch(setUser(freshUser));
-                                                toast.show(t("profile.messages.profileUpdated"), "success");
-                                            }}
-                                            onError={(msg) => toast.show(msg, "error")}
-                                        />
-                                    )}
-                                    {activeTab === "orders" && <OrdersTab key="orders" />}
-                                    {activeTab === "reviews" && (
-                                        <ReviewsTab
-                                            key="reviews"
-                                            userId={displayUser.id}
-                                        />
-                                    )}
-                                    {activeTab === "addresses" && (
-                                        <AddressesTab
-                                            key="addresses"
-                                            onSuccess={(msg) => toast.show(msg, "success")}
-                                            onError={(msg) => toast.show(msg, "error")}
-                                        />
-                                    )}
-                                </>
+                                        <CouponsTab />
+                                    </section>
+                                </div>
                             )}
                         </AnimatePresence>
                     </div>
@@ -1464,6 +1429,8 @@ const ReviewsTab: React.FC<{ userId: number }> = ({ userId }) => {
 import ConfirmModal from "../../components/ui/ConfirmModal";
 
 const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: string) => void }> = ({ onSuccess, onError }) => {
+    const dispatch = useDispatch();
+    const { user } = useSelector((state: any) => state.auth); // eslint-disable-line @typescript-eslint/no-explicit-any
     // State for ConfirmModal
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -1492,18 +1459,43 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
     const [form, setForm] = useState({
         label: "home", full_name: "", phone_number: "", building_name: "",
         flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE",
+        emirate: "abu_dhabi", country: "AE",
         latitude: null as number | null, longitude: null as number | null,
     });
     const [addrCountryCode, setAddrCountryCode] = useState("+971");
     const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
     const addrDropdownRef = useRef<HTMLDivElement>(null);
     const [addrErrors, setAddrErrors] = useState<Record<string, string>>({});
+    const [addressPhoneOtpStep, setAddressPhoneOtpStep] = useState<"idle" | "otp">("idle");
+    const [addressPhoneOtp, setAddressPhoneOtp] = useState("");
+    const [sendingAddressOtp, setSendingAddressOtp] = useState(false);
+    const [verifyingAddressOtp, setVerifyingAddressOtp] = useState(false);
+    const [addressPhoneVerified, setAddressPhoneVerified] = useState(false);
+    const [addressPhoneVerificationError, setAddressPhoneVerificationError] = useState<string | null>(null);
     const addressCountries = [
         { code: "+971", flag: "https://flagcdn.com/w40/ae.png", name: "UAE" },
         { code: "+91", flag: "https://flagcdn.com/w40/in.png", name: "India" },
         { code: "+86", flag: "https://flagcdn.com/w40/cn.png", name: "China" },
     ];
+
+    const getPhonePrefill = (rawPhone?: string) => {
+        const digitsPhone = String(rawPhone || "").replace(/[^\d+]/g, "");
+        const supportedCodes = ["+971", "+91", "+86"];
+
+        for (const code of supportedCodes) {
+            if (digitsPhone.startsWith(code)) {
+                return {
+                    countryCode: code,
+                    localNumber: digitsPhone.slice(code.length).replace(/^0+/, ""),
+                };
+            }
+        }
+
+        return {
+            countryCode: "+971",
+            localNumber: digitsPhone.replace(/[^\d]/g, "").replace(/^0+/, ""),
+        };
+    };
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (addrDropdownRef.current && !addrDropdownRef.current.contains(e.target as Node)) {
@@ -1522,8 +1514,6 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
             default: return { length: 10, pattern: null, name: "Phone" };
         }
     };
-    const allowedUaeCities = EMIRATES.map(e => e.label.toLowerCase());
-
     useEffect(() => {
         customersApi.listAddresses()
             .then((data) => { setAddresses(Array.isArray(data) ? data : data.results || []); })
@@ -1531,12 +1521,45 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
             .finally(() => setLoading(false));
     }, []);
 
-    const resetForm = () => setForm({
-        label: "home", full_name: "", phone_number: "", building_name: "",
-        flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE",
-        latitude: null, longitude: null,
-    });
+    const phoneVerified: boolean = Boolean(user?.is_phone_verified ?? user?.profile?.is_phone_verified);
+    const accountPhoneComposed = String(user?.phone_number || "").replace(/\s+/g, "");
+    const composedAddressPhone = `${addrCountryCode}${(form.phone_number || "").replace(/[^\d]/g, "").replace(/^0+/, "")}`;
+    const isAddressPhoneSameAsAccount = Boolean(accountPhoneComposed) && composedAddressPhone === accountPhoneComposed;
+    const addressPhoneReq = getAddrPhoneRequirements(addrCountryCode);
+    const isAddressPhoneValid = (() => {
+        const digits = (form.phone_number || "").replace(/[^\d]/g, "");
+        return digits.length === addressPhoneReq.length && (!addressPhoneReq.pattern || addressPhoneReq.pattern.test(digits));
+    })();
+    const isAddressPhoneOtpVerified = addressPhoneVerified || (phoneVerified && isAddressPhoneSameAsAccount);
+
+    const resetForm = () => {
+        const prefill = getPhonePrefill(user?.phone_number);
+        setForm({
+            label: "home", full_name: "", phone_number: prefill.localNumber, building_name: "",
+            flat_villa_number: "", street_address: "", area: "", city: "",
+            emirate: "abu_dhabi", country: "AE",
+            latitude: null, longitude: null,
+        });
+        setAddrCountryCode(prefill.countryCode);
+        setAddressPhoneOtpStep("idle");
+        setAddressPhoneOtp("");
+        setAddressPhoneVerificationError(null);
+        setAddressPhoneVerified(false);
+    };
+
+    useEffect(() => {
+        if (!showForm) return;
+        const prefill = getPhonePrefill(user?.phone_number);
+        setAddrCountryCode(prefill.countryCode);
+        setForm((prev) => ({
+            ...prev,
+            phone_number: prev.phone_number || prefill.localNumber,
+        }));
+        setAddressPhoneOtpStep("idle");
+        setAddressPhoneOtp("");
+        setAddressPhoneVerificationError(null);
+        setAddressPhoneVerified(false);
+    }, [showForm, user?.phone_number]);
 
     const handleSave = async () => {
         const errors: Record<string, string> = {};
@@ -1550,11 +1573,11 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
         if (!form.area || !form.area.trim()) {
             errors.area = "Area is required";
         }
-        if (!form.city || !form.city.trim()) {
-            errors.city = "City is required";
-        }
         if (!form.emirate || !form.emirate.trim()) {
             errors.emirate = "Please select an emirate";
+        }
+        if (form.emirate && form.emirate !== "abu_dhabi") {
+            errors.emirate = "Delivery is currently available only in Abu Dhabi.";
         }
         // Phone validation by country
         const req = getAddrPhoneRequirements(addrCountryCode);
@@ -1562,12 +1585,8 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
         if (digits.length !== req.length || (req.pattern && !req.pattern.test(digits))) {
             errors.phone_number = `${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`;
         }
-        // City validation for UAE
-        if (addrCountryCode === "+971" && form.city) {
-            const c = form.city.trim().toLowerCase();
-            if (!allowedUaeCities.includes(c)) {
-                errors.city = "Select a valid UAE city/emirate";
-            }
+        if (!isAddressPhoneOtpVerified) {
+            errors.phone_number = "Please verify this phone number with OTP before saving the address.";
         }
         setAddrErrors(errors);
         if (Object.keys(errors).length > 0) {
@@ -1610,7 +1629,10 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                 </div>
                 {!showForm && (
                     <button
-                        onClick={() => setShowForm(true)}
+                        onClick={() => {
+                            resetForm();
+                            setShowForm(true);
+                        }}
                         className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 transition-colors"
                     >
                         <Plus size={14} /> {t("profile.addresses.addAddress")}
@@ -1633,6 +1655,10 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pin Your Location</p>
                                 <GoogleMapPicker
                                     onSelect={(result: MapPickerResult) => {
+                                        const normalizedEmirate = result.emirate
+                                            ? result.emirate.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, "")
+                                            : "";
+
                                         setForm((prev) => ({
                                             ...prev,
                                             latitude: result.lat,
@@ -1640,10 +1666,21 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                             ...(result.street ? { street_address: result.street } : {}),
                                             ...(result.area ? { area: result.area } : {}),
                                             ...(result.city ? { city: result.city } : {}),
-                                            ...(result.emirate
-                                                ? { emirate: result.emirate.toLowerCase().replace(/\s+/g, "_") }
-                                                : {}),
+                                            ...(normalizedEmirate ? { emirate: normalizedEmirate } : {}),
                                         }));
+
+                                        setAddrErrors((prev) => {
+                                            const next = { ...prev };
+                                            if (result.street) delete next.street_address;
+                                            if (result.area) delete next.area;
+                                            if (result.city) delete next.city;
+                                            if (normalizedEmirate && normalizedEmirate !== "abu_dhabi") {
+                                                next.emirate = "Delivery is currently available only in Abu Dhabi.";
+                                            } else if (normalizedEmirate) {
+                                                delete next.emirate;
+                                            }
+                                            return next;
+                                        });
                                     }}
                                 />
                             </div>
@@ -1709,7 +1746,15 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                                         <button
                                                             key={c.code}
                                                             type="button"
-                                                            onClick={() => { setAddrCountryCode(c.code); setAddrDropdownOpen(false); }}
+                                                            onClick={() => {
+                                                                setAddrCountryCode(c.code);
+                                                                setAddrDropdownOpen(false);
+                                                                setAddressPhoneOtpStep("idle");
+                                                                setAddressPhoneOtp("");
+                                                                setAddressPhoneVerificationError(null);
+                                                                setAddressPhoneVerified(false);
+                                                                if (addrErrors.phone_number) setAddrErrors(prev => { const n = { ...prev }; delete n.phone_number; return n; });
+                                                            }}
                                                             className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-cyan-50 ${c.code === addrCountryCode ? "bg-cyan-50 text-cyan-600" : "text-slate-700"}`}
                                                         >
                                                             <img src={c.flag} alt={c.name} className="w-5 h-[14px] object-cover rounded-sm" />
@@ -1724,6 +1769,10 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                             value={form.phone_number}
                                             onChange={(e) => {
                                                 setForm((p) => ({ ...p, phone_number: e.target.value.replace(/[^\d]/g, "") }));
+                                                setAddressPhoneOtpStep("idle");
+                                                setAddressPhoneOtp("");
+                                                setAddressPhoneVerificationError(null);
+                                                setAddressPhoneVerified(false);
                                                 if (addrErrors.phone_number) setAddrErrors(prev => { const n = { ...prev }; delete n.phone_number; return n; });
                                             }}
                                             placeholder={`${getAddrPhoneRequirements(addrCountryCode).length} digits`}
@@ -1733,6 +1782,91 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                         />
                                     </div>
                                     {addrErrors.phone_number && <p className="text-[10px] text-rose-500 font-medium px-1">{addrErrors.phone_number}</p>}
+                                    {addressPhoneVerificationError && <p className="text-[10px] text-rose-500 font-medium px-1">{addressPhoneVerificationError}</p>}
+
+                                    {!isAddressPhoneOtpVerified && (
+                                        <div className="px-1 pt-1 space-y-2">
+                                            {addressPhoneOtpStep === "idle" ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        setAddressPhoneVerificationError(null);
+                                                        if (!isAddressPhoneValid) {
+                                                            setAddressPhoneVerificationError(`${addressPhoneReq.name}: ${addressPhoneReq.length} digits${addressPhoneReq.pattern ? ", specific starting digits required" : ""}`);
+                                                            return;
+                                                        }
+                                                        try {
+                                                            setSendingAddressOtp(true);
+                                                            await profileApi.sendProfileOtp({
+                                                                otp_type: "phone",
+                                                                phone_number: composedAddressPhone,
+                                                            } as any);
+                                                            setAddressPhoneOtpStep("otp");
+                                                        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                                            const apiErr = err?.response?.data;
+                                                            const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "Failed to send OTP. Try again.");
+                                                            setAddressPhoneVerificationError(detail);
+                                                        } finally {
+                                                            setSendingAddressOtp(false);
+                                                        }
+                                                    }}
+                                                    disabled={sendingAddressOtp || !isAddressPhoneValid}
+                                                    className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 disabled:opacity-50"
+                                                >
+                                                    {sendingAddressOtp ? "Sending..." : "Verify this phone with OTP"}
+                                                </button>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        value={addressPhoneOtp}
+                                                        onChange={(e) => setAddressPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                                                        maxLength={6}
+                                                        placeholder="6 digits"
+                                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            setAddressPhoneVerificationError(null);
+                                                            if (addressPhoneOtp.length < 6) {
+                                                                setAddressPhoneVerificationError("Enter the 6-digit OTP.");
+                                                                return;
+                                                            }
+                                                            try {
+                                                                setVerifyingAddressOtp(true);
+                                                                const res: any = await profileApi.verifyProfileOtp({
+                                                                    otp_type: "phone",
+                                                                    otp_code: addressPhoneOtp,
+                                                                    phone_number: composedAddressPhone,
+                                                                } as any);
+                                                                const access = res?.access || res?.accessToken || res?.token;
+                                                                if (access) tokenManager.set(access);
+                                                                const freshUser = res?.user || (await profileApi.getMe());
+                                                                dispatch(setUser(freshUser));
+                                                                setAddressPhoneVerified(true);
+                                                                setAddressPhoneOtpStep("idle");
+                                                                setAddressPhoneOtp("");
+                                                                setAddrErrors(prev => { const n = { ...prev }; delete n.phone_number; return n; });
+                                                            } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+                                                                const apiErr = err?.response?.data;
+                                                                const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : "OTP verification failed.");
+                                                                setAddressPhoneVerificationError(detail);
+                                                            } finally {
+                                                                setVerifyingAddressOtp(false);
+                                                            }
+                                                        }}
+                                                        disabled={verifyingAddressOtp || addressPhoneOtp.length < 6}
+                                                        className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
+                                                    >
+                                                        {verifyingAddressOtp ? "Verifying..." : "Verify"}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {isAddressPhoneOtpVerified && (
+                                        <p className="text-[10px] text-emerald-600 font-bold px-1 pt-1">Phone verified. You can save this address.</p>
+                                    )}
                                 </div>
 
                                 {/* Emirate */}
@@ -1761,7 +1895,7 @@ const AddressesTab: React.FC<{ onSuccess: (msg: string) => void; onError: (msg: 
                                 </button>
                                 <button
                                     onClick={handleSave}
-                                    disabled={saving}
+                                    disabled={saving || !isAddressPhoneOtpVerified}
                                     className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-bold hover:bg-cyan-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {saving && <Loader2 size={14} className="animate-spin" />}
@@ -1852,40 +1986,6 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
     const { t } = useTranslation("profile");
     const toast = useToast();
     const [copied, setCopied] = useState(false);
-    const [referralCoupons, setReferralCoupons] = useState<ProfileCouponCard[]>([]);
-
-    useEffect(() => {
-        let mounted = true;
-
-        const loadReferralCoupons = async () => {
-            try {
-                const response = await api.get("/marketing/coupons/");
-                const rawCoupons = Array.isArray(response.data)
-                    ? response.data
-                    : Array.isArray(response.data?.results)
-                        ? response.data.results
-                        : [];
-
-                const normalizedCoupons = rawCoupons
-                    .map((coupon: any, index: number) => normalizeProfileCoupon(coupon, index, t))
-                    .filter(Boolean) as ProfileCouponCard[];
-
-                if (mounted) {
-                    setReferralCoupons(normalizedCoupons);
-                }
-            } catch {
-                if (mounted) {
-                    setReferralCoupons([]);
-                }
-            }
-        };
-
-        void loadReferralCoupons();
-
-        return () => {
-            mounted = false;
-        };
-    }, [t]);
 
     // Prefer backend referral_code if present, else fallback to phone logic
     let referralCode = user?.referral_code;
@@ -2078,74 +2178,6 @@ const ReferralTab: React.FC<ReferralTabProps> = ({ user }) => {
                     <Gift size={18} />
                     {t("profile.referrals.startReferring", { defaultValue: "Start Referring, Start Earning!" })}
                 </button>
-            </div>
-
-            {/* ── Referral & Coupon Section ── */}
-            <div>
-                <h3 className="text-center text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-wider mb-6 md:mb-8">
-                    {t("profile.referrals.coupons.title", { defaultValue: "Referral & Coupon" })}
-                </h3>
-
-                {referralCoupons.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-8 text-center flex flex-col items-center">
-                        <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mb-4 text-cyan-500 shadow-sm border border-slate-100">
-                            <Tag size={22} />
-                        </div>
-                        <p className="text-sm font-bold text-slate-900">{t("profile.referrals.coupons.empty", { defaultValue: "No referral coupons yet." })}</p>
-                        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                            {t("profile.referrals.coupons.emptyHint", { defaultValue: "Invite your friends to earn discount coupons!" })}
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {referralCoupons.map((coupon) => (
-                            <div key={coupon.id} className="relative flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                                <div className="p-4 flex-1 flex flex-col min-w-0 bg-slate-50">
-                                    <div className="flex items-center justify-between gap-3 mb-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-                                                <Tag size={18} />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{coupon.typeLabel}</div>
-                                                <h4 className="text-sm md:text-base font-bold text-slate-900 truncate tracking-tight">{coupon.title}</h4>
-                                            </div>
-                                        </div>
-                                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${coupon.statusClassName}`}>
-                                            {coupon.statusLabel}
-                                        </span>
-                                    </div>
-                                    
-                                    <p className="text-[11px] text-slate-500 mb-4 line-clamp-2">{coupon.description}</p>
-
-                                    <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
-                                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
-                                            <Clock size={12} className="text-slate-400" />
-                                            {t("profile.coupons.validUntil", { defaultValue: "Valid until" })}: <span className="text-slate-700 font-bold">{coupon.validUntil || t("profile.coupons.noExpiry", { defaultValue: "No expiry" })}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                                        <div className="flex-1 px-3 py-1.5 bg-slate-200/50 rounded-lg text-xs font-mono font-bold text-slate-700 tracking-wider truncate">
-                                            {coupon.code}
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(coupon.code)
-                                                    .then(() => toast.show(t("profile.coupons.copied", { defaultValue: "Coupon code copied!" }), "success"))
-                                                    .catch(() => toast.show(t("profile.coupons.error", { defaultValue: "Failed to copy code." }), "error"));
-                                            }}
-                                            className="p-1.5 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
-                                            title="Copy Code"
-                                        >
-                                            <Copy size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
         </motion.div>
     );

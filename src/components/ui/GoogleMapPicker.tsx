@@ -27,9 +27,6 @@ interface Props {
   defaultLng?: number;
 }
 
-/* ── Improved Maps loader ── */
-
-
 /* ── Parse Geocoder address components ── */
 function parseGeocoderComponents(components: any[]): Partial<MapPickerResult> {
 
@@ -54,9 +51,10 @@ function parseGeocoderComponents(components: any[]): Partial<MapPickerResult> {
 
 /* ── Parse Places API components ── */
 function parsePlaceComponents(components: any[]): Partial<MapPickerResult> {
-
-  const get = (type: string) =>
-    (components || []).find((c: any) => c.types?.includes(type))?.longText ?? "";
+  const get = (type: string) => {
+    const component = (components || []).find((c: any) => c.types?.includes(type));
+    return component?.long_name || component?.longText || "";
+  };
 
   return {
     street: [get("street_number"), get("route")].filter(Boolean).join(" ") || undefined,
@@ -81,11 +79,12 @@ export default function GoogleMapPicker({
 }: Props) {
 
   const mapDivRef = useRef<HTMLDivElement>(null);
-  const acContainerRef = useRef<HTMLDivElement>(null);
+  const acInputRef = useRef<HTMLInputElement>(null);
 
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const geocoderRef = useRef<any>(null);
+  const autocompleteRef = useRef<any>(null);
 
   const initializedRef = useRef(false);
 
@@ -151,7 +150,6 @@ export default function GoogleMapPicker({
         { Map },
         { AdvancedMarkerElement },
         { Geocoder },
-        { PlaceAutocompleteElement },
       ] = (await Promise.all([
         window.google.maps.importLibrary("maps"),
         window.google.maps.importLibrary("marker"),
@@ -209,56 +207,35 @@ export default function GoogleMapPicker({
         reverseGeocode(lat, lng);
       });
 
-      if (acContainerRef.current) {
-
-        const placeAC = new PlaceAutocompleteElement({
-          componentRestrictions: {
-            country: ["ae", "in", "cn"],
-          },
+      if (acInputRef.current && window.google?.maps?.places) {
+        const autocomplete = new window.google.maps.places.Autocomplete(acInputRef.current, {
+          fields: ["geometry", "address_components", "formatted_address"],
+          componentRestrictions: { country: ["ae", "in", "cn"] },
         });
 
-        acContainerRef.current.innerHTML = "";
+        autocompleteRef.current = autocomplete;
 
-        acContainerRef.current.appendChild(placeAC);
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          const location = place?.geometry?.location;
 
-        placeAC.addEventListener(
-          "gmp-placeselect",
-          async (e: any) => {
+          if (!location) return;
 
-            try {
+          const lat = location.lat();
+          const lng = location.lng();
 
-              const { place } = e;
+          marker.position = { lat, lng };
+          map.panTo({ lat, lng });
+          map.setZoom(15);
 
-              await place.fetchFields({
-                fields: [
-                  "location",
-                  "addressComponents",
-                  "formattedAddress",
-                ],
-              });
+          setAddress(place.formatted_address ?? "");
 
-              const lat = place.location?.lat();
-              const lng = place.location?.lng();
-
-              if (lat == null || lng == null) return;
-
-              marker.position = { lat, lng };
-
-              map.panTo({ lat, lng });
-
-              setAddress(place.formattedAddress ?? "");
-
-              onSelect({
-                lat,
-                lng,
-                ...parsePlaceComponents(
-                  place.addressComponents ?? []
-                ),
-              });
-
-            } catch {}
-          }
-        );
+          onSelect({
+            lat,
+            lng,
+            ...parsePlaceComponents(place.address_components ?? []),
+          });
+        });
       }
 
       setIsLoaded(true);
@@ -338,10 +315,17 @@ export default function GoogleMapPicker({
             </div>
           )}
 
-          <div
-            ref={acContainerRef}
-            className={!isLoaded ? "hidden" : "w-full"}
-          />
+          <div className={!isLoaded ? "hidden" : "w-full"}>
+            <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-cyan-500/20 focus-within:border-cyan-400 transition-all">
+              <MapPin size={14} className="text-slate-400 shrink-0" />
+              <input
+                ref={acInputRef}
+                type="text"
+                placeholder="Search location"
+                className="w-full bg-white text-slate-900 placeholder:text-slate-400 text-sm outline-none"
+              />
+            </div>
+          </div>
 
         </div>
 

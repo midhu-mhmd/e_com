@@ -172,6 +172,7 @@
             "deleted": "محذوف",
             "noExpiry": "بدون انتهاء",
             "unlimited": "غير محدود",
+            "exhausted": "نفد",
             "stats": {
                 "available": "المتاح",
                 "referral": "إحالة",

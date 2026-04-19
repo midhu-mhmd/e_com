@@ -30,13 +30,13 @@ const ADDRESS_TYPES = [
 ];
 
 const EMIRATES = [
-  { value: "abu_dhabi", key: "emirates.abu_dhabi" },
-  { value: "dubai", key: "emirates.dubai" },
-  { value: "sharjah", key: "emirates.sharjah" },
-  { value: "ajman", key: "emirates.ajman" },
-  { value: "umm_al_quwain", key: "emirates.umm_al_quwain" },
-  { value: "ras_al_khaimah", key: "emirates.ras_al_khaimah" },
-  { value: "fujairah", key: "emirates.fujairah" },
+  { value: "abu_dhabi", key: "emirates.abu_dhabi", available: true },
+  { value: "dubai", key: "emirates.dubai", available: false },
+  { value: "sharjah", key: "emirates.sharjah", available: false },
+  { value: "ajman", key: "emirates.ajman", available: false },
+  { value: "umm_al_quwain", key: "emirates.umm_al_quwain", available: false },
+  { value: "ras_al_khaimah", key: "emirates.ras_al_khaimah", available: false },
+  { value: "fujairah", key: "emirates.fujairah", available: false },
 ];
 
 type CouponFeedback = {
@@ -169,7 +169,10 @@ const CheckoutPage: React.FC = () => {
   const { user } = useAppSelector((s: any) => s.auth);
 
   // ─── Delivery Estimation from Tiers ───
-  const { estimation, loading: estimationLoading } = useDeliveryEstimation();
+  const { estimation, loading: estimationLoading, error: estimationError, stockDetails } = useDeliveryEstimation();
+  const emirateUnavailableMessage = t("address.errors.emirateUnsupported", {
+    defaultValue: "Delivery is currently available only in Abu Dhabi.",
+  });
 
   // ─── State ───
   const [addresses, setAddresses] = useState<AddressDto[]>([]);
@@ -219,13 +222,32 @@ const CheckoutPage: React.FC = () => {
 
   // Add address form
   const [showAddressForm, setShowAddressForm] = useState(false);
+
+  const getPhonePrefill = (rawPhone?: string) => {
+    const digitsPhone = String(rawPhone || "").replace(/[^\d+]/g, "");
+    const supportedCodes = ["+971", "+91", "+86"];
+    for (const code of supportedCodes) {
+      if (digitsPhone.startsWith(code)) {
+        return {
+          countryCode: code,
+          localNumber: digitsPhone.slice(code.length).replace(/^0+/, ""),
+        };
+      }
+    }
+    return {
+      countryCode: "+971",
+      localNumber: digitsPhone.replace(/[^\d]/g, "").replace(/^0+/, ""),
+    };
+  };
+
+  const phonePrefill = getPhonePrefill(user?.phone_number);
   const [addressForm, setAddressForm] = useState({
     label: "home", full_name: "", phone_number: "", building_name: "",
     flat_villa_number: "", street_address: "", area: "", city: "",
-    emirate: "", country: "AE", address_type: "home",
+    emirate: "abu_dhabi", country: "AE", address_type: "home",
     latitude: null as number | null, longitude: null as number | null,
   });
-  const [addrCountryCode, setAddrCountryCode] = useState("+971");
+  const [addrCountryCode, setAddrCountryCode] = useState(phonePrefill.countryCode);
   const [addrDropdownOpen, setAddrDropdownOpen] = useState(false);
   const addrDropdownRef = useRef<HTMLDivElement>(null);
   const addressCountries = [
@@ -247,7 +269,6 @@ const CheckoutPage: React.FC = () => {
     if (digits.length !== verifyReq.length) return false;
     return verifyReq.pattern ? verifyReq.pattern.test(digits) : true;
   })();
-  const allowedUaeCities = EMIRATES.map(e => t(e.key).toLowerCase());
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (addrDropdownRef.current && !addrDropdownRef.current.contains(e.target as Node)) {
@@ -259,6 +280,36 @@ const CheckoutPage: React.FC = () => {
   }, []);
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
+  const [addressPhoneOtpStep, setAddressPhoneOtpStep] = useState<"idle" | "otp">("idle");
+  const [addressPhoneOtp, setAddressPhoneOtp] = useState("");
+  const [sendingAddressOtp, setSendingAddressOtp] = useState(false);
+  const [verifyingAddressOtp, setVerifyingAddressOtp] = useState(false);
+  const [addressPhoneVerified, setAddressPhoneVerified] = useState(false);
+  const [addressPhoneVerificationError, setAddressPhoneVerificationError] = useState<string | null>(null);
+
+  const accountPhoneComposed = String(user?.phone_number || "").replace(/\s+/g, "");
+  const composedAddressPhone = `${addrCountryCode}${(addressForm.phone_number || "").replace(/[^\d]/g, "").replace(/^0+/, "")}`;
+  const isAddressPhoneSameAsAccount = Boolean(accountPhoneComposed) && composedAddressPhone === accountPhoneComposed;
+  const isAddressPhoneValid = (() => {
+    const req = getPhoneRequirements(addrCountryCode);
+    const digits = (addressForm.phone_number || "").replace(/[^\d]/g, "");
+    return digits.length === req.length && (!req.pattern || req.pattern.test(digits));
+  })();
+  const isAddressPhoneOtpVerified = addressPhoneVerified || (phoneVerified && isAddressPhoneSameAsAccount);
+
+  useEffect(() => {
+    if (!showAddressForm) return;
+    const prefill = getPhonePrefill(user?.phone_number);
+    setAddrCountryCode(prefill.countryCode);
+    setAddressForm((prev) => ({
+      ...prev,
+      phone_number: prev.phone_number || prefill.localNumber,
+    }));
+    setAddressPhoneOtpStep("idle");
+    setAddressPhoneOtp("");
+    setAddressPhoneVerificationError(null);
+    setAddressPhoneVerified(false);
+  }, [showAddressForm, user?.phone_number]);
 
   const validateAddress = () => {
     const errors: Record<string, string> = {};
@@ -275,16 +326,17 @@ const CheckoutPage: React.FC = () => {
         reqPatternStr: req.pattern ? ", specific starting digits required" : ""
       });
     }
-    if (addrCountryCode === "+971" && addressForm.city) {
-      const c = addressForm.city.trim().toLowerCase();
-      if (!allowedUaeCities.includes(c)) {
-        errors.city = t("address.errors.cityInvalid", { defaultValue: "Select a valid UAE city/emirate" });
-      }
-    }
     if (!addressForm.street_address) errors.street_address = t("address.errors.streetRequired", { defaultValue: "Street address is required" });
     if (!addressForm.area) errors.area = t("address.errors.areaRequired", { defaultValue: "Area is required" });
-    if (!addressForm.city) errors.city = t("address.errors.cityRequired", { defaultValue: "City is required" });
     if (!addressForm.emirate) errors.emirate = t("address.errors.emirateRequired", { defaultValue: "Please select an emirate" });
+    if (addressForm.emirate && addressForm.emirate !== "abu_dhabi") {
+      errors.emirate = emirateUnavailableMessage;
+    }
+    if (!isAddressPhoneOtpVerified) {
+      errors.phone_number = t("address.errors.phoneOtpRequired", {
+        defaultValue: "Please verify this phone number with OTP before saving the address.",
+      });
+    }
 
     setAddressErrors(errors);
     return Object.keys(errors).length === 0;
@@ -623,9 +675,15 @@ const CheckoutPage: React.FC = () => {
       setAddressForm({
         label: "home", full_name: "", phone_number: "", building_name: "",
         flat_villa_number: "", street_address: "", area: "", city: "",
-        emirate: "", country: "AE", address_type: "home",
+        emirate: "abu_dhabi", country: "AE", address_type: "home",
         latitude: null, longitude: null,
       });
+      const prefill = getPhonePrefill(user?.phone_number);
+      setAddrCountryCode(prefill.countryCode);
+      setAddressPhoneOtpStep("idle");
+      setAddressPhoneOtp("");
+      setAddressPhoneVerificationError(null);
+      setAddressPhoneVerified(false);
       setAddressErrors({});
     } catch (err: any) {
       console.error("Failed to save address", err);
@@ -857,6 +915,10 @@ const CheckoutPage: React.FC = () => {
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t("fields.pinLocation", "Pin Your Location")}</p>
                       <GoogleMapPicker
                         onSelect={(result: MapPickerResult) => {
+                          const normalizedEmirate = result.emirate
+                            ? result.emirate.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, "")
+                            : "";
+
                           setAddressForm((prev) => ({
                             ...prev,
                             latitude: result.lat,
@@ -864,10 +926,21 @@ const CheckoutPage: React.FC = () => {
                             ...(result.street ? { street_address: result.street } : {}),
                             ...(result.area ? { area: result.area } : {}),
                             ...(result.city ? { city: result.city } : {}),
-                            ...(result.emirate
-                              ? { emirate: result.emirate.toLowerCase().replace(/\s+/g, "_") }
-                              : {}),
+                            ...(normalizedEmirate ? { emirate: normalizedEmirate } : {}),
                           }));
+
+                          setAddressErrors((prev) => {
+                            const next = { ...prev };
+                            if (result.street) delete next.street_address;
+                            if (result.area) delete next.area;
+                            if (result.city) delete next.city;
+                            if (normalizedEmirate && normalizedEmirate !== "abu_dhabi") {
+                              next.emirate = emirateUnavailableMessage;
+                            } else if (normalizedEmirate) {
+                              delete next.emirate;
+                            }
+                            return next;
+                          });
                         }}
                       />
                     </div>
@@ -956,6 +1029,10 @@ const CheckoutPage: React.FC = () => {
                             onChange={(e) => {
                               const v = e.target.value.replace(/[^\d]/g, "");
                               setAddressForm((prev) => ({ ...prev, phone_number: v }));
+                              setAddressPhoneOtpStep("idle");
+                              setAddressPhoneOtp("");
+                              setAddressPhoneVerificationError(null);
+                              setAddressPhoneVerified(false);
                               if (addressErrors.phone_number) {
                                 setAddressErrors(prev => {
                                   const next = { ...prev };
@@ -973,6 +1050,95 @@ const CheckoutPage: React.FC = () => {
                         {addressErrors.phone_number && (
                           <p className="text-[10px] text-rose-500 font-medium px-1">{addressErrors.phone_number}</p>
                         )}
+                        {addressPhoneVerificationError && (
+                          <p className="text-[10px] text-rose-500 font-medium px-1">{addressPhoneVerificationError}</p>
+                        )}
+
+                        {!isAddressPhoneOtpVerified && (
+                          <div className="px-1 pt-1 space-y-2">
+                            {addressPhoneOtpStep === "idle" ? (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setAddressPhoneVerificationError(null);
+                                  if (!isAddressPhoneValid) {
+                                    const req = getPhoneRequirements(addrCountryCode);
+                                    setAddressPhoneVerificationError(`${req.name}: ${req.length} digits${req.pattern ? ", specific starting digits required" : ""}`);
+                                    return;
+                                  }
+                                  try {
+                                    setSendingAddressOtp(true);
+                                    await profileApi.sendProfileOtp({
+                                      otp_type: "phone",
+                                      phone_number: composedAddressPhone,
+                                    } as any);
+                                    setAddressPhoneOtpStep("otp");
+                                  } catch (err: any) {
+                                    const apiErr = err?.response?.data;
+                                    const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : t("verifyPhone.sendError", { defaultValue: "Failed to send OTP. Try again." }));
+                                    setAddressPhoneVerificationError(detail);
+                                  } finally {
+                                    setSendingAddressOtp(false);
+                                  }
+                                }}
+                                disabled={sendingAddressOtp || !isAddressPhoneValid}
+                                className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 disabled:opacity-50"
+                              >
+                                {sendingAddressOtp ? t("verifyPhone.sending", "Sending...") : t("address.verifyPhone", { defaultValue: "Verify this phone with OTP" })}
+                              </button>
+                            ) : (
+                              <div className="flex gap-2">
+                                <input
+                                  value={addressPhoneOtp}
+                                  onChange={(e) => setAddressPhoneOtp(e.target.value.replace(/\D/g, ""))}
+                                  maxLength={6}
+                                  placeholder={t("fields.digits", { count: 6, defaultValue: "6 digits" })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-400 outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    setAddressPhoneVerificationError(null);
+                                    if (addressPhoneOtp.length < 6) {
+                                      setAddressPhoneVerificationError(t("verifyPhone.otpError", "Enter the 6-digit OTP."));
+                                      return;
+                                    }
+                                    try {
+                                      setVerifyingAddressOtp(true);
+                                      await profileApi.verifyProfileOtp({
+                                        otp_type: "phone",
+                                        otp_code: addressPhoneOtp,
+                                        phone_number: composedAddressPhone,
+                                      } as any);
+                                      setAddressPhoneVerified(true);
+                                      setAddressPhoneOtpStep("idle");
+                                      setAddressPhoneOtp("");
+                                      setAddressErrors((prev) => {
+                                        const next = { ...prev };
+                                        delete next.phone_number;
+                                        return next;
+                                      });
+                                      toast.show(t("verifyPhone.success", { defaultValue: "Phone verified. You can now place your order." }), "success");
+                                    } catch (err: any) {
+                                      const apiErr = err?.response?.data;
+                                      const detail = apiErr?.detail || apiErr?.message || (typeof apiErr === "string" ? apiErr : t("verifyPhone.verifyError", { defaultValue: "OTP verification failed." }));
+                                      setAddressPhoneVerificationError(detail);
+                                    } finally {
+                                      setVerifyingAddressOtp(false);
+                                    }
+                                  }}
+                                  disabled={verifyingAddressOtp || addressPhoneOtp.length < 6}
+                                  className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                  {verifyingAddressOtp ? t("verifyPhone.verifying", "Verifying...") : t("verifyPhone.verifyAndContinue", "Verify")}
+                                </button>
+                              </div>
+                            )}
+                            {isAddressPhoneOtpVerified && (
+                              <p className="text-[10px] text-emerald-600 font-bold">{t("verifyPhone.success", { defaultValue: "Phone verified. You can now place your order." })}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Emirate Dropdown */}
@@ -983,19 +1149,21 @@ const CheckoutPage: React.FC = () => {
                             value={addressForm.emirate}
                             onChange={(e) => {
                               setAddressForm((prev) => ({ ...prev, emirate: e.target.value }));
-                              if (addressErrors.emirate) {
-                                setAddressErrors(prev => {
-                                  const next = { ...prev };
+                              setAddressErrors(prev => {
+                                const next = { ...prev };
+                                if (e.target.value && e.target.value !== "abu_dhabi") {
+                                  next.emirate = emirateUnavailableMessage;
+                                } else {
                                   delete next.emirate;
-                                  return next;
-                                });
-                              }
+                                }
+                                return next;
+                              });
                             }}
                             className={`w-full px-3.5 py-2.5 bg-white border ${addressErrors.emirate ? "border-rose-400 focus:ring-rose-500/30" : "border-slate-200 focus:ring-cyan-500/30"} rounded-xl text-sm appearance-none focus:ring-2 focus:border-cyan-400 outline-none transition-all`}
                           >
                             <option value="">{t("address.fields.emirate.placeholder")}</option>
                             {EMIRATES.map((em) => (
-                              <option key={em.value} value={em.value}>{t(em.key)}</option>
+                              <option key={em.value} value={em.value}>{em.available ? t(em.key) : `${t(em.key)} (${t("address.notAvailable", { defaultValue: "Not available" })})`}</option>
                             ))}
                           </select>
                           <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -1009,14 +1177,22 @@ const CheckoutPage: React.FC = () => {
                     <div className="flex gap-3 pt-2">
                       <button
                         onClick={handleSaveAddress}
-                        disabled={savingAddress}
+                        disabled={savingAddress || !isAddressPhoneOtpVerified}
                         className="px-5 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-bold hover:bg-cyan-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         {savingAddress && <Loader2 size={14} className="animate-spin" />}
                         {savingAddress ? t("address.adding") : t("address.addNew")}
                       </button>
                       <button
-                        onClick={() => setShowAddressForm(false)}
+                        onClick={() => {
+                          const prefill = getPhonePrefill(user?.phone_number);
+                          setShowAddressForm(false);
+                          setAddrCountryCode(prefill.countryCode);
+                          setAddressPhoneOtpStep("idle");
+                          setAddressPhoneOtp("");
+                          setAddressPhoneVerificationError(null);
+                          setAddressPhoneVerified(false);
+                        }}
                         className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
                       >
                         {t("address.cancel", { defaultValue: "Cancel" })}
@@ -1078,6 +1254,26 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            ) : estimationError ? (
+              <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Info size={16} className="text-rose-600" />
+                  <p className="text-xs font-bold text-rose-700">{t("delivery.estimateFailed", "Delivery estimate failed")}</p>
+                </div>
+                <p className="text-xs text-rose-700">{estimationError} If you have to buy other products, remove this from your cart.</p>
+                {stockDetails?.length ? (
+                  <div className="space-y-2 text-xs text-rose-700">
+                    <p className="font-medium">{t("delivery.stockDetails", "Insufficient stock for these items:")}</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {stockDetails.map((item) => (
+                        <li key={item.product_id}>
+                          {item.product_name}: {t("delivery.requestedQuantity", { defaultValue: "Requested" })} {item.requested_quantity}, {t("delivery.availableStock", { defaultValue: "Available" })} {item.available_stock}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -1658,9 +1854,15 @@ const CheckoutPage: React.FC = () => {
                   </p>
                 </div>
               )}
+              {estimationError && (
+                <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 flex gap-2">
+                  <Info size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-rose-700 font-medium">{estimationError}</p>
+                </div>
+              )}
               <button
                 onClick={handlePlaceOrder}
-                disabled={submitting || summaryLoading || !selectedAddressId || !phoneVerified}
+                disabled={submitting || summaryLoading || !selectedAddressId || !phoneVerified || !!estimationError}
                 className="w-full py-4 bg-linear-to-r from-cyan-600 to-cyan-700 text-white rounded-2xl font-black text-base hover:from-cyan-700 hover:to-cyan-800 transition-all shadow-xl shadow-cyan-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {submitting ? (
