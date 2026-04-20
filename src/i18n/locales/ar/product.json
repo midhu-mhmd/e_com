@@ -15,6 +15,7 @@
     "inStock": "{{count}} في المخزون"
   },
   "list": {
+    "all": "جميع العناصر",
     "searchPlaceholder": "ابحث عن مأكولات بحرية...",
     "errorLoading": "فشل تحميل المنتجات. يرجى المحاولة مرة أخرى.",
     "tryAgain": "إعادة المحاولة",
@@ -22,6 +23,12 @@
     "noProductsDescription": "لم نتمكن من العثور على أي نتائج لـ \"{{searchTerm}}\". جرب كلمة بحث أخرى.",
     "clearSearch": "مسح البحث",
     "showingResults": "عرض {{start}}–{{end}} من أصل {{total}} من النتائج"
+  },
+  "filters": {
+    "freshFish": "أسماك طازجة",
+    "frozenFish": "أسماك مجمدة",
+    "liveFish": "أسماك حية",
+    "lightFish": "أسماك خفيفة"
   },
   "details": {
     "back": "رجوع",

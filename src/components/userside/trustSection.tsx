@@ -1,20 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { productsApi, type CategoryDto } from "../../features/admin/products/productApi";
+import { useCategories } from "../../hooks/queries";
+import { type CategoryDto } from "../../features/admin/products/productApi";
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
 const ShopByCategorySection: React.FC = () => {
-  const { t } = useTranslation("home");
-
-  const { data: categories = [], isLoading } = useQuery<CategoryDto[]>({
-    queryKey: ["categories"],
-    queryFn: () => productsApi.listCategories(),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { t, i18n } = useTranslation("home");
+  const { data: categories = [], isLoading } = useCategories(i18n.language);
 
   return (
     <section className="relative overflow-hidden bg-[#f8f9fa] py-3 px-4 sm:px-6 lg:px-8">

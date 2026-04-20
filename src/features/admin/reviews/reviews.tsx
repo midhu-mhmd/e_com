@@ -32,6 +32,7 @@ import {
 import type { Review } from "./reviewsSlice";
 import { reviewsApi } from "./reviewsApi";
 import { useToast } from "../../../components/ui/Toast";
+import { API_BASE_URL } from "../../../config/constants";
 
 /* --- Column Visibility --- */
 type ColumnKey =
@@ -74,6 +75,22 @@ function useDebounce<T>(value: T, delay: number): T {
   }, [value, delay]);
   return debouncedValue;
 }
+
+const normalizeReviewImage = (src: string): string => {
+  if (!src) return "";
+  const value = String(src).trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base =
+    (import.meta as any).env?.VITE_MEDIA_BASE_URL ||
+    ((API_BASE_URL && /^https?:\/\//i.test(API_BASE_URL))
+      ? new URL(API_BASE_URL as any).origin
+      : window.location.origin);
+
+  if (value.startsWith("/")) return `${base}${value}`;
+  return `${base}/${value.replace(/^\.?\/*/, "")}`;
+};
 
 /* --- MAIN COMPONENT --- */
 const ReviewsManagement: React.FC = () => {
@@ -772,6 +789,38 @@ const ReviewDetailPanel = ({
             <p className="text-sm text-[#A1A1AA] italic">No comment provided.</p>
           )}
         </div>
+
+          {/* Images */}
+          <div>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#A1A1AA] border-b border-[#EEEEEE] pb-2 mb-3">
+              Images
+            </h4>
+            {Array.isArray(review.images) && review.images.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {review.images.slice(0, 6).map((src, idx) => {
+                  const normalizedSrc = normalizeReviewImage(src);
+                  return (
+                    <a
+                      key={`${review.id}-image-${idx}`}
+                      href={normalizedSrc}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block overflow-hidden rounded-xl border border-[#EEEEEE] bg-[#FAFAFA]"
+                      aria-label={`Open review image ${idx + 1}`}
+                    >
+                      <img
+                        src={normalizedSrc}
+                        alt={`Review ${review.id} image ${idx + 1}`}
+                        className="h-28 w-full object-cover"
+                      />
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[#A1A1AA] italic">No images uploaded.</p>
+            )}
+          </div>
 
         {/* Timestamps */}
         <div>

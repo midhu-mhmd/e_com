@@ -5,6 +5,13 @@ import { MapPin, Globe, Sparkles, ShieldCheck } from "lucide-react";
 
 const AboutPage: React.FC = () => {
   const { t } = useTranslation("common");
+  const sectorItems = [
+    { key: "import", label: t("about.sectors.import", "Import") },
+    { key: "export", label: t("about.sectors.export", "Export") },
+    { key: "farming", label: t("about.sectors.farming", "Farming") },
+    { key: "retail", label: t("about.sectors.retail", "Retail") },
+    { key: "wholesale", label: t("about.sectors.wholesale", "Wholesale") },
+  ];
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 py-14 px-4 sm:px-6 lg:px-8">
@@ -93,15 +100,9 @@ const AboutPage: React.FC = () => {
         <section className="mt-8 rounded-4xl bg-white p-8 shadow-lg border border-slate-200">
           <h2 className="text-2xl font-bold text-slate-900 mb-4">{t("about.sectorsTitle", "Our Presence")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              "Import",
-              "Export",
-              "Farming",
-              "Retail",
-              "Wholesale",
-            ].map((item) => (
-              <div key={item} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm font-semibold text-cyan-700">{item}</p>
+            {sectorItems.map((item) => (
+              <div key={item.key} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-sm font-semibold text-cyan-700">{item.label}</p>
               </div>
             ))}
           </div>

@@ -149,6 +149,12 @@
         "label": "Terms of Service"
       }
     ],
+    "categoryLabels": {
+      "freshFish": "Fresh Fish",
+      "frozenFish": "Frozen Fish",
+      "liveFish": "Live Fish",
+      "lightFish": "Light Fish"
+    },
     "download": "Download App",
     "getItOn": "Get it on",
     "downloadOn": "Download on",
@@ -176,6 +182,13 @@
     "commitmentToService": "Commitment to exceptional service",
     "commitmentToServiceText": "We make seafood shopping easy, reliable, and enjoyable for customers, partners, and businesses alike.",
     "sectorsTitle": "Our Presence",
+    "sectors": {
+      "import": "Import",
+      "export": "Export",
+      "farming": "Farming",
+      "retail": "Retail",
+      "wholesale": "Wholesale"
+    },
     "joinUsTitle": "Experience SIMAK FRESH",
     "joinUsText": "Join us on our journey to redefine seafood freshness, quality, and trust across the world.",
     "shopNow": "Shop Fresh Seafood"

@@ -13,6 +13,7 @@ export interface Review {
     userName: string;
     rating: number;
     comment: string;
+    images: string[];
     isVisible: boolean;
     adminResponse: string | null;
     createdAt: string;

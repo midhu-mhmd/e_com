@@ -16,16 +16,13 @@ import {
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useCategories } from "../../../hooks/queries";
 import simakLogo from "../../../assets/SIMAK FRESH FINAL LOGO-01 (1).png";
 
 /* ── Component ── */
 const Footer: React.FC = () => {
     const { t } = useTranslation("common");
-    const { data: dynamicCategories, isLoading: isCategoriesLoading } = useCategories();
     const year = new Date().getFullYear();
 
-    const shopLinks = t("footer.shopLinks", { returnObjects: true }) as { label: string }[];
     const companyLinks = t("footer.companyLinks", { returnObjects: true }) as { label: string }[];
     const supportLinks = t("footer.supportLinks", { returnObjects: true }) as { label: string }[];
     const legalLinks = t("footer.legalLinks", { returnObjects: true }) as { label: string }[];
@@ -37,6 +34,36 @@ const Footer: React.FC = () => {
         "/",            // Blog
         "/",            // Press
     ];
+
+    const supportLinkPaths = [
+        "/support", // Help Center
+        "/orders",  // Track Order
+        "/support", // Contact Us
+        null,        // FAQs
+    ];
+
+    const footerCategories = [
+        {
+            slug: "fresh-fish",
+            label: t("footer.categoryLabels.freshFish", "Fresh Fish"),
+        },
+        {
+            slug: "frozen-fish",
+            label: t("footer.categoryLabels.frozenFish", "Frozen Fish"),
+        },
+        {
+            slug: "live-fish",
+            label: t("footer.categoryLabels.liveFish", "Live Fish"),
+        },
+        {
+            slug: "light-fish",
+            label: t("footer.categoryLabels.lightFish", "Light Fish"),
+        },
+    ];
+
+    const getCategoryPath = (slug: string) => {
+        return `/products?category_slug=${encodeURIComponent(slug)}`;
+    };
 
     const socials = [
         { icon: <Instagram size={18} />, href: "#", label: "Instagram" },
@@ -138,30 +165,16 @@ const Footer: React.FC = () => {
                                 {t("footer.shop")}
                             </h4>
                             <ul className="space-y-2.5">
-                                {isCategoriesLoading ? (
-                                    [1, 2, 3, 4, 5].map((i) => (
-                                        <li key={i} className="h-3 w-24 bg-cyan-900 animate-pulse rounded" />
-                                    ))
-                                ) : (
-                                    dynamicCategories?.slice(0, 8).map((cat) => (
-                                        <li key={cat.id}>
-                                            <a
-                                                href={`/shop?category_name=${encodeURIComponent(cat.name)}`}
-                                                className="text-xs hover:text-yellow-400 transition-colors"
-                                            >
-                                                {cat.name}
-                                            </a>
-                                        </li>
-                                    )) || (
-                                        Array.isArray(shopLinks) && shopLinks.map((link, idx) => (
-                                            <li key={idx}>
-                                                <a href="/" className="text-xs hover:text-yellow-400 transition-colors">
-                                                    {link.label}
-                                                </a>
-                                            </li>
-                                        ))
-                                    )
-                                )}
+                                {footerCategories.map((category) => (
+                                    <li key={category.slug}>
+                                        <Link
+                                            to={getCategoryPath(category.slug)}
+                                            className="text-xs hover:text-yellow-400 transition-colors"
+                                        >
+                                            {category.label}
+                                        </Link>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
 
@@ -171,16 +184,28 @@ const Footer: React.FC = () => {
                                 {t("footer.company")}
                             </h4>
                             <ul className="space-y-2.5">
-                                {Array.isArray(companyLinks) && companyLinks.map((link, idx) => (
-                                    <li key={idx}>
-                                        <Link
-                                            to={companyLinkPaths[idx] || "/"}
-                                            className="text-xs hover:text-yellow-400 transition-colors"
-                                        >
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
+                                {Array.isArray(companyLinks) && companyLinks.map((link, idx) => {
+                                    if (idx === 2) return null;
+
+                                    const isStaticLabel = idx === 1 || idx === 4 || idx === 5;
+
+                                    return (
+                                        <li key={idx}>
+                                            {isStaticLabel ? (
+                                                <span className="text-xs text-cyan-200/80">
+                                                    {link.label}
+                                                </span>
+                                            ) : (
+                                                <Link
+                                                    to={companyLinkPaths[idx] || "/"}
+                                                    className="text-xs hover:text-yellow-400 transition-colors"
+                                                >
+                                                    {link.label}
+                                                </Link>
+                                            )}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </div>
 
@@ -192,9 +217,18 @@ const Footer: React.FC = () => {
                             <ul className="space-y-2.5">
                                 {Array.isArray(supportLinks) && supportLinks.map((link, idx) => (
                                     <li key={idx}>
-                                        <a href="/" className="text-xs hover:text-yellow-400 transition-colors">
-                                            {link.label}
-                                        </a>
+                                        {supportLinkPaths[idx] ? (
+                                            <Link
+                                                to={supportLinkPaths[idx]}
+                                                className="text-xs hover:text-yellow-400 transition-colors"
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ) : (
+                                            <span className="text-xs text-cyan-200/80">
+                                                {link.label}
+                                            </span>
+                                        )}
                                     </li>
                                 ))}
                             </ul>

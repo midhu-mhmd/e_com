@@ -56,10 +56,10 @@ const ProductCard = memo(({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.42, delay: (index % 8) * 0.055, ease: [0.23, 1, 0.32, 1] }}
             whileHover={{ y: -5 }}
-            className="group relative bg-white rounded-2xl sm:rounded-[2rem] p-2 sm:p-3 shadow-[0_2px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_14px_44px_rgba(0,0,0,0.12)] transition-all duration-300 border border-slate-100 hover:border-slate-200 flex flex-col hover:z-10"
+            className="group relative bg-white rounded-2xl sm:rounded-4xl p-2 sm:p-3 shadow-[0_2px_14px_rgba(0,0,0,0.06)] hover:shadow-[0_14px_44px_rgba(0,0,0,0.12)] transition-all duration-300 border border-slate-100 hover:border-slate-200 flex flex-col hover:z-10"
         >
             <Link to={`/products/${product.id}`} className="flex flex-col flex-1">
-                <div className="relative aspect-[3/4] bg-slate-50 rounded-xl sm:rounded-[1.5rem] overflow-hidden mb-2 sm:mb-3 isolate">
+                <div className="relative aspect-3/4 bg-slate-50 rounded-xl sm:rounded-3xl overflow-hidden mb-2 sm:mb-3 isolate">
                     {mainImage ? (
                         <img
                             src={mainImage}
@@ -73,7 +73,7 @@ const ProductCard = memo(({
                         </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                     <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-2 z-10">
                         {product.discount_price && (
@@ -113,7 +113,7 @@ const ProductCard = memo(({
                 </div>
 
                 {/* Content - Force LTR for English data */}
-                <div className="px-2 pb-2 flex-grow flex flex-col text-left" dir="ltr">
+                <div className="px-2 pb-2 grow flex flex-col text-left" dir="ltr">
                     <div className="mb-1 flex items-center justify-between">
                         <span className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md">
                             {product.category_name || t("card.categoryFallback")}
@@ -129,7 +129,7 @@ const ProductCard = memo(({
                     </h3>
 
                     <div className="hidden sm:block h-9 relative group/desc mb-3 cursor-default">
-                        <p className="text-xs text-slate-500 leading-[1.5] line-clamp-2 select-none">
+                        <p className="text-xs text-slate-500 leading-normal line-clamp-2 select-none">
                             {product.description || t("card.descriptionFallback")}
                         </p>
                         {product.description && product.description.length > 60 && (
@@ -192,19 +192,30 @@ const UserProductsPage: React.FC = () => {
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
     const category = searchParams.get("category");
     const categoryName = searchParams.get("category_name");
-    const fixedCategories = ["Fresh Fish", "Frozen Fish", "Live Fish", "Light Fish"];
+    const categorySlug = searchParams.get("category_slug");
+    const fixedCategories = useMemo(() => ([
+        { value: "fresh-fish", label: t("filters.freshFish") },
+        { value: "frozen-fish", label: t("filters.frozenFish") },
+        { value: "live-fish", label: t("filters.liveFish") },
+        { value: "light-fish", label: t("filters.lightFish") },
+    ]), [t]);
+
+    const activeFixedCategory = fixedCategories.find((item) => item.value === categorySlug);
+    const pageCategoryLabel = activeFixedCategory?.label || categoryName || category || "";
 
     const handleAllCategories = useCallback(() => {
         const params = new URLSearchParams(searchParams);
         params.delete("category");
         params.delete("category_name");
+        params.delete("category_slug");
         setSearchParams(params);
     }, [searchParams, setSearchParams]);
 
-    const handleCategoryChipClick = useCallback((name: string) => {
+    const handleCategoryChipClick = useCallback((slug: string) => {
         const params = new URLSearchParams(searchParams);
         params.delete("category");
-        params.set("category_name", name);
+        params.delete("category_name");
+        params.set("category_slug", slug);
         setSearchParams(params);
     }, [searchParams, setSearchParams]);
 
@@ -222,18 +233,19 @@ const UserProductsPage: React.FC = () => {
             const params: any = {};
             if (searchTerm) params.q = searchTerm;
             if (category) params.category = category;
-            if (categoryName) params.category_name = categoryName;
+            if (categorySlug) params.category_slug = categorySlug;
+            else if (categoryName) params.category_name = categoryName;
             setSearchParams(params, { replace: true });
         }, 500);
 
         return () => clearTimeout(handler);
-    }, [searchTerm, category, categoryName, setSearchParams]);
+    }, [searchTerm, category, categoryName, categorySlug, setSearchParams]);
 
     // ✅ TanStack Infinite Query — Load More pagination
     const filters = {
         ...(debouncedSearch && { search: debouncedSearch, q: debouncedSearch }),
         ...(category && (isNaN(Number(category)) ? { category_slug: category } : { category })),
-        ...(categoryName && { category_name: categoryName }),
+        ...(categorySlug ? { category_slug: categorySlug } : categoryName ? { category_name: categoryName } : {}),
     };
     const {
         data,
@@ -334,9 +346,9 @@ const UserProductsPage: React.FC = () => {
         <div dir="ltr" className="min-h-screen bg-slate-50 text-slate-800 selection:bg-cyan-100 selection:text-cyan-900">
             <Helmet>
                 <title>
-                    {category ? `${category} - SIMAK FRESH` : searchTerm ? `Search: ${searchTerm} - SIMAK FRESH` : "Shop Fresh Seafood & Meat - SIMAK FRESH"}
+                    {pageCategoryLabel ? `${pageCategoryLabel} - SIMAK FRESH` : searchTerm ? `Search: ${searchTerm} - SIMAK FRESH` : "Shop Fresh Seafood & Meat - SIMAK FRESH"}
                 </title>
-                <meta name="description" content={category ? `Browse our freshest selection of ${category}. Quality seafood and meat delivered fresh.` : "Browse our full catalog of premium fresh seafood and meat products locally sourced and delivered in Dubai."} />
+                <meta name="description" content={pageCategoryLabel ? `Browse our freshest selection of ${pageCategoryLabel}. Quality seafood and meat delivered fresh.` : "Browse our full catalog of premium fresh seafood and meat products locally sourced and delivered in Dubai."} />
             </Helmet>
 
             {/* ─── Sticky Premium Filter & Search Bar ─── */}
@@ -359,19 +371,19 @@ const UserProductsPage: React.FC = () => {
                             </button>
 
                             {/* Category Chips */}
-                            {fixedCategories.map((name) => {
-                                const isActive = categoryName?.toLowerCase() === name.toLowerCase();
+                            {fixedCategories.map((item) => {
+                                const isActive = categorySlug === item.value;
                                 return (
                                     <button
-                                        key={name}
-                                        onClick={() => handleCategoryChipClick(name)}
+                                        key={item.value}
+                                        onClick={() => handleCategoryChipClick(item.value)}
                                         className={`shrink-0 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold tracking-tight transition-all duration-300 whitespace-nowrap active:scale-95 ${
                                             isActive
                                                 ? "bg-[#0b4e62] text-white shadow-lg shadow-[#0b4e62]/20"
                                                 : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200/50"
                                         }`}
                                     >
-                                        {name}
+                                        {item.label}
                                     </button>
                                 );
                             })}
@@ -404,7 +416,7 @@ const UserProductsPage: React.FC = () => {
             </div>
 
             {/* ─── Product Grid ─── */}
-            <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+            <main className="max-w-350 mx-auto px-4 sm:px-6 py-6 sm:py-10">
                 {loading && products.length === 0 ? (
                     <div className="flex items-center justify-center min-h-[50vh]">
                         <ShrimpLoader />
@@ -472,7 +484,7 @@ const UserProductsPage: React.FC = () => {
                                 <button
                                     onClick={() => fetchNextPage()}
                                     disabled={isFetchingNextPage}
-                                    className="relative px-8 py-3 bg-gradient-to-r from-slate-900 to-slate-700 text-white rounded-full font-semibold text-sm shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 disabled:opacity-60 disabled:cursor-wait disabled:hover:translate-y-0"
+                                    className="relative px-8 py-3 bg-linear-to-r from-slate-900 to-slate-700 text-white rounded-full font-semibold text-sm shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30 hover:-translate-y-0.5 transition-all duration-300 active:scale-95 disabled:opacity-60 disabled:cursor-wait disabled:hover:translate-y-0"
                                 >
                                     {isFetchingNextPage ? (
                                         <span className="flex items-center gap-2">

@@ -16,6 +16,9 @@ function mapReviewDtoToReview(dto: ReviewDto): Review {
         userName: dto.user_name ?? `User #${dto.user}`,
         rating: dto.rating,
         comment: dto.comment ?? "",
+        images: Array.isArray(dto.images)
+            ? dto.images.map((entry) => entry.image).filter(Boolean)
+            : [],
         isVisible: dto.is_visible,
         adminResponse: dto.admin_response ?? null,
         createdAt: dto.created_at,
