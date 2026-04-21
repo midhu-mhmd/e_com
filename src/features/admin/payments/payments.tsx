@@ -17,6 +17,7 @@ import {
   selectPaymentsTotal,
 } from "./paymentsSlice";
 import type { Payment, PaymentStatus, PaymentMethod } from "./paymentsSlice";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 /* --- COLUMN VISIBILITY --- */
 type ColumnKey = "paymentId" | "order" | "customer" | "amount" | "method" | "status" | "date" | "orderStatus";
@@ -62,6 +63,9 @@ const PaymentManagement: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
+  const debouncedSearchTerm = useDebounce(searchTerm, 2000);
+  const debouncedOrderFilter = useDebounce(orderFilter, 2000);
+  const debouncedCustomerFilter = useDebounce(customerFilter, 2000);
 
   // Column visibility
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
@@ -92,37 +96,80 @@ const PaymentManagement: React.FC = () => {
 
   useEffect(() => {
     const params: any = {
-      page: page,
-      limit: limit,
+      page,
+      limit,
       offset: (page - 1) * limit,
     };
 
-    if (searchTerm) params.search = searchTerm;
+    const paymentTerm = debouncedSearchTerm.trim();
+    const orderTerm = debouncedOrderFilter.trim();
+    const customerTerm = debouncedCustomerFilter.trim();
+    const genericSearchTerm = paymentTerm || orderTerm || customerTerm;
+
+    if (genericSearchTerm) {
+      params.q = genericSearchTerm;
+      params.search = genericSearchTerm;
+    }
+
+    if (paymentTerm) {
+      const normalizedPaymentId = paymentTerm.replace(/^pay[-\s]*/i, "");
+      params.id = normalizedPaymentId;
+      params.payment_id = normalizedPaymentId;
+    }
+
+    if (orderTerm) {
+      const normalizedOrderId = orderTerm.replace(/^ord[-\s]*/i, "");
+      params.order_id = normalizedOrderId;
+      params.order__id = normalizedOrderId;
+    }
+
+    if (customerTerm) {
+      params.customer_name = customerTerm;
+    }
+
     if (statusFilter !== "All") {
       const statusMap: Record<PaymentStatus, string> = {
-        "Pending": "PENDING",
-        "Success": "SUCCESS",
-        "Failed": "FAILED",
-        "Refunded": "REFUNDED"
+        Pending: "PENDING",
+        Success: "SUCCESS",
+        Failed: "FAILED",
+        Refunded: "REFUNDED",
       };
       params.status = statusMap[statusFilter];
     }
+
     if (methodFilter !== "All") {
       const methodMap: Record<PaymentMethod, string> = {
-        "UPI": "UPI",
-        "Card": "ZIINA",
-        "NetBanking": "NETBANKING",
-        "Wallet": "WALLET",
-        "COD": "COD",
-        "N/A": ""
+        UPI: "UPI",
+        Card: "ZIINA",
+        NetBanking: "NETBANKING",
+        Wallet: "WALLET",
+        COD: "COD",
+        "N/A": "",
       };
       const mappedMethod = methodMap[methodFilter];
       if (mappedMethod) params.payment_method = mappedMethod;
     }
 
-    console.log("Fetching payments with params:", params);
+    if (amountMin) params.amount_min = amountMin;
+    if (amountMax) params.amount_max = amountMax;
+
     dispatch(paymentsActions.fetchPaymentsRequest(params));
-  }, [dispatch, page, limit, searchTerm, statusFilter, methodFilter]);
+  }, [
+    dispatch,
+    page,
+    limit,
+    debouncedSearchTerm,
+    debouncedOrderFilter,
+    debouncedCustomerFilter,
+    statusFilter,
+    methodFilter,
+    amountMin,
+    amountMax,
+  ]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, debouncedCustomerFilter, orderFilter, statusFilter, methodFilter, amountMin, amountMax]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -137,10 +184,8 @@ const PaymentManagement: React.FC = () => {
 
   const hasActiveFilters = !!(searchTerm || statusFilter !== "All" || methodFilter !== "All" || orderFilter || customerFilter || amountMin || amountMax);
 
-  // Get total count from API
   const totalCount = useSelector(selectPaymentsTotal);
 
-  // Use payments directly (already paginated from API)
   const paginatedPayments = payments;
 
   // Export handler
@@ -203,9 +248,9 @@ const PaymentManagement: React.FC = () => {
       <div className="bg-white rounded-2xl border border-[#EEEEEE] shadow-sm overflow-hidden">
         <nav className="flex items-center gap-1 p-3 border-b border-[#EEEEEE] overflow-x-auto no-scrollbar">
           <NavTab id="dashboard" active={currentView} label="Overview" icon={<LayoutDashboard size={14} />} onClick={() => { setCurrentView("dashboard" as ViewType); }} />
-          <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={() => { setCurrentView("payments" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("All"); setPage(1); }} />
-          <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={() => { setCurrentView("refunds" as ViewType); setSearchTerm(""); setStatusFilter("Refunded"); setMethodFilter("All"); setPage(1); }} />
-          <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
+          <NavTab id="payments" active={currentView} label="Payments" icon={<ListOrdered size={14} />} onClick={() => { setCurrentView("payments" as ViewType); setSearchTerm(""); setOrderFilter(""); setCustomerFilter(""); setAmountMin(""); setAmountMax(""); setStatusFilter("All"); setMethodFilter("All"); setPage(1); }} />
+          <NavTab id="refunds" active={currentView} label="Refunds" icon={<Undo2 size={14} />} onClick={() => { setCurrentView("refunds" as ViewType); setSearchTerm(""); setOrderFilter(""); setCustomerFilter(""); setAmountMin(""); setAmountMax(""); setStatusFilter("Refunded"); setMethodFilter("All"); setPage(1); }} />
+          <NavTab id="cod" active={currentView} label="COD" icon={<HandCoins size={14} />} onClick={() => { setCurrentView("cod" as ViewType); setSearchTerm(""); setOrderFilter(""); setCustomerFilter(""); setAmountMin(""); setAmountMax(""); setStatusFilter("All"); setMethodFilter("COD"); setPage(1); }} />
         </nav>
         <main className="min-h-[60vh]">
           {currentView === "dashboard" && (
@@ -528,7 +573,7 @@ const PaymentsListView = ({
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+        <table className="w-full text-left border-collapse min-w-225">
           <thead>
             <tr className="text-[10px] font-bold text-[#A1A1AA] uppercase tracking-widest bg-[#FAFAFA] border-b border-[#EEEEEE]">
               {isVisible("paymentId") && <th className="px-5 py-4">Payment ID</th>}
@@ -817,7 +862,7 @@ const PaymentDetailDrawer = ({
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-[60] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-full max-w-xl bg-white z-60 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         {/* Header */}
         <div className="p-6 border-b flex justify-between items-center bg-[#FAFAFA]">
           <div>

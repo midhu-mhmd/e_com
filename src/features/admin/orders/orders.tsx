@@ -28,7 +28,6 @@ import {
   LineChart,
   BarChart3,
   DollarSign,
-  Search,
 } from "lucide-react";
 import { FEATURE_ORDERS_ANALYTICS } from "../../../config/constants";
 
@@ -106,7 +105,6 @@ const OrderManagement: React.FC = () => {
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterOrderStatus>("All");
   const [customerFilter, setCustomerFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -117,8 +115,7 @@ const OrderManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
-  const debouncedSearch = useDebounce(searchTerm, 500);
-  const debouncedCustomer = useDebounce(customerFilter, 500);
+  const debouncedCustomer = useDebounce(customerFilter, 2000);
 
   // Analytics state
   const [anaLoading, setAnaLoading] = useState(true);
@@ -153,13 +150,12 @@ const OrderManagement: React.FC = () => {
   const isVisible = (key: ColumnKey) => visibleColumns[key];
 
   // Reset to page 1 when server-side filters change
-  useEffect(() => { setPage(1); }, [debouncedSearch, debouncedCustomer, statusFilter]);
+  useEffect(() => { setPage(1); }, [debouncedCustomer, statusFilter]);
 
-  // Main API Fetch Effect — search + customer + status go to the server (same as product page)
+  // Main API Fetch Effect — customer + status go to the server
   useEffect(() => {
     const offset = (page - 1) * limit;
-    // Combine search bar and customer column filter: customer takes priority if set
-    const q = debouncedCustomer || debouncedSearch || undefined;
+    const q = debouncedCustomer || undefined;
     dispatch(
       ordersActions.fetchOrdersRequest({
         q,
@@ -170,7 +166,7 @@ const OrderManagement: React.FC = () => {
         offset,
       })
     );
-  }, [dispatch, debouncedSearch, debouncedCustomer, statusFilter, page, limit]);
+  }, [dispatch, debouncedCustomer, statusFilter, page, limit]);
 
   // Fetch dashboard analytics
   useEffect(() => {
@@ -210,7 +206,6 @@ const OrderManagement: React.FC = () => {
   }, []);
 
   const handleReset = () => {
-    setSearchTerm("");
     setStatusFilter("All");
     setCustomerFilter("");
     setCityFilter("");
@@ -475,19 +470,8 @@ const OrderManagement: React.FC = () => {
         </div>
 
         {/* Toolbar */}
-        <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-between items-center gap-4 bg-white">
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A1A1AA]" size={14} />
-            <input
-              type="text"
-              placeholder="Search orders..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#F9F9F9] border border-[#EEEEEE] rounded-xl text-xs focus:bg-white focus:border-black outline-none transition-all"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+        <div className="p-4 border-b border-[#EEEEEE] flex flex-col md:flex-row justify-start items-center gap-4 bg-white">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-start">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[11px] font-bold transition-all ${isFilterOpen

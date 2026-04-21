@@ -269,7 +269,7 @@ const BestsellersSection: React.FC = () => {
         }
         dispatch(fetchCartRequest());
         toast.show(t("bestsellers.addedToCart", { name: product.name, defaultValue: `${product.name} added to cart` }), "cart");
-        navigate("/checkout");
+        navigate("/cart");
       } catch (err: any) {
         const msg = err?.response?.data?.error || "Failed to add item to cart";
         toast.show(msg, "error");

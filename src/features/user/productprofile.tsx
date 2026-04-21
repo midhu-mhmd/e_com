@@ -433,7 +433,7 @@ const ProductProfile: React.FC = () => {
 
             {product.is_available && product.stock > 0 ? (
               <button
-                onClick={() => addItemToCart("checkout")}
+                onClick={() => addItemToCart("cart")}
                 className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
               >
                 <Zap size={22} />
@@ -590,7 +590,7 @@ const ProductProfile: React.FC = () => {
         </button>
         {product.is_available && product.stock > 0 ? (
           <button
-            onClick={() => addItemToCart("checkout")}
+            onClick={() => addItemToCart("cart")}
             className="flex-1 py-3.5 bg-cyan-600 text-white text-sm font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/25 active:scale-[0.97] transition-all"
           >
             <Zap size={17} className="fill-current" />
@@ -781,7 +781,7 @@ const ProductProfile: React.FC = () => {
 
               {product.is_available && product.stock > 0 ? (
                 <button
-                  onClick={() => addItemToCart("checkout")}
+                  onClick={() => addItemToCart("cart")}
                   className="flex-1 py-4 bg-cyan-600 text-white text-base font-black rounded-2xl hover:bg-cyan-700 shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                 >
                   <Zap size={22} />
@@ -867,12 +867,6 @@ const ProductProfile: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">
                       {t("details.reviews.title", { defaultValue: "Reviews" })}
-                    </p>
-                    <p className="text-stone-500 text-sm font-bold">
-                      {t("details.reviews.basedOn", {
-                        count: visibleReviews.length,
-                        defaultValue: `Based on ${visibleReviews.length} reviews`,
-                      })}
                     </p>
                   </div>
                 </div>

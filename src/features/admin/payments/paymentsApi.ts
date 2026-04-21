@@ -25,9 +25,17 @@ export interface PaymentDto {
 }
 
 export type PaymentsQuery = {
+    q?: string;
     search?: string;
+    id?: string | number;
+    payment_id?: string | number;
+    order__id?: string | number;
+    order_id?: string | number;
+    amount_min?: string | number;
+    amount_max?: string | number;
     status?: string;
     payment_method?: string;
+    customer_name?: string;
     order__status?: string;
     page?: number;
     limit?: number;

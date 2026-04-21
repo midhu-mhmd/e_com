@@ -81,7 +81,7 @@ const CouponManagement: React.FC = () => {
     const [discountTypeFilter, setDiscountTypeFilter] = useState<"All" | "percentage" | "fixed">("All");
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const debouncedSearch = useDebounce(searchTerm, 500);
+    const debouncedSearch = useDebounce(searchTerm, 2000);
 
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [couponToDelete, setCouponToDelete] = useState<number | null>(null);

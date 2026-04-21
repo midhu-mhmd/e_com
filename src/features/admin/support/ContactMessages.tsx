@@ -23,7 +23,7 @@ const ContactMessagesPage: React.FC = () => {
     const t = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 400);
+    }, 2000);
     return () => clearTimeout(t);
   }, [search]);
 

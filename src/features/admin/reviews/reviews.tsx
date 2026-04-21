@@ -111,7 +111,7 @@ const ReviewsManagement: React.FC = () => {
   const [commentFilter, setCommentFilter] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(5);
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  const debouncedSearch = useDebounce(searchTerm, 2000);
   const toast = useToast();
   const [togglingId, setTogglingId] = useState<number | null>(null);
 

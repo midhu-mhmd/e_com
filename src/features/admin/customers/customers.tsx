@@ -861,7 +861,7 @@ const CustomerManagement: React.FC = () => {
   const [limit, setLimit] = useState(10);
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 500);
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 2000);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
