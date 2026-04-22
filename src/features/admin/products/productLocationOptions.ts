@@ -4,7 +4,7 @@ export interface ProductLocationOption {
 }
 
 export const PRODUCT_LOCATION_OPTIONS: ProductLocationOption[] = [
-    { value: "abu_dhabi", label: "Abu Dhabi Region" },
+    { value: "abu_dhabi", label: "Abu Dhabi" },
     { value: "dubai", label: "Dubai" },
     { value: "sharjah", label: "Sharjah" },
     { value: "ajman", label: "Ajman" },

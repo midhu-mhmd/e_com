@@ -110,6 +110,7 @@ export interface CartItem {
     image: string | null;
     quantity: number;
     stock: number;
+    isAvailable?: boolean;
     sku?: string;
     category?: string;
 }
@@ -196,10 +197,22 @@ export const {
     clearCart,
 } = cartSlice.actions;
 
+export const isCartItemInStock = (item: CartItem) =>
+    item.stock > 0 && item.isAvailable !== false;
+
 // User cart selectors
 export const selectCartItems = (state: RootState) => state.cart.items;
 export const selectCartTotal = (state: RootState) =>
     Number(state.cart.items.reduce((total, item) => total + item.finalPrice * item.quantity, 0).toFixed(2));
+export const selectInStockCartItems = (state: RootState) =>
+    state.cart.items.filter(isCartItemInStock);
+export const selectInStockCartTotal = (state: RootState) =>
+    Number(
+        state.cart.items
+            .filter(isCartItemInStock)
+            .reduce((total, item) => total + item.finalPrice * item.quantity, 0)
+            .toFixed(2)
+    );
 export const selectCartCount = (state: RootState) =>
     state.cart.items.reduce((count, item) => count + item.quantity, 0);
 export const selectCartLoading = (state: RootState) => state.cart.isLoading;

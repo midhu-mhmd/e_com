@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Fish } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Fish, Loader2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../components/ui/Toast';
 import {
     fetchCartRequest,
     removeFromCart,
     updateQuantity,
     selectCartItems,
-    selectCartTotal,
     selectCartError,
     selectUpdatingItemIds,
+    isCartItemInStock,
 } from '../admin/cart/cartSlice';
 import { ordersApi, type DeliveryChargeSettingsDto } from '../admin/orders/ordersApi';
+import { cartsApi } from '../admin/cart/cartApi';
 
 import logo from "../../assets/SIMAK FRESH FINAL LOGO-01.svg";
 
@@ -30,14 +32,21 @@ const CartPage: React.FC = () => {
     const { t } = useTranslation('cart');
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const toast = useToast();
     const cartItems = useAppSelector(selectCartItems);
-    const cartTotal = useAppSelector(selectCartTotal);
     const cartError = useAppSelector(selectCartError);
     const updatingItemIds = useAppSelector(selectUpdatingItemIds);
     const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
     const checkingAuth = useAppSelector((s) => s.auth.checkingAuth);
     const [deliveryChargeSettings, setDeliveryChargeSettings] = useState<DeliveryChargeSettingsDto | null>(null);
     const [loadingDeliveryChargeSettings, setLoadingDeliveryChargeSettings] = useState(true);
+    const [preparingCheckout, setPreparingCheckout] = useState(false);
+
+    const inStockCartItems = cartItems.filter(isCartItemInStock);
+    const outOfStockCartItems = cartItems.filter((item) => !isCartItemInStock(item));
+    const inStockCartTotal = Number(
+        inStockCartItems.reduce((total, item) => total + item.finalPrice * item.quantity, 0).toFixed(2)
+    );
 
     // Always fetch fresh cart data when the cart page mounts and user is authenticated.
     // Also refetch when the page regains focus to prevent caching.
@@ -85,8 +94,49 @@ const CartPage: React.FC = () => {
         };
     }, []);
 
-    const deliveryCharge = computeDeliveryCharge(cartTotal, deliveryChargeSettings);
-    const totalWithDelivery = cartTotal + (deliveryCharge ?? 0);
+    const deliveryCharge = computeDeliveryCharge(inStockCartTotal, deliveryChargeSettings);
+    const totalWithDelivery = inStockCartTotal + (deliveryCharge ?? 0);
+
+    const handleProceedToCheckout = async () => {
+        if (preparingCheckout) return;
+
+        setPreparingCheckout(true);
+        try {
+            if (outOfStockCartItems.length > 0) {
+                await Promise.all(
+                    outOfStockCartItems.map((item) =>
+                        cartsApi.removeItem(item.id).catch(() => null)
+                    )
+                );
+
+                dispatch(fetchCartRequest());
+                toast.show(
+                    t('cart.checkoutFilteredOutOfStock', {
+                        count: outOfStockCartItems.length,
+                        defaultValue:
+                            outOfStockCartItems.length === 1
+                                ? '1 out-of-stock item was removed from checkout.'
+                                : `${outOfStockCartItems.length} out-of-stock items were removed from checkout.`,
+                    }),
+                    'warning'
+                );
+            }
+
+            if (inStockCartItems.length === 0) {
+                toast.show(
+                    t('cart.noInStockForCheckout', {
+                        defaultValue: 'Your cart has no in-stock items available for checkout.',
+                    }),
+                    'warning'
+                );
+                return;
+            }
+
+            navigate('/checkout');
+        } finally {
+            setPreparingCheckout(false);
+        }
+    };
 
     // Loading state removed as requested
 
@@ -257,7 +307,7 @@ const CartPage: React.FC = () => {
                         <div className="space-y-3 pb-6 border-b border-stone-100">
                             <div className="flex justify-between text-sm text-stone-500">
                                 <span>{t('cart.subtotal')}</span>
-                                <span className="font-bold text-stone-900">AED {cartTotal.toFixed(2)}</span>
+                                <span className="font-bold text-stone-900">AED {inStockCartTotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm text-stone-500">
                                 <span>{t('cart.shipping')}</span>
@@ -285,6 +335,17 @@ const CartPage: React.FC = () => {
                                             defaultValue: 'Delivery is calculated using the current delivery settings.',
                                         })}
                             </p>
+                            {outOfStockCartItems.length > 0 && (
+                                <p className="text-xs font-semibold text-amber-600">
+                                    {t('cart.excludingOutOfStock', {
+                                        count: outOfStockCartItems.length,
+                                        defaultValue:
+                                            outOfStockCartItems.length === 1
+                                                ? '1 out-of-stock item will be excluded at checkout.'
+                                                : `${outOfStockCartItems.length} out-of-stock items will be excluded at checkout.`,
+                                    })}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex justify-between items-end">
@@ -294,9 +355,21 @@ const CartPage: React.FC = () => {
 
                         <button
                             className="w-full py-4 bg-cyan-900 text-white rounded-xl font-bold hover:bg-cyan-800 transition-all shadow-lg flex items-center justify-center gap-2 group shadow-cyan-900/20"
-                            onClick={() => navigate('/checkout')}
+                            onClick={() => {
+                                void handleProceedToCheckout();
+                            }}
+                            disabled={preparingCheckout}
                         >
-                            {t('cart.proceedToCheckout')} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            {preparingCheckout ? (
+                                <>
+                                    <Loader2 size={18} className="animate-spin" />
+                                    {t('cart.preparingCheckout', { defaultValue: 'Preparing checkout...' })}
+                                </>
+                            ) : (
+                                <>
+                                    {t('cart.proceedToCheckout')} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
                         </button>
 
                         <div className="flex items-center justify-center gap-2 text-xs text-stone-400 bg-stone-50 py-2 rounded-lg">

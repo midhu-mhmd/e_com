@@ -41,6 +41,10 @@ const Footer: React.FC = () => {
         "/support", // Contact Us
         null,        // FAQs
     ];
+    const legalLinkPaths = [
+        "/privacy-policy",
+        "/terms-of-service",
+    ];
 
     const footerCategories = [
         {
@@ -291,13 +295,19 @@ const Footer: React.FC = () => {
 
                     <div className="flex items-center gap-4">
                         {Array.isArray(legalLinks) && legalLinks.map((link, idx) => (
-                            <a
-                                key={idx}
-                                href="/"
-                                className="text-[10px] text-cyan-200/60 hover:text-yellow-400 transition-colors"
-                            >
-                                {link.label}
-                            </a>
+                            legalLinkPaths[idx] ? (
+                                <Link
+                                    key={idx}
+                                    to={legalLinkPaths[idx] as string}
+                                    className="text-[10px] text-cyan-200/60 hover:text-yellow-400 transition-colors"
+                                >
+                                    {link.label}
+                                </Link>
+                            ) : (
+                                <span key={idx} className="text-[10px] text-cyan-200/60">
+                                    {link.label}
+                                </span>
+                            )
                         ))}
                     </div>
                 </div>

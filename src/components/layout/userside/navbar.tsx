@@ -300,7 +300,8 @@ const Navbar: React.FC = () => {
 
                                 {/* Navigation Links */}
                                 <div className="px-4 space-y-1">
-                                    {[...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
+                                    {[{ key: 'shop', label: t('nav.shop'), href: '/products', icon: <Package size={18} /> },
+                                    ...(isAuthenticated ? [{ key: 'cart', label: t('nav.myCart'), href: '/cart', icon: <ShoppingCart size={18} />, badge: cartItems.length }] : [])
                                     ].map((link) => (
                                         <Link
                                             key={link.key}

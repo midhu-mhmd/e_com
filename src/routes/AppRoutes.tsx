@@ -18,6 +18,8 @@ import CheckoutPage from '../features/user/checkout';
 import NotificationPage from '../features/user/notification';
 import AboutPage from '../features/user/about';
 import CareersPage from '../features/user/careers';
+import PrivacyPolicyPage from '../features/user/privacy';
+import TermsOfServicePage from '../features/user/terms';
 import Navbar from '../components/layout/userside/navbar';
 import Footer from '../components/layout/userside/footer';
 import OrderPage from '../features/user/order';
@@ -144,6 +146,8 @@ export const AppRoutes: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/careers" element={<CareersPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/support" element={<SupportPage />} />
 
           {/* Protected user routes — require login */}

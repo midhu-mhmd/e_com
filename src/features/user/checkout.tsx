@@ -2,9 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { useDeliveryEstimation } from "../../hooks/useDeliveryEstimation";
-import { selectCartItems, selectCartTotal, clearCart } from "../admin/cart/cartSlice";
+import {
+  selectCartItems,
+  selectInStockCartItems,
+  selectInStockCartTotal,
+  clearCart,
+  fetchCartRequest,
+  isCartItemInStock,
+} from "../admin/cart/cartSlice";
 import { ordersApi, type CheckoutSummaryResponse, type DeliveryChargeSettingsDto, type DeliverySlotDto } from "../admin/orders/ordersApi";
 import { customersApi, type AddressDto } from "../admin/customers/customersApi";
+import { cartsApi } from "../admin/cart/cartApi";
 import {
   MapPin, CreditCard, Truck, ArrowLeft, Loader2,
   Calendar, Clock, MessageSquare, Plus, Home, Briefcase, ChevronDown, Info, Check, Tag, X
@@ -164,9 +172,12 @@ const CheckoutPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const toast = useToast();
 
-  const cartItems = useAppSelector(selectCartItems);
-  const cartTotal = useAppSelector(selectCartTotal);
+  const allCartItems = useAppSelector(selectCartItems);
+  const cartItems = useAppSelector(selectInStockCartItems);
+  const cartTotal = useAppSelector(selectInStockCartTotal);
   const { user } = useAppSelector((s: any) => s.auth);
+  const outOfStockCartItems = allCartItems.filter((item) => !isCartItemInStock(item));
+  const prunedOutOfStockSignature = useRef<string>("");
 
   // ─── Delivery Estimation from Tiers ───
   const { estimation, loading: estimationLoading, error: estimationError, stockDetails } = useDeliveryEstimation();
@@ -388,6 +399,48 @@ const CheckoutPage: React.FC = () => {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (outOfStockCartItems.length === 0) {
+      return;
+    }
+
+    const ids = outOfStockCartItems
+      .map((item) => item.id)
+      .sort((left, right) => left - right);
+    const signature = ids.join(",");
+
+    if (!signature || signature === prunedOutOfStockSignature.current) {
+      return;
+    }
+
+    prunedOutOfStockSignature.current = signature;
+    let cancelled = false;
+
+    const pruneOutOfStockItems = async () => {
+      await Promise.all(ids.map((id) => cartsApi.removeItem(id).catch(() => null)));
+
+      if (cancelled) return;
+
+      dispatch(fetchCartRequest());
+      toast.show(
+        t("alerts.removedOutOfStockBeforeCheckout", {
+          count: ids.length,
+          defaultValue:
+            ids.length === 1
+              ? "1 out-of-stock item was removed from checkout."
+              : `${ids.length} out-of-stock items were removed from checkout.`,
+        }),
+        "warning"
+      );
+    };
+
+    void pruneOutOfStockItems();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, outOfStockCartItems, t, toast]);
 
   // ─── Computed ───
   useEffect(() => {
@@ -698,6 +751,16 @@ const CheckoutPage: React.FC = () => {
   const handlePlaceOrder = async () => {
     setAttemptedSubmit(true);
 
+    if (cartItems.length === 0) {
+      toast.show(
+        t("alerts.inStockItemsRequired", {
+          defaultValue: "Your cart has no in-stock items available for checkout.",
+        }),
+        "warning"
+      );
+      return;
+    }
+
     if (!phoneVerified) {
       // Open verification modal if not verified
       setVerifyOpen(true);
@@ -781,7 +844,13 @@ const CheckoutPage: React.FC = () => {
         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
           <Truck size={36} className="text-slate-300" />
         </div>
-        <p className="text-slate-500 font-semibold">{t("emptyCart.title")}</p>
+        <p className="text-slate-500 font-semibold">
+          {allCartItems.length > 0
+            ? t("emptyCart.onlyOutOfStock", {
+              defaultValue: "All items in your cart are currently out of stock.",
+            })
+            : t("emptyCart.title")}
+        </p>
         <button
           onClick={() => navigate("/products")}
           className="px-6 py-2.5 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-700 transition-colors"

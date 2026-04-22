@@ -137,6 +137,7 @@ function mapApiItemToCartItem(dto: CartItemDto): CartItem {
         image,
         quantity: dto.quantity,
         stock: pd?.stock ?? 999,
+        isAvailable: pd?.is_available ?? true,
         sku: pd?.sku ?? "",
         category: pd?.category_name ?? "",
     };
