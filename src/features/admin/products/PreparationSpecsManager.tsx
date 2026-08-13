@@ -232,7 +232,7 @@ const PreparationSpecsManager: React.FC<PreparationSpecsManagerProps> = ({ produ
                                                     <span className={`inline-block w-2 h-2 rounded-full ${spec.is_active ? 'bg-emerald-500' : 'bg-stone-300'}`} />
                                                 </td>
                                                 <td className="py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center justify-end gap-2 transition-opacity">
                                                         <button type="button" onClick={() => startEdit(spec)} className="p-1.5 text-stone-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors">
                                                             <Edit2 size={15} />
                                                         </button>
