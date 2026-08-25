@@ -111,7 +111,7 @@ const ProductManagement: React.FC = () => {
     const [ratingFilter, setRatingFilter] = useState("");
     const [deliveryTimeFilter, setDeliveryTimeFilter] = useState("");
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(5);
+    const [limit, setLimit] = useState(50);
     const debouncedSearch = useDebounce(searchTerm, 2000);
 
     // Column visibility
