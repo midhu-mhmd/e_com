@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Canvas Text in jsPDF</title>
+</head>
+<body>
+  <h1>Testing Canvas Text</h1>
+  <button id="btn">Generate PDF</button>
+  <div id="status"></div>
+  <iframe id="pdfFrame" style="width: 1000px; height: 500px; margin-top: 20px;"></iframe>
+
+  <script type="module">
+    import { jsPDF } from "https://cdn.jsdelivr.net/npm/jspdf@4.2.1/+esm";
+
+    function wrapTextCanvas(ctx, text, maxWidth) {
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = "";
+
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const testWidth = ctx.measureText(testLine).width;
+        if (testWidth > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      return lines;
+    }
+
+    function renderTextToCanvas(text, options) {
+      const {
+        maxWidthMm,
+        fontSizePt = 16,
+        fontWeight = "bold",
+        fontFamily = "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif",
+        lineHeightRatio = 1.35,
+        color = "#000000",
+        scale = 3, // High DPI
+      } = options;
+
+      // 1 pt = 25.4 / 72 mm ~= 0.3528 mm
+      // 1 mm ~= 3.7795 px at 96 DPI
+      const MM_TO_PX = 3.779527559;
+      const maxWidthPx = maxWidthMm * MM_TO_PX;
+      const fontSizePx = fontSizePt * (4 / 3); // 1 pt = 1.333 px
+
+      const measureCanvas = document.createElement("canvas");
+      const measureCtx = measureCanvas.getContext("2d");
+      measureCtx.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+
+      const lines = wrapTextCanvas(measureCtx, text, maxWidthPx);
+      const lineCount = Math.max(1, lines.length);
+      const lineStepPx = fontSizePx * lineHeightRatio;
+      const totalHeightPx = lineCount * lineStepPx + fontSizePx * 0.4;
+      const totalHeightMm = totalHeightPx / MM_TO_PX;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(maxWidthPx * scale);
+      canvas.height = Math.ceil(totalHeightPx * scale);
+      const ctx = canvas.getContext("2d");
+
+      ctx.scale(scale, scale);
+      ctx.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+      ctx.fillStyle = color;
+      ctx.textBaseline = "top";
+
+      lines.forEach((line, index) => {
+        ctx.fillText(line, 0, index * lineStepPx);
+      });
+
+      return {
+        dataUrl: canvas.toDataURL("image/png"),
+        widthMm: maxWidthMm,
+        heightMm: totalHeightMm,
+        lineCount,
+      };
+    }
+
+    window.runTest = () => {
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: [500, 250],
+      });
+
+      const text = "FRESH SEABREAM (2 PCS, 900-1100 G) | سيبريم طازج";
+      const rendered = renderTextToCanvas(text, {
+        maxWidthMm: 370,
+        fontSizePt: 16,
+        fontWeight: "bold",
+      });
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(17);
+      doc.text("ITEM", 29, 100);
+      doc.text("QTY", 450, 100, { align: "right" });
+
+      // Draw table box
+      const rowH = Math.max(16, rendered.heightMm + 6);
+      doc.rect(29, 105, 442, rowH);
+      doc.line(29 + 382, 105, 29 + 382, 105 + rowH);
+
+      // Add rendered text
+      doc.addImage(rendered.dataUrl, "PNG", 33, 108, rendered.widthMm, rendered.heightMm);
+
+      // Add QTY
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(15);
+      doc.text("12 Pieces", 450, 105 + rowH / 2 + 2, { align: "right" });
+
+      const pdfUrl = doc.output("bloburl");
+      document.getElementById("pdfFrame").src = pdfUrl;
+      document.getElementById("status").innerText = "PDF Generated Successfully!";
+    };
+
+    document.getElementById("btn").onclick = window.runTest;
+    window.runTest();
+  </script>
+</body>
+</html>

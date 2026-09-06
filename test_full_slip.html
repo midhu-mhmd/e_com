@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Full Delivery Slip Test</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: sans-serif; background: #222; }
+    iframe { width: 100%; height: 800px; border: none; background: #fff; }
+  </style>
+</head>
+<body>
+  <iframe id="pdfFrame"></iframe>
+  <script type="module">
+    import { jsPDF } from "https://cdn.jsdelivr.net/npm/jspdf@4.2.1/+esm";
+
+    const PAGE_W_MM = 500;
+    const PAGE_H_MM = 250;
+    const MARGIN_X_MM = 25;
+    const CONTENT_W_MM = 450;
+    const HEADER_TOP_MARGIN_MM = 5;
+    const HEADER_MAX_H_MM = 95;
+    const HEADER_SIDE_INSET_MM = 10;
+    const PAD_X_MM = 4;
+    const FOOTER_TEXT = "Thank you for shopping with us";
+
+    function hasNonLatin(text) {
+      return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text) ||
+        [...text].some((char) => char.charCodeAt(0) > 255);
+    }
+
+    function wrapTextCanvas(ctx, text, maxWidth) {
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = "";
+
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const testWidth = ctx.measureText(testLine).width;
+        if (testWidth > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      return lines;
+    }
+
+    function renderTextToCanvas(text, options) {
+      const {
+        maxWidthMm,
+        fontSizePt = 16,
+        fontWeight = "bold",
+        fontFamily = "'Cairo', 'SF Pro Display', ui-sans-serif, system-ui, sans-serif",
+        lineHeightRatio = 1.35,
+        color = "#000000",
+        scale = 3,
+      } = options;
+
+      const MM_TO_PX = 3.779527559;
+      const maxWidthPx = maxWidthMm * MM_TO_PX;
+      const fontSizePx = fontSizePt * (4 / 3);
+
+      const measureCanvas = document.createElement("canvas");
+      const measureCtx = measureCanvas.getContext("2d");
+      measureCtx.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+
+      const lines = wrapTextCanvas(measureCtx, text, maxWidthPx);
+      const lineCount = Math.max(1, lines.length);
+      const lineStepPx = fontSizePx * lineHeightRatio;
+      const totalHeightPx = lineCount * lineStepPx + fontSizePx * 0.3;
+      const totalHeightMm = totalHeightPx / MM_TO_PX;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(maxWidthPx * scale);
+      canvas.height = Math.ceil(totalHeightPx * scale);
+      const ctx = canvas.getContext("2d");
+
+      ctx.scale(scale, scale);
+      ctx.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+      ctx.fillStyle = color;
+      ctx.textBaseline = "top";
+
+      lines.forEach((line, index) => {
+        ctx.fillText(line, 0, index * lineStepPx);
+      });
+
+      return {
+        dataUrl: canvas.toDataURL("image/png"),
+        widthMm: maxWidthMm,
+        heightMm: totalHeightMm,
+        lineCount,
+      };
+    }
+
+    function drawBox(doc, x, y, w, h, weight = 0.45) {
+      doc.setLineWidth(weight);
+      doc.rect(x, y, w, h);
+    }
+
+    function drawDivider(doc, y, weight = 0.4) {
+      doc.setLineWidth(weight);
+      doc.line(MARGIN_X_MM + PAD_X_MM, y, MARGIN_X_MM + CONTENT_W_MM - PAD_X_MM, y);
+    }
+
+    async function generatePdf() {
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: [PAGE_W_MM, PAGE_H_MM],
+      });
+
+      const left = MARGIN_X_MM + PAD_X_MM;
+      const right = MARGIN_X_MM + CONTENT_W_MM - PAD_X_MM;
+      const contentWidth = right - left;
+      let y = 60; // Skip header image for this layout test
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(30);
+      doc.text("ORD-318", left, y);
+      doc.setFontSize(18);
+      doc.text("06/09/2026, 20:06", right, y - 1, { align: "right" });
+
+      y += 8;
+      drawDivider(doc, y, 0.5);
+      y += 8;
+
+      // Address box
+      const addressBoxX = left;
+      const addressBoxY = y;
+      const addressBoxW = contentWidth;
+      const addressPad = 6;
+      const addressTextW = addressBoxW - addressPad * 2;
+      const customerName = "ANASTASSIA T";
+      const addressParts = ["The Pearl Residences, Hidd Al Saadiyat", "Abu Dhabi", "abu_dhabi"];
+      const phoneNumber = "+971585772269";
+
+      const customerNameLines = doc.splitTextToSize(customerName, addressTextW);
+      const addressLines = doc.splitTextToSize(addressParts.join(", "), addressTextW);
+      const phoneLines = doc.splitTextToSize(phoneNumber, addressTextW);
+      const addressBoxH =
+        addressPad +
+        customerNameLines.length * 10 +
+        (addressLines.length > 0 ? addressLines.length * 7 + 2 : 0) +
+        phoneLines.length * 8 +
+        addressPad;
+
+      drawBox(doc, addressBoxX, addressBoxY, addressBoxW, addressBoxH, 0.45);
+
+      let textY = addressBoxY + addressPad + 8;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(21);
+      doc.text(customerNameLines, addressBoxX + addressPad, textY);
+      textY += customerNameLines.length * 10;
+
+      if (addressLines.length > 0) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(15);
+        doc.text(addressLines, addressBoxX + addressPad, textY);
+        textY += addressLines.length * 7 + 2;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(17);
+      doc.text(phoneLines, addressBoxX + addressPad, textY);
+      y = addressBoxY + addressBoxH + 8;
+
+      const qtyColW = 60;
+      const itemColW = contentWidth - qtyColW;
+      const headerRowH = 14;
+
+      drawBox(doc, left, y, contentWidth, headerRowH, 0.5);
+      doc.line(left + itemColW, y, left + itemColW, y + headerRowH);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(17);
+      doc.text("ITEM", left + 4, y + 9);
+      doc.text("QTY", right - 4, y + 9, { align: "right" });
+      y += headerRowH;
+
+      const productName = "FRESH SEABREAM (2 PCS, 900-1100 G) | سيبريم طازج";
+      const qty = "12 Pieces";
+
+      if (hasNonLatin(productName)) {
+        const rendered = renderTextToCanvas(productName, {
+          maxWidthMm: itemColW - 10,
+          fontSizePt: 16,
+          fontWeight: "bold",
+        });
+
+        const rowH = Math.max(16, rendered.heightMm + 8);
+        drawBox(doc, left, y, contentWidth, rowH, 0.35);
+        doc.line(left + itemColW, y, left + itemColW, y + rowH);
+
+        doc.addImage(
+          rendered.dataUrl,
+          "PNG",
+          left + 4,
+          y + 3,
+          rendered.widthMm,
+          rendered.heightMm
+        );
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(15);
+        doc.text(qty, right - 4, y + rowH / 2 + 2, { align: "right" });
+      } else {
+        const nameLines = doc.splitTextToSize(productName.toUpperCase(), itemColW - 10);
+        const rowH = Math.max(16, nameLines.length * 7 + 8);
+
+        drawBox(doc, left, y, contentWidth, rowH, 0.35);
+        doc.line(left + itemColW, y, left + itemColW, y + rowH);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text(nameLines, left + 4, y + 8);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(15);
+        doc.text(qty, right - 4, y + rowH / 2 + 2, { align: "right" });
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(FOOTER_TEXT, MARGIN_X_MM + CONTENT_W_MM / 2, PAGE_H_MM - 12, {
+        align: "center",
+      });
+
+      document.getElementById("pdfFrame").src = doc.output("bloburl");
+    }
+
+    generatePdf();
+  </script>
+</body>
+</html>
